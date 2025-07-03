@@ -1,0 +1,591 @@
+{
+  "info": {
+    "_postman_id": "b1e2c3d4-5678-1234-9abc-def012345678",
+    "name": "Storix API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "email", "value": "testuser1@example.com" },
+    { "key": "password", "value": "testpassword" },
+    { "key": "token", "value": "" },
+    { "key": "credential_id", "value": "" },
+    { "key": "file_key", "value": "uploads/testfile.txt" },
+    { "key": "share_link_id", "value": "" },
+    { "key": "access_key_id", "value": "" },
+    { "key": "secret_access_key", "value": "" },
+    { "key": "bucket", "value": "" },
+    { "key": "region", "value": "" },
+    { "key": "upload_id", "value": "" },
+    { "key": "multipart_key", "value": "" },
+    { "key": "chunk_url", "value": "" },
+    { "key": "part1_etag", "value": "" },
+    { "key": "download_url", "value": "" },
+    { "key": "presigned_url", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Register",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.test('Token is present', function () { pm.expect(json).to.have.property('token'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/auth/register", "host": [ "{{base_url}}" ], "path": [ "api", "auth", "register" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user\": {\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\",\n    \"password_confirmation\": \"{{password}}\"\n  }\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "if (json.token) { pm.collectionVariables.set('token', json.token); }",
+              "pm.test('Token is present', function () { pm.expect(json).to.have.property('token'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/auth/login", "host": [ "{{base_url}}" ], "path": [ "api", "auth", "login" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Storage Credential",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "if (json.token) { pm.collectionVariables.set('token', json.token); }",
+              "if (json.active_credential_id) { pm.collectionVariables.set('credential_id', json.active_credential_id); }",
+              "pm.test('Credential created', function () { pm.expect(json).to.have.property('active_credential_id'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": { "raw": "{{base_url}}/api/storage/credentials", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "credentials" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"storage_credential\": {\n    \"provider\": \"s3\",\n    \"access_key_id\": \"{{access_key_id}}\",\n    \"secret_access_key\": \"{{secret_access_key}}\",\n    \"region\": \"{{region}}\",\n    \"bucket\": \"{{bucket}}\"\n  }\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Validate Storage Credential",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 422', function () { pm.expect([200,422]).to.include(pm.response.code); });",
+              "var json = pm.response.json();",
+              "pm.test('Validation result present', function () { pm.expect(json).to.have.any.keys('valid','error'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{base_url}}/api/storage/credentials/validate", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "credentials", "validate" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"storage_credential\": {\n    \"provider\": \"s3\",\n    \"access_key_id\": \"{{access_key_id}}\",\n    \"secret_access_key\": \"{{secret_access_key}}\",\n    \"region\": \"{{region}}\",\n    \"bucket\": \"{{bucket}}\"\n  }\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Storage Credentials",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "pm.test('Credentials array present', function () { pm.expect(json).to.have.property('credentials'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/storage/credentials", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "credentials" ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Credential",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "pm.test('Credential updated', function () { pm.expect(json).to.have.property('id'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/credentials/{{credential_id}}", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "credentials", "{{credential_id}}" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"storage_credential\": {\n    \"region\": \"{{region}}\"\n  }\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Set Active Credential",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "if (json.token) { pm.collectionVariables.set('token', json.token); }",
+              "pm.test('Active credential set', function () { pm.expect(json).to.have.property('active_credential_id'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{base_url}}/api/auth/active_credential", "host": [ "{{base_url}}" ], "path": [ "api", "auth", "active_credential" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"credential_id\": \"{{credential_id}}\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Files",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/storage/files", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "files" ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Folder",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/create_folder", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "create_folder" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"prefix\": \"uploads/testfolder/\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Presign Upload",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if (json.presigned_url) { pm.collectionVariables.set('presigned_url', json.presigned_url); }"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/presign_upload", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "presign_upload" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"key\": \"{{file_key}}\",\n  \"content_type\": \"text/plain\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload File (to presigned URL)",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Content-Type", "value": "text/plain" } ],
+        "url": "{{presigned_url}}",
+        "body": {
+          "mode": "raw",
+          "raw": "Hello, world!"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Presign Download",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if (json.presigned_url) { pm.collectionVariables.set('download_url', json.presigned_url); }"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/presign_download", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "presign_download" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"key\": \"{{file_key}}\",\n  \"expires_in\": 3600\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Download File (from presigned URL)",
+      "request": {
+        "method": "GET",
+        "url": "{{download_url}}"
+      },
+      "response": []
+    },
+    {
+      "name": "Move Files (Bulk)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/move_files", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "move_files" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"files\": [\n    {\n      \"source_key\": \"uploads/testfile.txt\",\n      \"destination_key\": \"uploads/testfolder/testfile.txt\"\n    }\n  ]\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Copy Files (Bulk)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/copy_files", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "copy_files" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"files\": [\n    {\n      \"source_key\": \"uploads/testfolder/testfile.txt\",\n      \"destination_key\": \"uploads/testfolder/testfile_copy.txt\"\n    }\n  ]\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Move Folders (Recursive)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/move_folders", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "move_folders" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"folders\": [\n    {\n      \"source_prefix\": \"uploads/testfolder/\",\n      \"destination_prefix\": \"uploads/testfolder_moved/\"\n    }\n  ]\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Copy Folders (Recursive)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/copy_folders", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "copy_folders" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"folders\": [\n    {\n      \"source_prefix\": \"uploads/testfolder_moved/\",\n      \"destination_prefix\": \"uploads/testfolder_copied/\"\n    }\n  ]\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Rename File",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/files", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "files" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"key\": \"uploads/testfolder_copied/testfile_copy.txt\",\n  \"new_key\": \"uploads/testfolder_copied/renamed_file.txt\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete File",
+      "request": {
+        "method": "DELETE",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/files", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "files" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"key\": \"uploads/testfolder_copied/testfile_copy.txt\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Folder",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/delete_folder", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "delete_folder" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"prefix\": \"uploads/testfolder_copied/\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Share Link",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if (json.share_link && json.share_link.id) { pm.collectionVariables.set('share_link_id', json.share_link.id); }"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/share_link", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "share_link" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"key\": \"{{file_key}}\",\n  \"expires_in\": 3600\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Share Links",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/storage/share_links", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "share_links" ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Revoke Share Link",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{base_url}}/api/storage/revoke_share_link", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "revoke_share_link" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": {{share_link_id}}\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Usage Reporting",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/storage/usage", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "usage" ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Multipart Uploads",
+      "item": [
+        {
+          "name": "Start Multipart Upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/api/start_upload", "host": [ "{{base_url}}" ], "path": [ "api", "start_upload" ] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"uploads/multipart_test.txt\",\n  \"content_type\": \"text/plain\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.upload_id) { pm.collectionVariables.set('upload_id', json.upload_id); }",
+                  "if (json.key) { pm.collectionVariables.set('multipart_key', json.key); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Presign Chunk",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/api/presign_chunk", "host": [ "{{base_url}}" ], "path": [ "api", "presign_chunk" ] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"{{multipart_key}}\",\n  \"upload_id\": \"{{upload_id}}\",\n  \"part_number\": 1\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.presigned_url) { pm.collectionVariables.set('chunk_url', json.presigned_url); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload Chunk (PUT to presigned URL)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "text/plain" }
+            ],
+            "url": "{{chunk_url}}",
+            "body": {
+              "mode": "raw",
+              "raw": "This is the first part of the file."
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var etag = pm.response.headers.get('etag');",
+                  "if (etag) { pm.collectionVariables.set('part1_etag', etag); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complete Multipart Upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/api/complete_upload", "host": [ "{{base_url}}" ], "path": [ "api", "complete_upload" ] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"{{multipart_key}}\",\n  \"upload_id\": \"{{upload_id}}\",\n  \"parts\": [\n    { \"part_number\": 1, \"etag\": {{part1_etag}} }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete Credential",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "pm.test('Credential deleted', function () { pm.expect(json).to.have.property('message'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/storage/credentials/{{credential_id}}", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "credentials", "{{credential_id}}" ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Get User Profile",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/auth/profile", "host": [ "{{base_url}}" ], "path": [ "api", "auth", "profile" ] }
+      },
+      "response": []
+    }
+  ]
+} 

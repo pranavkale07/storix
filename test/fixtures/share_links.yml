@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  storage_credential: one
+  key: MyString
+  presigned_url: MyString
+  expires_at: 2025-07-03 08:02:45
+  revoked: false
+
+two:
+  user: two
+  storage_credential: two
+  key: MyString
+  presigned_url: MyString
+  expires_at: 2025-07-03 08:02:45
+  revoked: false

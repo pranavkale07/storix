@@ -1,0 +1,4 @@
+RAILS_ENV: development
+DATABASE_URL: postgresql://localhost/storage_api_development
+AWS_REGION: us-east-1
+ALLOWED_ORIGINS: "*" 
