@@ -289,22 +289,17 @@ class Api::Storage::StorageController < ApplicationController
     expires_in = params[:expires_in].presence || 3600
     key = params[:key]
     begin
+      # Generate presigned URL but do not store it
       s3_client = S3ClientBuilder.new(@storage_credential).client
       presigner = Aws::S3::Presigner.new(client: s3_client)
-      url = presigner.presigned_url(
-        :get_object,
-        bucket: @storage_credential.bucket,
-        key: key,
-        expires_in: expires_in.to_i
-      )
+      # url = presigner.presigned_url(:get_object, bucket: @storage_credential.bucket, key: key, expires_in: expires_in.to_i)
       share_link = ShareLink.create!(
         user: current_user,
         storage_credential: @storage_credential,
         key: key,
-        presigned_url: url,
         expires_at: Time.current + expires_in.to_i.seconds
       )
-      render json: { share_link: share_link.slice(:id, :key, :presigned_url, :expires_at, :revoked) }
+      render json: { share_link: share_link.slice(:id, :key, :expires_at, :revoked) }
     rescue => e
       render json: { error: "Failed to create share link: #{e.message}" }, status: :unprocessable_entity
     end
@@ -313,7 +308,16 @@ class Api::Storage::StorageController < ApplicationController
   # GET /api/storage/share_links
   def share_links
     links = ShareLink.where(user: current_user, storage_credential: @storage_credential).order(created_at: :desc)
-    render json: { share_links: links.map { |l| l.slice(:id, :key, :presigned_url, :expires_at, :revoked) } }
+    render json: {
+      share_links: links.map { |l| {
+        id: l.id,
+        key: l.key,
+        created_at: l.created_at,
+        expires_at: l.expires_at,
+        revoked: l.revoked,
+        expired: l.expired?
+      } }
+    }
   end
 
   # POST /api/storage/revoke_share_link
@@ -508,6 +512,30 @@ class Api::Storage::StorageController < ApplicationController
     rescue => e
       Rails.logger.error("validate_credential generic rescue: #{e.class} - #{e.message}\n#{e.backtrace.join("\n")}")
       render json: { valid: false, error: 'Credential validation failed: Unable to connect to the storage provider.' }, status: :unprocessable_entity
+    end
+  end
+  
+  # PATCH /api/storage/share_links/:id
+  def update_share_link
+    link = ShareLink.find_by(id: params[:id], user: current_user, storage_credential: @storage_credential)
+    unless link
+      render json: { error: 'Share link not found' }, status: :not_found
+      return
+    end
+    if params[:expires_at].present?
+      link.expires_at = Time.parse(params[:expires_at]) rescue nil
+    end
+    if link.save
+      render json: {
+        id: link.id,
+        key: link.key,
+        created_at: link.created_at,
+        expires_at: link.expires_at,
+        revoked: link.revoked,
+        expired: link.expired?
+      }
+    else
+      render json: { error: link.errors.full_messages }, status: :unprocessable_entity
     end
   end
   

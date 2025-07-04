@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_03_095730) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_03_164519) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -18,13 +18,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_03_095730) do
     t.bigint "user_id", null: false
     t.uuid "storage_credential_id", null: false
     t.string "key"
-    t.string "presigned_url"
     t.datetime "expires_at"
     t.boolean "revoked", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["presigned_url"], name: "index_share_links_on_presigned_url", unique: true
+    t.string "token", null: false
     t.index ["storage_credential_id"], name: "index_share_links_on_storage_credential_id"
+    t.index ["token"], name: "index_share_links_on_token", unique: true
     t.index ["user_id"], name: "index_share_links_on_user_id"
   end
 
