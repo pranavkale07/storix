@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="dark">
+  <head>
+    <title>Storix</title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= vite_client_tag %>
+    <%= yield :head %>
+  </head>
+  <body>
+    <%= yield %>
+  </body>
+</html>

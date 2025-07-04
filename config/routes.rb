@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "home/index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -6,7 +7,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   # Defines the root path route ("/")
-  # root "posts#index"
+  root "home#index"
 
   # API routes
   namespace :api do
@@ -52,5 +53,10 @@ Rails.application.routes.draw do
       post "credentials/validate", to: "storage#validate_credential"
       patch '/share_links/:id', to: 'storage#update_share_link'
     end
+  end
+
+  # Serve React app for all unmatched routes (except for /api and /rails paths)
+  get '*path', to: 'home#index', constraints: ->(req) do
+    !req.xhr? && req.format.html?
   end
 end
