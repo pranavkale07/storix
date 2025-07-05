@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../components/AuthContext";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
 import { apiFetch } from "../lib/api";
+import { StorageManager } from "../lib/storage";
 
-export default function ConnectBucket({ setActiveBucket }) {
+export default function ConnectBucket() {
   const [provider, setProvider] = useState("s3");
   const [accessKey, setAccessKey] = useState("");
   const [secretKey, setSecretKey] = useState("");
@@ -16,6 +18,7 @@ export default function ConnectBucket({ setActiveBucket }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { updateActiveBucket } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,19 +45,22 @@ export default function ConnectBucket({ setActiveBucket }) {
         setLoading(false);
         return;
       }
-      // Store active bucket info (id, bucket, provider, token, etc.)
+      
+      // Update token if provided
+      if (data.token) {
+        StorageManager.setToken(data.token);
+      }
+      
+      // Store clean bucket info (no duplicates)
       const bucketInfo = {
         id: data.id,
         bucket,
         provider,
         region,
         endpoint,
-        token: data.token,
-        active_credential_id: data.active_credential_id,
       };
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("activeBucket", JSON.stringify(bucketInfo));
-      setActiveBucket?.(bucketInfo);
+      
+      updateActiveBucket(bucketInfo);
       navigate("/");
     } catch (err) {
       setError("Network error");

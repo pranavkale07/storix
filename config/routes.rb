@@ -55,6 +55,8 @@ Rails.application.routes.draw do
     end
   end
 
+  get 'share_links/:token', to: 'share_links#show', as: :share_link
+
   # Serve React app for all unmatched routes (except for /api and /rails paths)
   get '*path', to: 'home#index', constraints: ->(req) do
     !req.xhr? && req.format.html?

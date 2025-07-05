@@ -1,5 +1,7 @@
+import { StorageManager } from './storage';
+
 export function apiFetch(url, options = {}) {
-  const token = localStorage.getItem("token") || (JSON.parse(localStorage.getItem("activeBucket") || "null")?.token);
+  const token = StorageManager.getToken();
   const headers = {
     ...(options.headers || {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),

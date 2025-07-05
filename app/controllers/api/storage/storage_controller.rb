@@ -1,6 +1,6 @@
 class Api::Storage::StorageController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_storage_credential, except: [:create_credential, :validate_credential]
+  before_action :set_storage_credential, except: [:create_credential, :validate_credential, :list_credentials, :show_credential, :update_credential, :destroy_credential]
   
   # POST /api/storage_credentials
   def create_credential
@@ -208,11 +208,20 @@ class Api::Storage::StorageController < ApplicationController
       s3_client = S3ClientBuilder.new(@storage_credential).client
       presigner = Aws::S3::Presigner.new(client: s3_client)
       expires_in = params[:expires_in].presence || 3600
+      
+      # Extract filename from the key for the Content-Disposition header
+      filename = params[:key].split('/').last
+      
+      # Determine content disposition based on parameters
+      disposition = params[:inline] == 'true' ? 'inline' : 'attachment'
+      content_disposition = "#{disposition}; filename=\"#{filename}\""
+      
       url = presigner.presigned_url(
         :get_object,
         bucket: @storage_credential.bucket,
         key: params[:key],
-        expires_in: expires_in.to_i
+        expires_in: expires_in.to_i,
+        response_content_disposition: content_disposition
       )
       render json: { presigned_url: url }
     rescue Aws::S3::Errors::ServiceError => e
@@ -299,7 +308,7 @@ class Api::Storage::StorageController < ApplicationController
         key: key,
         expires_at: Time.current + expires_in.to_i.seconds
       )
-      render json: { share_link: share_link.slice(:id, :key, :expires_at, :revoked) }
+      render json: { share_link: share_link.slice(:id, :key, :token, :expires_at, :revoked) }
     rescue => e
       render json: { error: "Failed to create share link: #{e.message}" }, status: :unprocessable_entity
     end

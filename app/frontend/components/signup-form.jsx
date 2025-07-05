@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ export function SignupForm({ className, ...props }) {
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -28,6 +29,7 @@ export function SignupForm({ className, ...props }) {
       setError("Passwords do not match");
       return;
     }
+    setIsLoading(true);
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -37,12 +39,15 @@ export function SignupForm({ className, ...props }) {
       const data = await res.json();
       if (!res.ok) {
         setError(Array.isArray(data.errors) ? data.errors.join(", ") : data.error || "Signup failed");
+        setIsLoading(false);
         return;
       }
-      login(data.user, data.token);
+      await login(data.user, data.token);
       navigate("/");
     } catch (err) {
       setError("Network error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -92,15 +97,15 @@ export function SignupForm({ className, ...props }) {
               {error && (
                 <div className="text-red-500 text-sm text-center">{error}</div>
               )}
-              <Button type="submit" className="w-full">
-                Sign Up
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Creating Account..." : "Sign Up"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
-              <a href="/login" className="underline underline-offset-4">
+              <Link to="/login" className="underline underline-offset-4">
                 Login
-              </a>
+              </Link>
             </div>
           </form>
         </CardContent>

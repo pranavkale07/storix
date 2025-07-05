@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -20,12 +20,14 @@ export function LoginForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -35,13 +37,16 @@ export function LoginForm({
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || "Login failed");
+        setIsLoading(false);
         return;
       }
       const data = await res.json();
-      login(data.user, data.token);
+      await login(data.user, data.token);
       navigate("/");
     } catch (err) {
       setError("Network error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -88,8 +93,8 @@ export function LoginForm({
               {error && (
                 <div className="text-red-500 text-sm text-center">{error}</div>
               )}
-              <Button type="submit" className="w-full">
-                Login
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Logging in..." : "Login"}
               </Button>
               <Button variant="outline" className="w-full" type="button">
                 Login with Google
@@ -97,9 +102,9 @@ export function LoginForm({
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
-              <a href="/signup" className="underline underline-offset-4">
+              <Link to="/signup" className="underline underline-offset-4">
                 Sign up
-              </a>
+              </Link>
             </div>
           </form>
         </CardContent>
