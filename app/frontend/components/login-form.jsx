@@ -1,57 +1,57 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "./AuthContext";
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from './AuthContext';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export function LoginForm({
   className,
   ...props
 }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setIsLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Login failed");
+        setError(data.error || 'Login failed');
         setIsLoading(false);
         return;
       }
       const data = await res.json();
       await login(data.user, data.token);
-      navigate("/");
+      navigate('/');
     } catch (err) {
-      setError("Network error");
+      setError('Network error');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
@@ -94,14 +94,14 @@ export function LoginForm({
                 <div className="text-red-500 text-sm text-center">{error}</div>
               )}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? 'Logging in...' : 'Login'}
               </Button>
               <Button variant="outline" className="w-full" type="button">
                 Login with Google
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
+              Don&apos;t have an account?{' '}
               <Link to="/signup" className="underline underline-offset-4">
                 Sign up
               </Link>

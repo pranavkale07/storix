@@ -1,5 +1,5 @@
-import React from "react";
-import { SignupForm } from "../components/signup-form.jsx";
+import React from 'react';
+import { SignupForm } from '../components/signup-form.jsx';
 
 export default function Signup() {
   return (
@@ -7,4 +7,4 @@ export default function Signup() {
       <SignupForm />
     </div>
   );
-} 
+}

@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { BucketService } from "../lib/bucketService";
-import { StorageManager } from "../lib/storage";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { BucketService } from '../lib/bucketService';
+import { StorageManager } from '../lib/storage';
 
 const AuthContext = createContext();
 
@@ -14,7 +14,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     // Load from localStorage on mount
     const session = StorageManager.getSession();
-    
+
     if (session.user && session.token) {
       setUser(session.user);
       setToken(session.token);
@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
     setUser(user);
     setToken(token);
     StorageManager.setSession(user, token);
-    
+
     // Automatically load active bucket after login
     setBucketLoading(true);
     try {
@@ -45,14 +45,14 @@ export function AuthProvider({ children }) {
     setUser(null);
     setToken(null);
     setActiveBucket(null);
-    
+
     // Clear all localStorage data
     StorageManager.clearSession();
-    
+
     // Clear any potential browser state
     // Note: We don't use sessionStorage, cookies, or IndexedDB in this app
     // But this is where you'd clear them if needed
-    
+
     // Force a page reload to clear any cached API responses
     // This ensures no stale data remains in memory
     window.location.href = '/';
@@ -78,16 +78,16 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      token, 
-      login, 
-      logout, 
+    <AuthContext.Provider value={{
+      user,
+      token,
+      login,
+      logout,
       loading,
       activeBucket,
       bucketLoading,
       updateActiveBucket,
-      refreshActiveBucket
+      refreshActiveBucket,
     }}>
       {children}
     </AuthContext.Provider>
@@ -96,4 +96,4 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   return useContext(AuthContext);
-} 
+}

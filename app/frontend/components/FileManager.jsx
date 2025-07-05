@@ -1,19 +1,19 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
-import { Button } from "./ui/button";
-import { apiFetch } from "@/lib/api";
+import React, { useEffect, useState, useRef } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Button } from './ui/button';
+import { apiFetch } from '@/lib/api';
 import { Download, Trash2, Share2, X, Search, Filter as FilterIcon } from 'lucide-react';
-import ShareModal from "./ShareModal";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "./ui/select";
-import { Input } from "./ui/input";
-import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
+import ShareModal from './ShareModal';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select';
+import { Input } from './ui/input';
+import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
 
 function formatSize(bytes) {
-  if (bytes === 0) return "0 B";
+  if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 function formatDate(dateStr) {
@@ -28,20 +28,20 @@ function isViewableFile(filename) {
     '.txt', '.md', '.json', '.xml', '.csv', '.log', // Text files
     '.html', '.htm', // Web files
     '.mp4', '.webm', '.ogg', // Videos
-    '.mp3', '.wav', '.ogg' // Audio
+    '.mp3', '.wav', '.ogg', // Audio
   ];
-  
+
   const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
   return viewableExtensions.includes(extension);
 }
 
 function Breadcrumbs({ path, onNavigate, className }) {
-  const parts = path ? path.split("/").filter(Boolean) : [];
+  const parts = path ? path.split('/').filter(Boolean) : [];
   return (
-    <nav className={`flex items-center gap-0 text-sm text-muted-foreground ${className || ""}`}>
-      <button className="hover:underline" onClick={() => onNavigate("")}>/</button>
+    <nav className={`flex items-center gap-0 text-sm text-muted-foreground ${className || ''}`}>
+      <button className="hover:underline" onClick={() => onNavigate('')}>/</button>
       {parts.map((crumb, idx) => {
-        const fullPath = parts.slice(0, idx + 1).join("/") + "/";
+        const fullPath = parts.slice(0, idx + 1).join('/') + '/';
         const isLast = idx === parts.length - 1;
         return (
           <span key={idx} className="flex items-center gap-0">
@@ -60,25 +60,25 @@ function Breadcrumbs({ path, onNavigate, className }) {
 
 // Create Folder Modal Component
 function CreateFolderModal({ isOpen, onClose, onSuccess, currentPrefix }) {
-  const [folderName, setFolderName] = useState("");
+  const [folderName, setFolderName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!folderName.trim()) return;
 
     setLoading(true);
-    setError("");
-    
+    setError('');
+
     try {
-      const newFolderPrefix = currentPrefix + folderName.trim() + "/";
+      const newFolderPrefix = currentPrefix + folderName.trim() + '/';
       const response = await apiFetch('/api/storage/create_folder', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prefix: newFolderPrefix })
+        body: JSON.stringify({ prefix: newFolderPrefix }),
       });
 
       if (!response.ok) {
@@ -86,7 +86,7 @@ function CreateFolderModal({ isOpen, onClose, onSuccess, currentPrefix }) {
         throw new Error(errorData.error || 'Failed to create folder');
       }
 
-      setFolderName("");
+      setFolderName('');
       onSuccess();
       onClose();
     } catch (err) {
@@ -155,18 +155,18 @@ function FolderRenameInput({ folder, onRename, onCancel }) {
     try {
       const oldPrefix = folder.prefix;
       const newPrefix = folder.prefix.replace(folder.name + '/', newName.trim() + '/');
-      
+
       const response = await apiFetch('/api/storage/move_folders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           folders: [{
             source_prefix: oldPrefix,
-            destination_prefix: newPrefix
-          }]
-        })
+            destination_prefix: newPrefix,
+          }],
+        }),
       });
 
       if (!response.ok) {
@@ -176,7 +176,7 @@ function FolderRenameInput({ folder, onRename, onCancel }) {
 
       const result = await response.json();
       const hasErrors = result.results && result.results.some(r => r.status === 'error');
-      
+
       if (hasErrors) {
         const errors = result.results.filter(r => r.status === 'error').map(r => r.error).join(', ');
         throw new Error(`Some files failed to move: ${errors}`);
@@ -225,16 +225,16 @@ function FileRenameInput({ file, onRename, onCancel }) {
       const pathParts = file.key.split('/');
       pathParts[pathParts.length - 1] = newName.trim(); // Replace just the filename
       const newKey = pathParts.join('/');
-      
+
       const response = await apiFetch('/api/storage/rename_file', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           key: oldKey,
-          new_key: newKey
-        })
+          new_key: newKey,
+        }),
       });
 
       if (!response.ok) {
@@ -326,8 +326,8 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                     onClick={e => e.stopPropagation()}
                   />
                 </td>
-              <td className="py-2 px-3 flex items-center gap-2 font-semibold cursor-pointer hover:underline" onClick={() => onOpenFolder(folder.prefix)}>
-                <span className="text-lg">📁</span>
+                <td className="py-2 px-3 flex items-center gap-2 font-semibold cursor-pointer hover:underline" onClick={() => onOpenFolder(folder.prefix)}>
+                  <span className="text-lg">📁</span>
                   {renamingFolder === folder.prefix ? (
                     <FolderRenameInput
                       folder={folder}
@@ -343,9 +343,9 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                   ) : (
                     <span>{folder.name}</span>
                   )}
-              </td>
-              <td className="py-2 px-3 text-muted-foreground">—</td>
-              <td className="py-2 px-3 text-muted-foreground">—</td>
+                </td>
+                <td className="py-2 px-3 text-muted-foreground">—</td>
+                <td className="py-2 px-3 text-muted-foreground">—</td>
                 <td className="py-2 px-3 text-right">
                   <div className="flex items-center gap-1 justify-end">
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -358,7 +358,7 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                     </div>
                   </div>
                 </td>
-            </tr>
+              </tr>
             );
           })}
           {/* Files */}
@@ -374,8 +374,8 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                     onClick={e => e.stopPropagation()}
                   />
                 </td>
-              <td className="py-2 px-3 flex items-center gap-2">
-                <span className="text-lg">📄</span>
+                <td className="py-2 px-3 flex items-center gap-2">
+                  <span className="text-lg">📄</span>
                   {renamingFile === file.key ? (
                     <FileRenameInput
                       file={file}
@@ -390,17 +390,17 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                     />
                   ) : (
                     <span
-                      className={isViewableFile(file.key) ? "cursor-pointer hover:underline" : ""}
+                      className={isViewableFile(file.key) ? 'cursor-pointer hover:underline' : ''}
                       onClick={isViewableFile(file.key) ? () => onDownload(file.key, true) : undefined}
-                      title={isViewableFile(file.key) ? "Click to view" : undefined}
+                      title={isViewableFile(file.key) ? 'Click to view' : undefined}
                     >
-                {file.key}
+                      {file.key}
                     </span>
                   )}
-              </td>
-              <td className="py-2 px-3">{formatSize(file.size)}</td>
-              <td className="py-2 px-3">{formatDate(file.last_modified)}</td>
-              <td className="py-2 px-3 text-right">
+                </td>
+                <td className="py-2 px-3">{formatSize(file.size)}</td>
+                <td className="py-2 px-3">{formatDate(file.last_modified)}</td>
+                <td className="py-2 px-3 text-right">
                   <div className="flex items-center gap-1 justify-end">
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button size="icon" variant="ghost" title="Share" onClick={e => { e.stopPropagation(); onShareFile(file); }}>
@@ -415,10 +415,10 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                     </div>
                     <Button size="icon" variant="ghost" title="Download" onClick={e => { e.stopPropagation(); onDownload(file.key, false); }} disabled={downloading.has(file.key)}>
                       {downloading.has(file.key) ? '⏳' : '⬇️'}
-                </Button>
+                    </Button>
                   </div>
-              </td>
-            </tr>
+                </td>
+              </tr>
             );
           })}
         </tbody>
@@ -431,8 +431,8 @@ export default function FileManager({ activeBucket }) {
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [prefix, setPrefix] = useState(""); // current folder path
+  const [error, setError] = useState('');
+  const [prefix, setPrefix] = useState(''); // current folder path
   const [downloading, setDownloading] = useState(new Set());
   const [deleting, setDeleting] = useState(new Set());
   const [deletingFolders, setDeletingFolders] = useState(new Set());
@@ -463,48 +463,48 @@ export default function FileManager({ activeBucket }) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharingFile, setSharingFile] = useState(null);
 
-  const [filterType, setFilterType] = useState("all");
-  const [minSize, setMinSize] = useState("");
-  const [maxSize, setMaxSize] = useState("");
+  const [filterType, setFilterType] = useState('all');
+  const [minSize, setMinSize] = useState('');
+  const [maxSize, setMaxSize] = useState('');
   const [showFilterBar, setShowFilterBar] = useState(false);
   const filterDebounceRef = useRef();
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
 
   const [allUploadingFiles, setAllUploadingFiles] = useState([]);
 
   const fetchFiles = async () => {
-      setLoading(true);
-      setError("");
-      try {
-      let url = prefix ? `/api/storage/files?prefix=${encodeURIComponent(prefix)}` : "/api/storage/files";
+    setLoading(true);
+    setError('');
+    try {
+      let url = prefix ? `/api/storage/files?prefix=${encodeURIComponent(prefix)}` : '/api/storage/files';
       const params = [];
-      if (filterType && filterType !== "all") params.push(`filter_type=${encodeURIComponent(filterType)}`);
+      if (filterType && filterType !== 'all') params.push(`filter_type=${encodeURIComponent(filterType)}`);
       if (minSize) params.push(`min_size=${parseInt(minSize * 1024 * 1024)}`); // MB to bytes
       if (maxSize) params.push(`max_size=${parseInt(maxSize * 1024 * 1024)}`);
       if (search) params.push(`search=${encodeURIComponent(search)}`);
-      if (params.length) url += (url.includes("?") ? "&" : "?") + params.join("&");
-        console.log('Fetching files from:', url);
-        const res = await apiFetch(url);
-        const data = await res.json();
-        console.log('API Response:', { status: res.status, ok: res.ok, data });
-        if (!res.ok) {
-          setError(data.error || "Failed to fetch files");
-          setFolders([]);
-          setFiles([]);
-        } else {
-          console.log('Setting folders:', data.folders);
-          console.log('Setting files:', data.files);
-          setFolders(data.folders || []);
-          setFiles(data.files || []);
-        }
-      } catch (err) {
-        console.error('Error fetching files:', err);
-        setError("Network error");
+      if (params.length) url += (url.includes('?') ? '&' : '?') + params.join('&');
+      console.log('Fetching files from:', url);
+      const res = await apiFetch(url);
+      const data = await res.json();
+      console.log('API Response:', { status: res.status, ok: res.ok, data });
+      if (!res.ok) {
+        setError(data.error || 'Failed to fetch files');
         setFolders([]);
         setFiles([]);
+      } else {
+        console.log('Setting folders:', data.folders);
+        console.log('Setting files:', data.files);
+        setFolders(data.folders || []);
+        setFiles(data.files || []);
       }
-      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching files:', err);
+      setError('Network error');
+      setFolders([]);
+      setFiles([]);
+    }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -534,18 +534,18 @@ export default function FileManager({ activeBucket }) {
   const canGoBack = !!prefix;
   const handleBack = () => {
     if (!prefix) return;
-    const parts = prefix.split("/").filter(Boolean);
+    const parts = prefix.split('/').filter(Boolean);
     if (parts.length === 0) {
-      setPrefix("");
+      setPrefix('');
     } else {
-      const up = parts.slice(0, -1).join("/");
-      setPrefix(up ? up + "/" : "");
+      const up = parts.slice(0, -1).join('/');
+      setPrefix(up ? up + '/' : '');
     }
   };
 
   const handleDownload = async (fileKey, inline = false) => {
     if (downloading.has(fileKey)) return;
-    
+
     setDownloading(prev => new Set(prev).add(fileKey));
     try {
       // Get presigned download URL
@@ -554,10 +554,10 @@ export default function FileManager({ activeBucket }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           key: fileKey,
-          inline: inline.toString()
-        })
+          inline: inline.toString(),
+        }),
       });
 
       if (!response.ok) {
@@ -566,7 +566,7 @@ export default function FileManager({ activeBucket }) {
       }
 
       const { presigned_url } = await response.json();
-      
+
       if (inline) {
         // Open in new tab for inline viewing
         window.open(presigned_url, '_blank');
@@ -579,7 +579,7 @@ export default function FileManager({ activeBucket }) {
         link.click();
         document.body.removeChild(link);
       }
-      
+
     } catch (err) {
       console.error('Download failed:', err);
       alert(`Download failed: ${err.message}`);
@@ -594,12 +594,12 @@ export default function FileManager({ activeBucket }) {
 
   const handleDelete = async (fileKey) => {
     if (deleting.has(fileKey)) return;
-    
+
     // Confirm deletion
     if (!confirm(`Are you sure you want to delete "${fileKey}"? This action cannot be undone.`)) {
       return;
     }
-    
+
     setDeleting(prev => new Set(prev).add(fileKey));
     try {
       const response = await apiFetch('/api/storage/files', {
@@ -607,7 +607,7 @@ export default function FileManager({ activeBucket }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ key: fileKey })
+        body: JSON.stringify({ key: fileKey }),
       });
 
       if (!response.ok) {
@@ -617,7 +617,7 @@ export default function FileManager({ activeBucket }) {
 
       // Refresh the file list
       await fetchFiles();
-      
+
     } catch (err) {
       console.error('Delete failed:', err);
       alert(`Delete failed: ${err.message}`);
@@ -637,12 +637,12 @@ export default function FileManager({ activeBucket }) {
 
   const handleDeleteFolder = async (folderPrefix, folderName) => {
     if (deletingFolders.has(folderPrefix)) return;
-    
+
     // Confirm deletion
     if (!confirm(`Are you sure you want to delete the folder "${folderName}" and all its contents? This action cannot be undone.`)) {
       return;
     }
-    
+
     setDeletingFolders(prev => new Set(prev).add(folderPrefix));
     try {
       const response = await apiFetch('/api/storage/delete_folder', {
@@ -650,7 +650,7 @@ export default function FileManager({ activeBucket }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prefix: folderPrefix })
+        body: JSON.stringify({ prefix: folderPrefix }),
       });
 
       if (!response.ok) {
@@ -660,7 +660,7 @@ export default function FileManager({ activeBucket }) {
 
       // Refresh the file list
       await fetchFiles();
-      
+
     } catch (err) {
       console.error('Delete folder failed:', err);
       alert(`Delete folder failed: ${err.message}`);
@@ -688,7 +688,7 @@ export default function FileManager({ activeBucket }) {
   const collectFilesFromItems = async (items) => {
     const files = [];
     console.log('collectFilesFromItems: processing', items.length, 'items');
-    
+
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       console.log(`Processing item ${i + 1}/${items.length}:`, item.kind, item.type);
@@ -710,7 +710,7 @@ export default function FileManager({ activeBucket }) {
         console.log(`Skipping non-file item ${i + 1}:`, item.kind);
       }
     }
-    
+
     console.log('collectFilesFromItems: collected', files.length, 'files');
     console.log('Files collected:', files.map(f => f.name || f._relativePath));
     return files;
@@ -727,7 +727,7 @@ export default function FileManager({ activeBucket }) {
         const relativePath = path + file.name;
         const fileWithPath = new File([file], file.name, {
           type: file.type,
-          lastModified: file.lastModified
+          lastModified: file.lastModified,
         });
         // Add the relative path as a custom property
         fileWithPath._relativePath = relativePath;
@@ -754,9 +754,9 @@ export default function FileManager({ activeBucket }) {
     console.log('=== DRAG & DROP DEBUG ===');
     console.log('DataTransfer items:', e.dataTransfer.items?.length);
     console.log('DataTransfer files:', e.dataTransfer.files?.length);
-    
+
     let filesToUpload = [];
-    
+
     // If DataTransfer.files is available and has files, use it directly
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       filesToUpload = Array.from(e.dataTransfer.files);
@@ -771,29 +771,29 @@ export default function FileManager({ activeBucket }) {
         console.error('Error collecting files from items:', error);
       }
     }
-    
+
     console.log('Total files to upload:', filesToUpload.length);
     console.log('File names:', filesToUpload.map(f => f.name || f._relativePath));
-    
+
     if (filesToUpload.length > 0) {
       setUploading(true);
       // Use functional update to ensure we have the latest state
       setAllUploadingFiles(prev => {
         console.log('Previous uploading files:', prev.length);
         console.log('Previous file paths:', prev.map(f => f._relativePath || f.webkitRelativePath || f.name));
-        
+
         const prevPaths = new Set(prev.map(f => f._relativePath || f.webkitRelativePath || f.name));
         const newFiles = filesToUpload.filter(f => !prevPaths.has(f._relativePath || f.webkitRelativePath || f.name));
-        
+
         console.log('New files after filtering:', newFiles.length);
         console.log('New file names:', newFiles.map(f => f.name || f._relativePath));
-        
+
         // Start upload for new files immediately
         if (newFiles.length > 0) {
           console.log('Starting upload for files:', newFiles.length);
           setTimeout(() => uploadFiles(newFiles), 0);
         }
-        
+
         const result = [...prev, ...newFiles];
         console.log('Final allUploadingFiles count:', result.length);
         return result;
@@ -815,10 +815,10 @@ export default function FileManager({ activeBucket }) {
     }
   };
   const handleSelectFile = (key, checked) => {
-    setSelectedFiles(prev => checked ? [...prev, key] : prev.filter(k => k !== key));
+    setSelectedFiles(prev => (checked ? [...prev, key] : prev.filter(k => k !== key)));
   };
   const handleSelectFolder = (prefix, checked) => {
-    setSelectedFolders(prev => checked ? [...prev, prefix] : prev.filter(p => p !== prefix));
+    setSelectedFolders(prev => (checked ? [...prev, prefix] : prev.filter(p => p !== prefix)));
   };
 
   // Bulk Delete
@@ -834,7 +834,7 @@ export default function FileManager({ activeBucket }) {
         const res = await apiFetch('/api/storage/files', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key })
+          body: JSON.stringify({ key }),
         });
         if (!res.ok) {
           const err = await res.json();
@@ -853,7 +853,7 @@ export default function FileManager({ activeBucket }) {
         const res = await apiFetch('/api/storage/delete_folder', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prefix })
+          body: JSON.stringify({ prefix }),
         });
         if (!res.ok) {
           const err = await res.json();
@@ -882,7 +882,7 @@ export default function FileManager({ activeBucket }) {
         const response = await apiFetch('/api/storage/presign_download', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key })
+          body: JSON.stringify({ key }),
         });
         if (!response.ok) {
           const errorData = await response.json();
@@ -917,7 +917,7 @@ export default function FileManager({ activeBucket }) {
   const singleSelectedFolder = selectedFolders.length === 1 ? folders.find(f => f.prefix === selectedFolders[0]) : null;
   const singleSelectedItem = singleSelectedFile || singleSelectedFolder ? {
     key: singleSelectedFile ? singleSelectedFile.key : singleSelectedFolder.prefix,
-    name: singleSelectedFile ? singleSelectedFile.key.split('/').pop() : singleSelectedFolder.name
+    name: singleSelectedFile ? singleSelectedFile.key.split('/').pop() : singleSelectedFolder.name,
   } : null;
 
   // Auto-apply filters with debounce
@@ -937,20 +937,20 @@ export default function FileManager({ activeBucket }) {
     const selectedFiles = Array.from(e.target.files);
     console.log('Selected files:', selectedFiles.length);
     console.log('File names:', selectedFiles.map(f => f.name));
-    
+
     if (selectedFiles.length === 0) return;
-    
+
     console.log('Setting uploading to true');
     setUploading(true);
-    
+
     setAllUploadingFiles(prev => {
       console.log('Previous uploading files:', prev.length);
       const prevPaths = new Set(prev.map(f => f._relativePath || f.webkitRelativePath || f.name));
       const newFiles = selectedFiles.filter(f => !prevPaths.has(f._relativePath || f.webkitRelativePath || f.name));
-      
+
       console.log('New files to upload:', newFiles.length);
       console.log('New file names:', newFiles.map(f => f.name));
-      
+
       // Start upload for new files after state update
       if (newFiles.length > 0) {
         console.log('Scheduling uploadFiles call');
@@ -959,7 +959,7 @@ export default function FileManager({ activeBucket }) {
           uploadFiles(newFiles);
         }, 0);
       }
-      
+
       const result = [...prev, ...newFiles];
       console.log('Final allUploadingFiles count:', result.length);
       return result;
@@ -973,20 +973,20 @@ export default function FileManager({ activeBucket }) {
     const selectedFiles = Array.from(e.target.files);
     console.log('Selected files:', selectedFiles.length);
     console.log('File names:', selectedFiles.map(f => f.name));
-    
+
     if (selectedFiles.length === 0) return;
-    
+
     console.log('Setting uploading to true');
     setUploading(true);
-    
+
     setAllUploadingFiles(prev => {
       console.log('Previous uploading files:', prev.length);
       const prevPaths = new Set(prev.map(f => f._relativePath || f.webkitRelativePath || f.name));
       const newFiles = selectedFiles.filter(f => !prevPaths.has(f._relativePath || f.webkitRelativePath || f.name));
-      
+
       console.log('New files to upload:', newFiles.length);
       console.log('New file names:', newFiles.map(f => f.name));
-      
+
       // Start upload for new files after state update
       if (newFiles.length > 0) {
         console.log('Scheduling uploadFiles call');
@@ -995,7 +995,7 @@ export default function FileManager({ activeBucket }) {
           uploadFiles(newFiles);
         }, 0);
       }
-      
+
       const result = [...prev, ...newFiles];
       console.log('Final allUploadingFiles count:', result.length);
       return result;
@@ -1007,17 +1007,17 @@ export default function FileManager({ activeBucket }) {
     console.log('=== UPLOAD FILES DEBUG ===');
     console.log('uploadFiles called with:', filesToUpload.length, 'files');
     console.log('File names in uploadFiles:', filesToUpload.map(f => f.name || f._relativePath));
-    
+
     let anyError = false;
     await Promise.all(filesToUpload.map(async (file) => {
       try {
         const relativePath = file._relativePath || file.webkitRelativePath || file.name;
         console.log('Processing file:', relativePath);
-        const key = (prefix || "") + relativePath;
+        const key = (prefix || '') + relativePath;
         const res = await apiFetch('/api/storage/presign_upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key, content_type: file.type || 'application/octet-stream' })
+          body: JSON.stringify({ key, content_type: file.type || 'application/octet-stream' }),
         });
         if (!res.ok) {
           const err = await res.json();
@@ -1093,7 +1093,7 @@ export default function FileManager({ activeBucket }) {
   return (
     <div className="w-full flex justify-center">
       <div className="w-full max-w-4xl">
-        <Card 
+        <Card
           className={`w-full transition-all duration-200 ${dragActive ? 'ring-2 ring-primary ring-opacity-50 bg-primary/5' : ''}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -1120,7 +1120,7 @@ export default function FileManager({ activeBucket }) {
                 <Breadcrumbs
                   path={prefix}
                   onNavigate={handleBreadcrumbNavigate}
-                  className={!prefix ? "ml-4" : ""}
+                  className={!prefix ? 'ml-4' : ''}
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -1130,9 +1130,9 @@ export default function FileManager({ activeBucket }) {
                 </Button>
                 <Popover open={showUploadMenu} onOpenChange={setShowUploadMenu}>
                   <PopoverTrigger asChild>
-                    <Button 
-                      size="sm" 
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md flex items-center gap-2" 
+                    <Button
+                      size="sm"
+                      className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md flex items-center gap-2"
                       onClick={() => setShowUploadMenu(v => !v)}
                       disabled={uploading}
                     >
@@ -1193,7 +1193,7 @@ export default function FileManager({ activeBucket }) {
                   <button
                     type="button"
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    onClick={() => setSearch("")}
+                    onClick={() => setSearch('')}
                     tabIndex={-1}
                   >
                     <X className="w-4 h-4" />
@@ -1255,15 +1255,15 @@ export default function FileManager({ activeBucket }) {
                   />
                 </div>
                 <div className="flex gap-2 ml-auto">
-                  <Button size="sm" variant="outline" onClick={() => { setFilterType("all"); setMinSize(""); setMaxSize(""); fetchFiles(); }} className="h-9">Clear</Button>
+                  <Button size="sm" variant="outline" onClick={() => { setFilterType('all'); setMinSize(''); setMaxSize(''); fetchFiles(); }} className="h-9">Clear</Button>
                 </div>
                 <Button size="icon" variant="ghost" className="absolute top-2 right-2 text-muted-foreground hover:text-foreground" onClick={() => setShowFilterBar(false)} title="Close filter bar">
                   <X className="w-4 h-4" />
                 </Button>
-        </div>
+              </div>
             )}
-      </CardHeader>
-      <CardContent>
+          </CardHeader>
+          <CardContent>
             {/* Upload progress indicator */}
             {uploading && (
               <div className="mb-4 p-3 bg-muted border border-border rounded-lg">
@@ -1294,28 +1294,28 @@ export default function FileManager({ activeBucket }) {
                           </div>
                           <div className="flex items-center gap-2 flex-1 ml-2">
                             <div className="h-2 bg-muted rounded-full overflow-hidden flex-1">
-                              <div 
+                              <div
                                 className="h-2 rounded-full bg-green-500 transition-all duration-300"
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
-                            <span className="font-semibold text-foreground" style={{minWidth: 28, textAlign: 'right'}}>{progress}%</span>
+                            <span className="font-semibold text-foreground" style={{ minWidth: 28, textAlign: 'right' }}>{progress}%</span>
                           </div>
-                      </div>
+                        </div>
                         <div className="flex items-center justify-end mt-0.5 text-[11px] min-h-[16px]">
-                        {error ? (
+                          {error ? (
                             <span className="text-destructive">{error}</span>
                           ) : (
                             <span className="text-primary">{progress < 100 ? 'Uploading...' : 'Done'}</span>
-                            )}
-                          </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
             )}
-            
+
             {(selectedFiles.length > 0 || selectedFolders.length > 0) && (
               <div className="flex items-center justify-between bg-muted border border-border rounded-lg px-4 py-2 mb-2 w-full">
                 <div className="flex items-center gap-2">
@@ -1361,7 +1361,7 @@ export default function FileManager({ activeBucket }) {
               onSelectAll={handleSelectAll}
               onShareFile={handleShareFile}
             />
-      </CardContent>
+          </CardContent>
           <CreateFolderModal
             isOpen={showCreateFolder}
             onClose={() => setShowCreateFolder(false)}
@@ -1369,8 +1369,8 @@ export default function FileManager({ activeBucket }) {
             currentPrefix={prefix}
           />
           <ShareModal open={showShareModal} onClose={() => { setShowShareModal(false); setSharingFile(null); }} item={sharingFile} />
-    </Card>
+        </Card>
       </div>
     </div>
   );
-} 
+}

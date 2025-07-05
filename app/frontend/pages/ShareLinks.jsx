@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../components/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { apiFetch } from "../lib/api";
-import { 
-  Share2, 
-  Copy, 
-  Trash2, 
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../components/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { apiFetch } from '../lib/api';
+import {
+  Share2,
+  Copy,
+  Trash2,
   Calendar,
   Clock,
-  ExternalLink
-} from "lucide-react";
+  ExternalLink,
+} from 'lucide-react';
 
 export default function ShareLinks() {
   const { user, logout, activeBucket } = useAuth();
   const navigate = useNavigate();
-  
+
   const [shareLinks, setShareLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(null);
@@ -44,7 +44,6 @@ export default function ShareLinks() {
   };
 
 
-
   const handleRevokeLink = async (linkId) => {
     if (!confirm('Are you sure you want to revoke this share link? This action cannot be undone.')) {
       return;
@@ -57,7 +56,7 @@ export default function ShareLinks() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: linkId })
+        body: JSON.stringify({ id: linkId }),
       });
 
       if (response.ok) {
@@ -82,7 +81,6 @@ export default function ShareLinks() {
   };
 
 
-
   const getStatusBadge = (link) => {
     if (link.revoked) {
       return <span className="text-xs bg-destructive text-destructive-foreground px-2 py-1 rounded">Revoked</span>;
@@ -94,39 +92,39 @@ export default function ShareLinks() {
   };
 
   const formatExpiration = (expiresAt) => {
-    if (!expiresAt) return "Never";
+    if (!expiresAt) return 'Never';
     const date = new Date(expiresAt);
     const now = new Date();
     const diffMs = date - now;
-    
-    if (diffMs <= 0) return "Expired";
-    
+
+    if (diffMs <= 0) return 'Expired';
+
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffDays > 0) {
       return `${diffDays} day${diffDays > 1 ? 's' : ''} remaining`;
     } else if (diffHours > 0) {
       return `${diffHours} hour${diffHours > 1 ? 's' : ''} remaining`;
     } else {
-      return "Less than 1 hour remaining";
+      return 'Less than 1 hour remaining';
     }
   };
 
   const getFileIcon = (key) => {
     const extension = key.split('.').pop()?.toLowerCase();
     if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension)) {
-      return "🖼️";
+      return '🖼️';
     } else if (['pdf'].includes(extension)) {
-      return "📄";
+      return '📄';
     } else if (['mp4', 'avi', 'mov', 'webm'].includes(extension)) {
-      return "🎥";
+      return '🎥';
     } else if (['mp3', 'wav', 'ogg'].includes(extension)) {
-      return "🎵";
+      return '🎵';
     } else if (['zip', 'rar', '7z'].includes(extension)) {
-      return "📦";
+      return '📦';
     } else {
-      return "📁";
+      return '📁';
     }
   };
 
@@ -136,10 +134,10 @@ export default function ShareLinks() {
       <header className="w-full flex items-center justify-between px-6 py-4 border-b border-border bg-card/80 backdrop-blur sticky top-0 z-10">
         <div className="text-xl font-bold tracking-tight">Storix</div>
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate("/")}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/')}
           >
             ← Back to Files
           </Button>
@@ -169,22 +167,22 @@ export default function ShareLinks() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
                 <p className="text-muted-foreground">Loading share links...</p>
               </div>
-                         ) : shareLinks.length === 0 ? (
-               <div className="text-center py-8">
-                 <Share2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                 <p className="text-muted-foreground mb-4">No share links found.</p>
-                 <p className="text-sm text-muted-foreground mb-4">
+            ) : shareLinks.length === 0 ? (
+              <div className="text-center py-8">
+                <Share2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-4">No share links found.</p>
+                <p className="text-sm text-muted-foreground mb-4">
                    To create a share link, go to your files and use the share button (🔗) on any file.
-                 </p>
-                 <Button onClick={() => navigate("/")}>
+                </p>
+                <Button onClick={() => navigate('/')}>
                    Go to Files
-                 </Button>
-               </div>
+                </Button>
+              </div>
             ) : (
               <div className="space-y-4">
                 {shareLinks.map((link) => (
-                  <div 
-                    key={link.id} 
+                  <div
+                    key={link.id}
                     className="p-4 border rounded-lg border-border hover:border-primary/50 transition-colors"
                   >
                     <div className="flex items-start justify-between">
@@ -194,7 +192,7 @@ export default function ShareLinks() {
                           <h3 className="font-semibold truncate">{link.key.split('/').pop()}</h3>
                           {getStatusBadge(link)}
                         </div>
-                        
+
                         <div className="text-sm text-muted-foreground space-y-1 mb-3">
                           <p className="truncate">Path: {link.key}</p>
                           <div className="flex items-center gap-4">
@@ -231,7 +229,7 @@ export default function ShareLinks() {
                               )}
                             </Button>
                           </div>
-                          
+
                           <Button
                             size="sm"
                             variant="outline"
@@ -242,7 +240,7 @@ export default function ShareLinks() {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 ml-4">
                         <Button
                           variant="ghost"
@@ -265,4 +263,4 @@ export default function ShareLinks() {
       </main>
     </div>
   );
-} 
+}

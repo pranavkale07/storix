@@ -1,29 +1,29 @@
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../components/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
-import { apiFetch } from "../lib/api";
-import { Settings as SettingsIcon, Trash2, Edit, Plus, Save, X } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../components/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
+import { apiFetch } from '../lib/api';
+import { Settings as SettingsIcon, Trash2, Edit, Plus, Save, X } from 'lucide-react';
 
 export default function Settings() {
   const { user, logout, activeBucket, refreshActiveBucket } = useAuth();
   const navigate = useNavigate();
-  
+
   const [credentials, setCredentials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingCredential, setEditingCredential] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
-    access_key_id: "",
-    secret_access_key: "",
-    region: "",
-    endpoint: "",
-    bucket: "",
-    provider: "s3"
+    access_key_id: '',
+    secret_access_key: '',
+    region: '',
+    endpoint: '',
+    bucket: '',
+    provider: 's3',
   });
   const [formErrors, setFormErrors] = useState({});
 
@@ -52,17 +52,17 @@ export default function Settings() {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (formErrors[field]) {
-      setFormErrors(prev => ({ ...prev, [field]: "" }));
+      setFormErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.access_key_id.trim()) errors.access_key_id = "Access Key ID is required";
-    if (!formData.secret_access_key.trim()) errors.secret_access_key = "Secret Access Key is required";
-    if (!formData.bucket.trim()) errors.bucket = "Bucket name is required";
-    if (!formData.region.trim()) errors.region = "Region is required";
-    
+    if (!formData.access_key_id.trim()) errors.access_key_id = 'Access Key ID is required';
+    if (!formData.secret_access_key.trim()) errors.secret_access_key = 'Secret Access Key is required';
+    if (!formData.bucket.trim()) errors.bucket = 'Bucket name is required';
+    if (!formData.region.trim()) errors.region = 'Region is required';
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -73,18 +73,18 @@ export default function Settings() {
 
     setLoading(true);
     try {
-      const url = editingCredential 
+      const url = editingCredential
         ? `/api/storage/credentials/${editingCredential.id}`
         : '/api/storage/credentials';
-      
+
       const method = editingCredential ? 'PUT' : 'POST';
-      
+
       const response = await apiFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       if (response.ok) {
@@ -117,7 +117,7 @@ export default function Settings() {
     setLoading(true);
     try {
       const response = await apiFetch(`/api/storage/credentials/${credentialId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
       });
 
       if (response.ok) {
@@ -141,24 +141,24 @@ export default function Settings() {
   const handleEdit = (credential) => {
     setEditingCredential(credential);
     setFormData({
-      access_key_id: credential.access_key_id || "",
-      secret_access_key: credential.secret_access_key || "",
-      region: credential.region || "",
-      endpoint: credential.endpoint || "",
-      bucket: credential.bucket || "",
-      provider: credential.provider || "s3"
+      access_key_id: credential.access_key_id || '',
+      secret_access_key: credential.secret_access_key || '',
+      region: credential.region || '',
+      endpoint: credential.endpoint || '',
+      bucket: credential.bucket || '',
+      provider: credential.provider || 's3',
     });
     setShowAddForm(true);
   };
 
   const resetForm = () => {
     setFormData({
-      access_key_id: "",
-      secret_access_key: "",
-      region: "",
-      endpoint: "",
-      bucket: "",
-      provider: "s3"
+      access_key_id: '',
+      secret_access_key: '',
+      region: '',
+      endpoint: '',
+      bucket: '',
+      provider: 's3',
     });
     setFormErrors({});
     setEditingCredential(null);
@@ -175,10 +175,10 @@ export default function Settings() {
       <header className="w-full flex items-center justify-between px-6 py-4 border-b border-border bg-card/80 backdrop-blur sticky top-0 z-10">
         <div className="text-xl font-bold tracking-tight">Storix</div>
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate("/")}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/')}
           >
             ← Back to Files
           </Button>
@@ -199,7 +199,7 @@ export default function Settings() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Storage Credentials</CardTitle>
-              <Button 
+              <Button
                 onClick={() => setShowAddForm(true)}
                 disabled={showAddForm}
                 size="sm"
@@ -226,11 +226,11 @@ export default function Settings() {
             ) : (
               <div className="space-y-4">
                 {credentials.map((credential) => (
-                  <div 
-                    key={credential.id} 
+                  <div
+                    key={credential.id}
                     className={`p-4 border rounded-lg ${
-                      isActiveBucket(credential) 
-                        ? 'border-primary bg-primary/5' 
+                      isActiveBucket(credential)
+                        ? 'border-primary bg-primary/5'
                         : 'border-border'
                     }`}
                   >
@@ -294,8 +294,8 @@ export default function Settings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="provider">Provider</Label>
-                    <Select 
-                      value={formData.provider} 
+                    <Select
+                      value={formData.provider}
                       onValueChange={(value) => handleInputChange('provider', value)}
                     >
                       <SelectTrigger>
@@ -421,7 +421,7 @@ export default function Settings() {
                   Email address cannot be changed
                 </p>
               </div>
-              
+
               <div className="pt-4 border-t">
                 <Button variant="outline" onClick={logout}>
                   Sign Out
@@ -433,4 +433,4 @@ export default function Settings() {
       </main>
     </div>
   );
-} 
+}

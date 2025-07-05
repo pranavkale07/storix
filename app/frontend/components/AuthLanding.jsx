@@ -1,7 +1,7 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
-import { Button } from "./ui/button";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Button } from './ui/button';
 
 export default function AuthLanding() {
   return (
@@ -14,16 +14,16 @@ export default function AuthLanding() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button 
-            className="w-full" 
+          <Button
+            className="w-full"
             size="lg"
             asChild
           >
             <Link to="/login">Sign In</Link>
           </Button>
-          <Button 
-            variant="outline" 
-            className="w-full" 
+          <Button
+            variant="outline"
+            className="w-full"
             size="lg"
             asChild
           >
@@ -33,4 +33,4 @@ export default function AuthLanding() {
       </Card>
     </div>
   );
-} 
+}

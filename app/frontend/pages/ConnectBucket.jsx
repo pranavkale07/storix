@@ -1,33 +1,33 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../components/AuthContext";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import { Label } from "../components/ui/label";
-import { apiFetch } from "../lib/api";
-import { StorageManager } from "../lib/storage";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../components/AuthContext';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { Label } from '../components/ui/label';
+import { apiFetch } from '../lib/api';
+import { StorageManager } from '../lib/storage';
 
 export default function ConnectBucket() {
-  const [provider, setProvider] = useState("s3");
-  const [accessKey, setAccessKey] = useState("");
-  const [secretKey, setSecretKey] = useState("");
-  const [region, setRegion] = useState("");
-  const [bucket, setBucket] = useState("");
-  const [endpoint, setEndpoint] = useState("");
-  const [error, setError] = useState("");
+  const [provider, setProvider] = useState('s3');
+  const [accessKey, setAccessKey] = useState('');
+  const [secretKey, setSecretKey] = useState('');
+  const [region, setRegion] = useState('');
+  const [bucket, setBucket] = useState('');
+  const [endpoint, setEndpoint] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { updateActiveBucket } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
     try {
-      const res = await apiFetch("/api/storage/credentials", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await apiFetch('/api/storage/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           storage_credential: {
             provider,
@@ -41,16 +41,16 @@ export default function ConnectBucket() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(Array.isArray(data.errors) ? data.errors.join(", ") : data.error || "Failed to connect bucket");
+        setError(Array.isArray(data.errors) ? data.errors.join(', ') : data.error || 'Failed to connect bucket');
         setLoading(false);
         return;
       }
-      
+
       // Update token if provided
       if (data.token) {
         StorageManager.setToken(data.token);
       }
-      
+
       // Store clean bucket info (no duplicates)
       const bucketInfo = {
         id: data.id,
@@ -59,11 +59,11 @@ export default function ConnectBucket() {
         region,
         endpoint,
       };
-      
+
       updateActiveBucket(bucketInfo);
-      navigate("/");
+      navigate('/');
     } catch (err) {
-      setError("Network error");
+      setError('Network error');
     }
     setLoading(false);
   };
@@ -110,11 +110,11 @@ export default function ConnectBucket() {
             </div>
             {error && <div className="text-red-500 text-sm">{error}</div>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Connecting..." : "Connect"}
+              {loading ? 'Connecting...' : 'Connect'}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
   );
-} 
+}

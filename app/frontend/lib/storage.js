@@ -1,6 +1,6 @@
 /**
  * Centralized localStorage management for Storix
- * 
+ *
  * localStorage Keys:
  * - "user": User object { id, email }
  * - "token": JWT authentication token
@@ -63,7 +63,7 @@ export class StorageManager {
     return {
       user: this.getUser(),
       token: this.getToken(),
-      activeBucket: this.getActiveBucket()
+      activeBucket: this.getActiveBucket(),
     };
   }
 
@@ -87,7 +87,7 @@ export class StorageManager {
       hasUser: !!this.getUser(),
       hasToken: !!this.getToken(),
       hasActiveBucket: !!this.getActiveBucket(),
-      isAuthenticated: this.isAuthenticated()
+      isAuthenticated: this.isAuthenticated(),
     };
   }
-} 
+}

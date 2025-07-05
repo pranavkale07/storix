@@ -26,6 +26,16 @@ export default [
         alert: 'readonly',
         confirm: 'readonly',
         prompt: 'readonly',
+        // Browser globals
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        navigator: 'readonly',
+        File: 'readonly',
+        XMLHttpRequest: 'readonly',
+        CustomEvent: 'readonly',
+        process: 'readonly',
       },
       parserOptions: {
         ecmaFeatures: {

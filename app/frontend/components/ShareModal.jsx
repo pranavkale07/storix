@@ -1,14 +1,14 @@
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { apiFetch } from "@/lib/api";
-import { Copy, X, Link2, Trash2 } from "lucide-react";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import { apiFetch } from '@/lib/api';
+import { Copy, X, Link2, Trash2 } from 'lucide-react';
 
 export default function ShareModal({ open, onClose, item, onLinkCreated }) {
   const [expiresIn, setExpiresIn] = useState(24); // hours
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [shareLink, setShareLink] = useState(null);
   const [copied, setCopied] = useState(false);
   const [revoking, setRevoking] = useState(false);
@@ -17,15 +17,15 @@ export default function ShareModal({ open, onClose, item, onLinkCreated }) {
 
   const handleCreate = async () => {
     setLoading(true);
-    setError("");
+    setError('');
     try {
-      const res = await apiFetch("/api/storage/share_link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: item.key, expires_in: expiresIn * 3600 })
+      const res = await apiFetch('/api/storage/share_link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: item.key, expires_in: expiresIn * 3600 }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create share link");
+      if (!res.ok) throw new Error(data.error || 'Failed to create share link');
       setShareLink(data.share_link);
       if (onLinkCreated) onLinkCreated(data.share_link);
     } catch (err) {
@@ -46,15 +46,15 @@ export default function ShareModal({ open, onClose, item, onLinkCreated }) {
   const handleRevoke = async () => {
     if (!shareLink) return;
     setRevoking(true);
-    setError("");
+    setError('');
     try {
-      const res = await apiFetch("/api/storage/revoke_share_link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: shareLink.id })
+      const res = await apiFetch('/api/storage/revoke_share_link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: shareLink.id }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to revoke link");
+      if (!res.ok) throw new Error(data.error || 'Failed to revoke link');
       setShareLink({ ...shareLink, revoked: true });
     } catch (err) {
       setError(err.message);
@@ -63,7 +63,7 @@ export default function ShareModal({ open, onClose, item, onLinkCreated }) {
     }
   };
 
-  const url = shareLink ? `${window.location.origin}/share_links/${shareLink.token}` : "";
+  const url = shareLink ? `${window.location.origin}/share_links/${shareLink.token}` : '';
   const expired = shareLink && shareLink.expires_at && new Date(shareLink.expires_at) < new Date();
 
   return (
@@ -110,8 +110,8 @@ export default function ShareModal({ open, onClose, item, onLinkCreated }) {
               </div>
             </div>
             <div className="flex items-center justify-between gap-4 text-xs">
-              <span>Expires: {shareLink.expires_at ? new Date(shareLink.expires_at).toLocaleString() : "Never"}</span>
-              <span>Status: {shareLink.revoked ? "Revoked" : expired ? "Expired" : "Active"}</span>
+              <span>Expires: {shareLink.expires_at ? new Date(shareLink.expires_at).toLocaleString() : 'Never'}</span>
+              <span>Status: {shareLink.revoked ? 'Revoked' : expired ? 'Expired' : 'Active'}</span>
             </div>
             {error && <div className="text-destructive text-sm">{error}</div>}
             <DialogFooter className="flex justify-end gap-2">
@@ -125,4 +125,4 @@ export default function ShareModal({ open, onClose, item, onLinkCreated }) {
       </DialogContent>
     </Dialog>
   );
-} 
+}

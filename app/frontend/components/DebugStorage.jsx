@@ -31,7 +31,7 @@ export function DebugStorage() {
       fontFamily: 'monospace',
       maxWidth: '300px',
       zIndex: 9999,
-      border: '1px solid #333'
+      border: '1px solid #333',
     }}>
       <div style={{ marginBottom: '5px', fontWeight: 'bold' }}>
         localStorage Debug
@@ -56,7 +56,7 @@ export function DebugStorage() {
           ●
         </span> Auth: {storageData.isAuthenticated ? '✓' : '✗'}
       </div>
-      <button 
+      <button
         onClick={refreshData}
         style={{
           background: '#333',
@@ -65,18 +65,18 @@ export function DebugStorage() {
           padding: '2px 6px',
           borderRadius: '3px',
           fontSize: '10px',
-          cursor: 'pointer'
+          cursor: 'pointer',
         }}
       >
         Refresh
       </button>
-      <button 
+      <button
         onClick={() => {
           console.log('localStorage Debug Data:', storageData);
           console.log('Raw localStorage:', {
             user: localStorage.getItem('user'),
             token: localStorage.getItem('token'),
-            activeBucket: localStorage.getItem('activeBucket')
+            activeBucket: localStorage.getItem('activeBucket'),
           });
         }}
         style={{
@@ -87,11 +87,11 @@ export function DebugStorage() {
           borderRadius: '3px',
           fontSize: '10px',
           cursor: 'pointer',
-          marginLeft: '5px'
+          marginLeft: '5px',
         }}
       >
         Log
       </button>
     </div>
   );
-} 
+}

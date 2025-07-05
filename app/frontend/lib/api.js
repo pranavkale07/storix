@@ -7,4 +7,4 @@ export function apiFetch(url, options = {}) {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
   return fetch(url, { ...options, headers });
-} 
+}

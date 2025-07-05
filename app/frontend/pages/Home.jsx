@@ -1,11 +1,11 @@
-import React from "react";
-import { useAuth } from "../components/AuthContext";
-import FileManager from "../components/FileManager";
-import AuthLanding from "../components/AuthLanding";
-import { useNavigate } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Settings, Share2 } from "lucide-react";
+import React from 'react';
+import { useAuth } from '../components/AuthContext';
+import FileManager from '../components/FileManager';
+import AuthLanding from '../components/AuthLanding';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Settings, Share2 } from 'lucide-react';
 
 export default function Home() {
   const { user, logout, loading, activeBucket, bucketLoading, refreshActiveBucket } = useAuth();
@@ -62,9 +62,9 @@ export default function Home() {
           {activeBucket ? (
             <div className="flex items-center gap-2">
               <span className="text-sm text-primary-foreground bg-primary rounded px-2 py-1">Bucket: {activeBucket.bucket}</span>
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={handleRefreshBucket}
                 disabled={bucketLoading}
                 title="Refresh bucket connection"
@@ -73,21 +73,21 @@ export default function Home() {
               </Button>
             </div>
           ) : (
-            <button className="btn btn-outline btn-sm" onClick={() => navigate("/connect-bucket")}>Connect Bucket</button>
+            <button className="btn btn-outline btn-sm" onClick={() => navigate('/connect-bucket')}>Connect Bucket</button>
           )}
           {user && <span className="text-sm text-muted-foreground">{user.email}</span>}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate("/share-links")}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/share-links')}
             title="Share Links"
           >
             <Share2 className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate("/settings")}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/settings')}
             title="Settings"
           >
             <Settings className="h-4 w-4" />
@@ -106,11 +106,11 @@ export default function Home() {
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-4">
               <div className="text-muted-foreground text-center">You need to connect a storage bucket to view and manage your files.</div>
-              <Button onClick={() => navigate("/connect-bucket")}>Connect Bucket</Button>
+              <Button onClick={() => navigate('/connect-bucket')}>Connect Bucket</Button>
             </CardContent>
           </Card>
         )}
       </main>
     </div>
   );
-} 
+}

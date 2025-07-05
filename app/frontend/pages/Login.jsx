@@ -1,5 +1,5 @@
-import React from "react";
-import { LoginForm } from "../components/login-form.jsx";
+import React from 'react';
+import { LoginForm } from '../components/login-form.jsx';
 
 export default function Login() {
   return (
@@ -7,4 +7,4 @@ export default function Login() {
       <LoginForm />
     </div>
   );
-} 
+}
