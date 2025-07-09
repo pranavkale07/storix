@@ -47,8 +47,8 @@ export default function Home() {
     return <AuthLanding />;
   }
 
-  // Show loading spinner while loading bucket
-  if (bucketLoading) {
+  // Show loading spinner while loading bucket (but only if user is authenticated)
+  if (bucketLoading && user) {
     return (
       <div className="min-h-screen bg-background">
         <Header showShareLinks showSettings />

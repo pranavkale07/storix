@@ -28,16 +28,8 @@ export function AuthProvider({ children }) {
     setToken(token);
     StorageManager.setSession(user, token);
 
-    // Automatically load active bucket after login
-    setBucketLoading(true);
-    try {
-      const bucket = await BucketService.loadActiveBucket();
-      setActiveBucket(bucket);
-    } catch (error) {
-      console.error('Failed to load active bucket:', error);
-    } finally {
-      setBucketLoading(false);
-    }
+    // Don't automatically load active bucket on login to prevent infinite loops
+    // The bucket will be loaded when needed by the components
   };
 
   const logout = () => {
