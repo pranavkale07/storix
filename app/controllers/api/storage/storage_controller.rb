@@ -1,7 +1,7 @@
 class Api::Storage::StorageController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_storage_credential, except: [:create_credential, :validate_credential]
-  
+  before_action :set_storage_credential, except: [ :create_credential, :validate_credential, :list_credentials, :show_credential, :update_credential, :destroy_credential ]
+
   # POST /api/storage_credentials
   def create_credential
     @storage_credential = current_user.storage_credentials.build(storage_credential_params)
@@ -10,20 +10,20 @@ class Api::Storage::StorageController < ApplicationController
       client = S3ClientBuilder.new(@storage_credential).client
       client.list_objects_v2(bucket: @storage_credential.bucket, max_keys: 1)
     rescue Aws::S3::Errors::InvalidAccessKeyId, Aws::S3::Errors::SignatureDoesNotMatch
-      render json: { errors: ["Credential validation failed: Invalid access key or secret."] }, status: :unprocessable_entity
+      render json: { errors: [ "Credential validation failed: Invalid access key or secret." ] }, status: :unprocessable_entity
       return
     rescue Aws::S3::Errors::NoSuchBucket
-      render json: { errors: ["Credential validation failed: The specified bucket does not exist."] }, status: :unprocessable_entity
+      render json: { errors: [ "Credential validation failed: The specified bucket does not exist." ] }, status: :unprocessable_entity
       return
     rescue => e
-      render json: { errors: ["Credential validation failed: Unable to connect to the storage provider."] }, status: :unprocessable_entity
+      render json: { errors: [ "Credential validation failed: Unable to connect to the storage provider." ] }, status: :unprocessable_entity
       return
     end
     if @storage_credential.save
       # Generate a new token with this credential as active
       token = JwtService.encode(current_user, active_credential_id: @storage_credential.id)
       render json: {
-        message: 'Storage credentials created successfully',
+        message: "Storage credentials created successfully",
         id: @storage_credential.id,
         token: token,
         active_credential_id: @storage_credential.id
@@ -32,19 +32,19 @@ class Api::Storage::StorageController < ApplicationController
       render json: { errors: @storage_credential.errors.full_messages }, status: :unprocessable_entity
     end
   end
-  
+
   # POST /api/start_upload
   def start_upload
     begin
       s3_client = S3ClientBuilder.new(@storage_credential).client
-      
+
       response = s3_client.create_multipart_upload(
         bucket: @storage_credential.bucket,
         key: params[:key],
         content_type: params[:content_type]
       )
-      
-      render json: { 
+
+      render json: {
         upload_id: response.upload_id,
         key: params[:key]
       }
@@ -52,14 +52,14 @@ class Api::Storage::StorageController < ApplicationController
       render json: { error: "Failed to start upload: #{e.message}" }, status: :unprocessable_entity
     end
   end
-  
+
   # POST /api/presign_chunk
   def presign_chunk
     begin
       s3_client = S3ClientBuilder.new(@storage_credential).client
-      
+
       presigner = Aws::S3::Presigner.new(client: s3_client)
-      
+
       url = presigner.presigned_url(
         :upload_part,
         bucket: @storage_credential.bucket,
@@ -68,8 +68,8 @@ class Api::Storage::StorageController < ApplicationController
         part_number: params[:part_number],
         expires_in: 3600 # 1 hour
       )
-      
-      render json: { 
+
+      render json: {
         presigned_url: url,
         part_number: params[:part_number]
       }
@@ -77,12 +77,12 @@ class Api::Storage::StorageController < ApplicationController
       render json: { error: "Failed to generate presigned URL: #{e.message}" }, status: :unprocessable_entity
     end
   end
-  
+
   # POST /api/complete_upload
   def complete_upload
     begin
       s3_client = S3ClientBuilder.new(@storage_credential).client
-      
+
       # Transform parts array to AWS format
       parts = params[:parts].map do |part|
         {
@@ -90,16 +90,16 @@ class Api::Storage::StorageController < ApplicationController
           etag: part[:etag]
         }
       end
-      
+
       response = s3_client.complete_multipart_upload(
         bucket: @storage_credential.bucket,
         key: params[:key],
         upload_id: params[:upload_id],
         multipart_upload: { parts: parts }
       )
-      
-      render json: { 
-        message: 'Upload completed successfully',
+
+      render json: {
+        message: "Upload completed successfully",
         location: response.location,
         etag: response.etag
       }
@@ -107,7 +107,7 @@ class Api::Storage::StorageController < ApplicationController
       render json: { error: "Failed to complete upload: #{e.message}" }, status: :unprocessable_entity
     end
   end
-  
+
   # GET /api/files
   def list_files
     begin
@@ -122,7 +122,7 @@ class Api::Storage::StorageController < ApplicationController
 
       folders = (response.common_prefixes || []).map do |cp|
         {
-          name: cp.prefix.sub(prefix, '').chomp('/'),
+          name: cp.prefix.sub(prefix, "").chomp("/"),
           prefix: cp.prefix
         }
       end
@@ -157,8 +157,8 @@ class Api::Storage::StorageController < ApplicationController
       end
 
       # Sorting
-      sort_by = params[:sort_by].presence_in(%w[key size last_modified]) || 'key'
-      order = params[:order] == 'desc' ? -1 : 1
+      sort_by = params[:sort_by].presence_in(%w[key size last_modified]) || "key"
+      order = params[:order] == "desc" ? -1 : 1
       files = files.sort_by { |f| f[sort_by.to_sym] }
       files.reverse! if order == -1
 
@@ -167,23 +167,23 @@ class Api::Storage::StorageController < ApplicationController
       render json: { error: "Failed to list files: #{e.message}" }, status: :unprocessable_entity
     end
   end
-  
+
   # DELETE /api/files
   def delete_file
     begin
       s3_client = S3ClientBuilder.new(@storage_credential).client
-      
+
       s3_client.delete_object(
         bucket: @storage_credential.bucket,
         key: params[:key]
       )
-      
-      render json: { message: 'File deleted successfully' }
+
+      render json: { message: "File deleted successfully" }
     rescue Aws::S3::Errors::ServiceError => e
       render json: { error: "Failed to delete file: #{e.message}" }, status: :unprocessable_entity
     end
   end
-  
+
   # POST /api/storage/presign_upload
   def presign_upload
     begin
@@ -208,11 +208,20 @@ class Api::Storage::StorageController < ApplicationController
       s3_client = S3ClientBuilder.new(@storage_credential).client
       presigner = Aws::S3::Presigner.new(client: s3_client)
       expires_in = params[:expires_in].presence || 3600
+
+      # Extract filename from the key for the Content-Disposition header
+      filename = params[:key].split("/").last
+
+      # Determine content disposition based on parameters
+      disposition = params[:inline] == "true" ? "inline" : "attachment"
+      content_disposition = "#{disposition}; filename=\"#{filename}\""
+
       url = presigner.presigned_url(
         :get_object,
         bucket: @storage_credential.bucket,
         key: params[:key],
-        expires_in: expires_in.to_i
+        expires_in: expires_in.to_i,
+        response_content_disposition: content_disposition
       )
       render json: { presigned_url: url }
     rescue Aws::S3::Errors::ServiceError => e
@@ -237,23 +246,23 @@ class Api::Storage::StorageController < ApplicationController
         bucket: @storage_credential.bucket,
         key: source_key
       )
-      render json: { message: 'File renamed successfully' }
+      render json: { message: "File renamed successfully" }
     rescue Aws::S3::Errors::ServiceError => e
       render json: { error: "Failed to rename file: #{e.message}" }, status: :unprocessable_entity
     end
   end
-  
+
   # POST /api/storage/create_folder
   def create_folder
     begin
       s3_client = S3ClientBuilder.new(@storage_credential).client
-      folder_key = params[:prefix].to_s.chomp('/') + '/'
+      folder_key = params[:prefix].to_s.chomp("/") + "/"
       s3_client.put_object(
         bucket: @storage_credential.bucket,
         key: folder_key,
-        body: ''
+        body: ""
       )
-      render json: { message: 'Folder created successfully' }
+      render json: { message: "Folder created successfully" }
     rescue Aws::S3::Errors::ServiceError => e
       render json: { error: "Failed to create folder: #{e.message}" }, status: :unprocessable_entity
     end
@@ -263,13 +272,13 @@ class Api::Storage::StorageController < ApplicationController
   def delete_folder
     begin
       s3_client = S3ClientBuilder.new(@storage_credential).client
-      prefix = params[:prefix].to_s.chomp('/') + '/'
+      prefix = params[:prefix].to_s.chomp("/") + "/"
       objects = s3_client.list_objects_v2(
         bucket: @storage_credential.bucket,
         prefix: prefix
       ).contents
       if objects.empty?
-        render json: { message: 'Folder is already empty or does not exist' }
+        render json: { message: "Folder is already empty or does not exist" }
         return
       end
       s3_client.delete_objects(
@@ -278,33 +287,28 @@ class Api::Storage::StorageController < ApplicationController
           objects: objects.map { |obj| { key: obj.key } }
         }
       )
-      render json: { message: 'Folder and its contents deleted successfully' }
+      render json: { message: "Folder and its contents deleted successfully" }
     rescue Aws::S3::Errors::ServiceError => e
       render json: { error: "Failed to delete folder: #{e.message}" }, status: :unprocessable_entity
     end
   end
-  
+
   # POST /api/storage/share_link
   def share_link
     expires_in = params[:expires_in].presence || 3600
     key = params[:key]
     begin
+      # Generate presigned URL but do not store it
       s3_client = S3ClientBuilder.new(@storage_credential).client
       presigner = Aws::S3::Presigner.new(client: s3_client)
-      url = presigner.presigned_url(
-        :get_object,
-        bucket: @storage_credential.bucket,
-        key: key,
-        expires_in: expires_in.to_i
-      )
+      # url = presigner.presigned_url(:get_object, bucket: @storage_credential.bucket, key: key, expires_in: expires_in.to_i)
       share_link = ShareLink.create!(
         user: current_user,
         storage_credential: @storage_credential,
         key: key,
-        presigned_url: url,
         expires_at: Time.current + expires_in.to_i.seconds
       )
-      render json: { share_link: share_link.slice(:id, :key, :presigned_url, :expires_at, :revoked) }
+      render json: { share_link: share_link.slice(:id, :key, :token, :expires_at, :revoked) }
     rescue => e
       render json: { error: "Failed to create share link: #{e.message}" }, status: :unprocessable_entity
     end
@@ -313,19 +317,40 @@ class Api::Storage::StorageController < ApplicationController
   # GET /api/storage/share_links
   def share_links
     links = ShareLink.where(user: current_user, storage_credential: @storage_credential).order(created_at: :desc)
-    render json: { share_links: links.map { |l| l.slice(:id, :key, :presigned_url, :expires_at, :revoked) } }
+    render json: {
+      share_links: links.map { |l| {
+        id: l.id,
+        key: l.key,
+        token: l.token,
+        created_at: l.created_at,
+        expires_at: l.expires_at,
+        revoked: l.revoked,
+        expired: l.expired?
+      } }
+    }
   end
 
   # POST /api/storage/revoke_share_link
   def revoke_share_link
     link = ShareLink.find_by(id: params[:id], user: current_user, storage_credential: @storage_credential)
     if link.nil?
-      render json: { error: 'Share link not found' }, status: :not_found
+      render json: { error: "Share link not found" }, status: :not_found
     elsif link.revoked?
-      render json: { error: 'Share link already revoked' }, status: :unprocessable_entity
+      render json: { error: "Share link already revoked" }, status: :unprocessable_entity
     else
       link.update(revoked: true)
-      render json: { message: 'Share link revoked', id: link.id }
+      render json: { message: "Share link revoked", id: link.id }
+    end
+  end
+
+  # DELETE /api/storage/share_links/:id
+  def destroy_share_link
+    link = ShareLink.find_by(id: params[:id], user: current_user, storage_credential: @storage_credential)
+    if link.nil?
+      render json: { error: "Share link not found" }, status: :not_found
+    else
+      link.destroy
+      render json: { message: "Share link deleted", id: link.id }
     end
   end
 
@@ -352,14 +377,14 @@ class Api::Storage::StorageController < ApplicationController
       render json: { error: "Failed to get usage: #{e.message}" }, status: :unprocessable_entity
     end
   end
-  
+
   # POST /api/storage/dev_upload
   if Rails.env.development?
     def dev_upload
       file = params[:file]
       key = params[:key]
       unless file && key
-        render json: { error: 'file and key are required' }, status: :bad_request
+        render json: { error: "file and key are required" }, status: :bad_request
         return
       end
       begin
@@ -368,15 +393,15 @@ class Api::Storage::StorageController < ApplicationController
           bucket: @storage_credential.bucket,
           key: key,
           body: file.respond_to?(:read) ? file.read : file,
-          content_type: file.respond_to?(:content_type) ? file.content_type : 'application/octet-stream'
+          content_type: file.respond_to?(:content_type) ? file.content_type : "application/octet-stream"
         )
-        render json: { message: 'File uploaded successfully', key: key }
+        render json: { message: "File uploaded successfully", key: key }
       rescue Aws::S3::Errors::ServiceError => e
         render json: { error: "Failed to upload file: #{e.message}" }, status: :unprocessable_entity
       end
     end
   end
-  
+
   # GET /api/storage/credentials
   def list_credentials
     active_id = current_active_credential_id
@@ -392,7 +417,7 @@ class Api::Storage::StorageController < ApplicationController
     if credential
       render json: credential.slice(:id, :provider, :bucket, :region, :endpoint, :created_at, :updated_at)
     else
-      render json: { error: 'Credential not found' }, status: :not_found
+      render json: { error: "Credential not found" }, status: :not_found
     end
   end
 
@@ -400,7 +425,7 @@ class Api::Storage::StorageController < ApplicationController
   def update_credential
     credential = current_user.storage_credentials.find_by(id: params[:id])
     if credential.nil?
-      render json: { error: 'Credential not found' }, status: :not_found
+      render json: { error: "Credential not found" }, status: :not_found
       return
     end
     # Validate the new attributes before updating
@@ -411,20 +436,20 @@ class Api::Storage::StorageController < ApplicationController
       client = S3ClientBuilder.new(temp_credential).client
       client.list_objects_v2(bucket: temp_credential.bucket, max_keys: 1)
     rescue Aws::S3::Errors::InvalidAccessKeyId, Aws::S3::Errors::SignatureDoesNotMatch
-      Rails.logger.error('Credential update validation failed: Invalid access key or secret.')
-      render json: { errors: ['Credential validation failed: Invalid access key or secret.'] }, status: :unprocessable_entity
+      Rails.logger.error("Credential update validation failed: Invalid access key or secret.")
+      render json: { errors: [ "Credential validation failed: Invalid access key or secret." ] }, status: :unprocessable_entity
       return
     rescue Aws::S3::Errors::NoSuchBucket
-      Rails.logger.error('Credential update validation failed: The specified bucket does not exist.')
-      render json: { errors: ['Credential validation failed: The specified bucket does not exist.'] }, status: :unprocessable_entity
+      Rails.logger.error("Credential update validation failed: The specified bucket does not exist.")
+      render json: { errors: [ "Credential validation failed: The specified bucket does not exist." ] }, status: :unprocessable_entity
       return
     rescue Seahorse::Client::NetworkingError => e
       Rails.logger.error("Credential update validation Seahorse::Client::NetworkingError: #{e.class} - #{e.message}\n#{e.backtrace.join("\n")}")
-      render json: { errors: ['Credential validation failed: Unable to connect to the storage provider.'] }, status: :unprocessable_entity
+      render json: { errors: [ "Credential validation failed: Unable to connect to the storage provider." ] }, status: :unprocessable_entity
       return
     rescue => e
       Rails.logger.error("Credential update validation generic rescue: #{e.class} - #{e.message}\n#{e.backtrace.join("\n")}")
-      render json: { errors: ['Credential validation failed: Unable to connect to the storage provider.'] }, status: :unprocessable_entity
+      render json: { errors: [ "Credential validation failed: Unable to connect to the storage provider." ] }, status: :unprocessable_entity
       return
     end
     if credential.update(new_attrs)
@@ -435,7 +460,7 @@ class Api::Storage::StorageController < ApplicationController
       render json: { errors: credential.errors.full_messages }, status: :unprocessable_entity
     end
   end
-  
+
   # POST /api/storage/move_files
   def move_files
     process_bulk_file_operation(:move)
@@ -455,12 +480,12 @@ class Api::Storage::StorageController < ApplicationController
   def copy_folders
     process_bulk_folder_operation(:copy)
   end
-  
+
   # DELETE /api/storage/credentials/:id
   def destroy_credential
     credential = current_user.storage_credentials.find_by(id: params[:id])
     if credential.nil?
-      render json: { error: 'Credential not found' }, status: :not_found
+      render json: { error: "Credential not found" }, status: :not_found
       return
     end
     was_active = (credential.id.to_s == current_active_credential_id.to_s)
@@ -470,15 +495,15 @@ class Api::Storage::StorageController < ApplicationController
       next_credential = current_user.storage_credentials.order(updated_at: :desc).first
       token = JwtService.encode(current_user, active_credential_id: next_credential&.id)
       render json: {
-        message: 'Credential deleted',
+        message: "Credential deleted",
         active_credential_id: next_credential&.id,
         token: token
       }
     else
-      render json: { message: 'Credential deleted' }
+      render json: { message: "Credential deleted" }
     end
   end
-  
+
   # POST /api/storage/credentials/validate
   def validate_credential
     cred_params = params.require(:storage_credential).permit(:provider, :access_key_id, :secret_access_key, :region, :bucket, :endpoint)
@@ -488,43 +513,67 @@ class Api::Storage::StorageController < ApplicationController
       StorageCredential.new(cred_params.merge(user: current_user))
     end
     unless credential
-      render json: { error: 'Credential not found' }, status: :not_found
+      render json: { error: "Credential not found" }, status: :not_found
       return
     end
     begin
       client = S3ClientBuilder.new(credential).client
       # Try to list the bucket (limit 1)
       client.list_objects_v2(bucket: credential.bucket, max_keys: 1)
-      render json: { valid: true, message: 'Credential is valid' }
+      render json: { valid: true, message: "Credential is valid" }
     rescue Aws::S3::Errors::InvalidAccessKeyId, Aws::S3::Errors::SignatureDoesNotMatch
-      Rails.logger.error('Credential validation failed: Invalid access key or secret.')
-      render json: { valid: false, error: 'Credential validation failed: Invalid access key or secret.' }, status: :unprocessable_entity
+      Rails.logger.error("Credential validation failed: Invalid access key or secret.")
+      render json: { valid: false, error: "Credential validation failed: Invalid access key or secret." }, status: :unprocessable_entity
     rescue Aws::S3::Errors::NoSuchBucket
-      Rails.logger.error('Credential validation failed: The specified bucket does not exist.')
-      render json: { valid: false, error: 'Credential validation failed: The specified bucket does not exist.' }, status: :unprocessable_entity
+      Rails.logger.error("Credential validation failed: The specified bucket does not exist.")
+      render json: { valid: false, error: "Credential validation failed: The specified bucket does not exist." }, status: :unprocessable_entity
     rescue Seahorse::Client::NetworkingError => e
       Rails.logger.error("validate_credential Seahorse::Client::NetworkingError: #{e.class} - #{e.message}\n#{e.backtrace.join("\n")}")
-      render json: { valid: false, error: 'Credential validation failed: Unable to connect to the storage provider.' }, status: :unprocessable_entity
+      render json: { valid: false, error: "Credential validation failed: Unable to connect to the storage provider." }, status: :unprocessable_entity
     rescue => e
       Rails.logger.error("validate_credential generic rescue: #{e.class} - #{e.message}\n#{e.backtrace.join("\n")}")
-      render json: { valid: false, error: 'Credential validation failed: Unable to connect to the storage provider.' }, status: :unprocessable_entity
+      render json: { valid: false, error: "Credential validation failed: Unable to connect to the storage provider." }, status: :unprocessable_entity
     end
   end
-  
+
+  # PATCH /api/storage/share_links/:id
+  def update_share_link
+    link = ShareLink.find_by(id: params[:id], user: current_user, storage_credential: @storage_credential)
+    unless link
+      render json: { error: "Share link not found" }, status: :not_found
+      return
+    end
+    if params[:expires_at].present?
+      link.expires_at = Time.parse(params[:expires_at]) rescue nil
+    end
+    if link.save
+      render json: {
+        id: link.id,
+        key: link.key,
+        created_at: link.created_at,
+        expires_at: link.expires_at,
+        revoked: link.revoked,
+        expired: link.expired?
+      }
+    else
+      render json: { error: link.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   private
-  
+
   def set_storage_credential
     if current_active_credential_id.blank?
-      render json: { error: 'No active storage credential set' }, status: :unprocessable_entity
+      render json: { error: "No active storage credential set" }, status: :unprocessable_entity
       return
     end
     @storage_credential = current_user.storage_credentials.find_by(id: current_active_credential_id)
     if @storage_credential.nil?
-      render json: { error: 'Active storage credential not found' }, status: :not_found
-      return
+      render json: { error: "Active storage credential not found" }, status: :not_found
+      nil
     end
   end
-  
+
   def storage_credential_params
     params.require(:storage_credential).permit(:access_key_id, :secret_access_key, :region, :endpoint, :bucket, :provider)
   end
@@ -551,9 +600,9 @@ class Api::Storage::StorageController < ApplicationController
         if action == :move
           src_client.delete_object(bucket: src_bucket, key: src_key)
         end
-        { source_key: src_key, destination_key: dst_key, status: 'success' }
+        { source_key: src_key, destination_key: dst_key, status: "success" }
       rescue => e
-        { source_key: src_key, destination_key: dst_key, status: 'error', error: e.message }
+        { source_key: src_key, destination_key: dst_key, status: "error", error: e.message }
       end
     end
     render json: { results: results }
@@ -590,16 +639,16 @@ class Api::Storage::StorageController < ApplicationController
                 key: dst_key
               )
               src_client.delete_object(bucket: src_bucket, key: object.key) if action == :move
-              results << { source_key: object.key, destination_key: dst_key, status: 'success' }
+              results << { source_key: object.key, destination_key: dst_key, status: "success" }
             rescue => e
-              results << { source_key: object.key, destination_key: dst_key, status: 'error', error: e.message }
+              results << { source_key: object.key, destination_key: dst_key, status: "error", error: e.message }
             end
           end
           break unless resp.is_truncated
           continuation_token = resp.next_continuation_token
         end
       rescue => e
-        results << { source_prefix: src_prefix, destination_prefix: dst_prefix, status: 'error', error: e.message }
+        results << { source_prefix: src_prefix, destination_prefix: dst_prefix, status: "error", error: e.message }
       end
     end
     render json: { results: results }
@@ -609,5 +658,4 @@ class Api::Storage::StorageController < ApplicationController
     return nil if id.blank?
     current_user.storage_credentials.find_by(id: id)
   end
-
 end

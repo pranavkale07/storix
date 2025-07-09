@@ -21,7 +21,8 @@
     { "key": "chunk_url", "value": "" },
     { "key": "part1_etag", "value": "" },
     { "key": "download_url", "value": "" },
-    { "key": "presigned_url", "value": "" }
+    { "key": "presigned_url", "value": "" },
+    { "key": "storage_provider", "value": "s3" }
   ],
   "item": [
     {
@@ -103,7 +104,7 @@
         "url": { "raw": "{{base_url}}/api/storage/credentials", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "credentials" ] },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"storage_credential\": {\n    \"provider\": \"s3\",\n    \"access_key_id\": \"{{access_key_id}}\",\n    \"secret_access_key\": \"{{secret_access_key}}\",\n    \"region\": \"{{region}}\",\n    \"bucket\": \"{{bucket}}\"\n  }\n}"
+          "raw": "{\n  \"storage_credential\": {\n    \"provider\": \"{{storage_provider}}\",\n    \"access_key_id\": \"{{access_key_id}}\",\n    \"secret_access_key\": \"{{secret_access_key}}\",\n    \"region\": \"{{region}}\",\n    \"bucket\": \"{{bucket}}\"\n  }\n}"
         }
       },
       "response": []
@@ -132,7 +133,7 @@
         "url": { "raw": "{{base_url}}/api/storage/credentials/validate", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "credentials", "validate" ] },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"storage_credential\": {\n    \"provider\": \"s3\",\n    \"access_key_id\": \"{{access_key_id}}\",\n    \"secret_access_key\": \"{{secret_access_key}}\",\n    \"region\": \"{{region}}\",\n    \"bucket\": \"{{bucket}}\"\n  }\n}"
+          "raw": "{\n  \"storage_credential\": {\n    \"provider\": \"{{storage_provider}}\",\n    \"access_key_id\": \"{{access_key_id}}\",\n    \"secret_access_key\": \"{{secret_access_key}}\",\n    \"region\": \"{{region}}\",\n    \"bucket\": \"{{bucket}}\"\n  }\n}"
         }
       },
       "response": []
@@ -363,9 +364,9 @@
     {
       "name": "Rename File",
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
-        "url": { "raw": "{{base_url}}/api/storage/files", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "files" ] },
+        "url": { "raw": "{{base_url}}/api/storage/rename_file", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "files" ] },
         "body": {
           "mode": "raw",
           "raw": "{\n  \"key\": \"uploads/testfolder_copied/testfile_copy.txt\",\n  \"new_key\": \"uploads/testfolder_copied/renamed_file.txt\"\n}"
@@ -406,7 +407,10 @@
           "listen": "test",
           "script": {
             "exec": [
+              "pm.test('Status code is 200 or 201', function () { pm.expect([200,201]).to.include(pm.response.code); });",
               "var json = pm.response.json();",
+              "pm.test('Share link object present', function () { pm.expect(json).to.have.property('share_link'); });",
+              "pm.test('Share link fields present', function () { pm.expect(json.share_link).to.have.all.keys('id', 'key', 'expires_at', 'revoked'); });",
               "if (json.share_link && json.share_link.id) { pm.collectionVariables.set('share_link_id', json.share_link.id); }"
             ],
             "type": "text/javascript"
@@ -425,7 +429,53 @@
       "response": []
     },
     {
+      "name": "Update Share Link Expiry",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "pm.test('Share link fields present', function () { pm.expect(json).to.have.all.keys('id', 'key', 'created_at', 'expires_at', 'revoked', 'expired'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{base_url}}/api/storage/share_links/{{share_link_id}}", "host": [ "{{base_url}}" ], "path": [ "api", "storage", "share_links", "{{share_link_id}}" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"expires_at\": \"2024-07-10T12:00:00Z\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
       "name": "List Share Links",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "pm.test('share_links array present', function () { pm.expect(json).to.have.property('share_links'); });",
+              "if (json.share_links && json.share_links.length > 0) {",
+              "  var l = json.share_links[0];",
+              "  pm.test('Share link fields present', function () { pm.expect(l).to.have.all.keys('id', 'key', 'created_at', 'expires_at', 'revoked', 'expired'); });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
