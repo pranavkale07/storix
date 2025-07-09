@@ -27,14 +27,20 @@ module Storix
     # Only loads a smaller set of middleware suitable for API only apps.
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
-    config.api_only = true
+    config.api_only = false
 
-    # Load environment variables
+    # Add session middleware for OmniAuth
+    config.middleware.use ActionDispatch::Session::CookieStore
+    config.middleware.use ActionDispatch::Cookies
+
+    # Load environment variables from .env file
     config.before_configuration do
-      env_file = File.join(Rails.root, "config", "local_env.yml")
+      env_file = File.join(Rails.root, ".env")
       if File.exist?(env_file)
-        YAML.load(File.open(env_file)).each do |key, value|
-          ENV[key.to_s] = value
+        File.readlines(env_file).each do |line|
+          next if line.strip.empty? || line.start_with?("#")
+          key, value = line.split("=", 2)
+          ENV[key.strip] = value.strip if key && value
         end
       end
     end

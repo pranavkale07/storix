@@ -1,4 +1,4 @@
-class Api::Storage::StorageController < ApplicationController
+class Api::Storage::StorageController < Api::BaseController
   before_action :authenticate_user!
   before_action :set_storage_credential, except: [ :create_credential, :validate_credential, :list_credentials, :show_credential, :update_credential, :destroy_credential ]
 

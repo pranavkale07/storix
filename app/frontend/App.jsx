@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
 import Home from './pages/Home';
 import Settings from './pages/Settings';
 import ShareLinks from './pages/ShareLinks';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import { DebugStorage } from './components/DebugStorage';
+import { OAuthLogin } from './components/OAuthLogin';
+import { AuthCallback } from './components/AuthCallback';
+import { AuthError } from './components/AuthError';
 
 // Protected Route component
 function ProtectedRoute({ children }) {
@@ -62,20 +63,12 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
+          path="/auth/callback"
+          element={<AuthCallback />}
         />
         <Route
-          path="/signup"
-          element={
-            <PublicRoute>
-              <Signup />
-            </PublicRoute>
-          }
+          path="/auth/error"
+          element={<AuthError />}
         />
         <Route
           path="/settings"

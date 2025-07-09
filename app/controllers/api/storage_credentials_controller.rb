@@ -1,5 +1,5 @@
 module Api
-  class StorageCredentialsController < ApplicationController
+  class StorageCredentialsController < Api::BaseController
     include JwtAuthenticatable
 
     def destroy

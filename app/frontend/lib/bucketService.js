@@ -54,11 +54,14 @@ export class BucketService {
   static async loadActiveBucket() {
     try {
       const buckets = await this.fetchBuckets();
+
       if (buckets.length === 0) {
         StorageManager.removeActiveBucket();
         return null;
       }
+
       const activeBucket = this.getActiveBucket(buckets);
+
       if (!activeBucket) {
         const firstBucket = buckets[0];
         await this.setActiveBucket(firstBucket.id);
@@ -72,6 +75,7 @@ export class BucketService {
         StorageManager.setActiveBucket(bucketInfo);
         return bucketInfo;
       }
+
       const bucketInfo = {
         id: activeBucket.id,
         bucket: activeBucket.bucket,

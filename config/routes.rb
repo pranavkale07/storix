@@ -9,12 +9,17 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "home#index"
 
+  # OAuth routes
+  get "/auth/:provider/callback", to: "oauth#callback", as: :oauth_callback
+  get "/auth/failure", to: "oauth#failure", as: :oauth_failure
+
+  # Test route for session debugging
+  get "/test/session", to: "test#session_test"
+
   # API routes
   namespace :api do
     # Authentication routes
     namespace :auth do
-      post "register", to: "auth#register"
-      post "login", to: "auth#login"
       get "me", to: "auth#me"
       delete "me", to: "auth#destroy"
       post "active_credential", to: "auth#active_credential"
