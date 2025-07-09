@@ -321,6 +321,7 @@ class Api::Storage::StorageController < ApplicationController
       share_links: links.map { |l| {
         id: l.id,
         key: l.key,
+        token: l.token,
         created_at: l.created_at,
         expires_at: l.expires_at,
         revoked: l.revoked,
@@ -339,6 +340,17 @@ class Api::Storage::StorageController < ApplicationController
     else
       link.update(revoked: true)
       render json: { message: 'Share link revoked', id: link.id }
+    end
+  end
+
+  # DELETE /api/storage/share_links/:id
+  def destroy_share_link
+    link = ShareLink.find_by(id: params[:id], user: current_user, storage_credential: @storage_credential)
+    if link.nil?
+      render json: { error: 'Share link not found' }, status: :not_found
+    else
+      link.destroy
+      render json: { message: 'Share link deleted', id: link.id }
     end
   end
 

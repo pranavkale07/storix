@@ -7,6 +7,20 @@ import ShareModal from './ShareModal';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select';
 import { Input } from './ui/input';
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from './ui/alert-dialog';
+import ConfirmDialog from './ConfirmDialog';
+import { Checkbox } from './ui/checkbox';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 function formatSize(bytes) {
   if (bytes === 0) return '0 B';
@@ -115,7 +129,10 @@ function CreateFolderModal({ isOpen, onClose, onSuccess, currentPrefix }) {
             />
           </div>
           {error && (
-            <div className="mb-4 text-red-500 text-sm">{error}</div>
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
           <div className="flex justify-end gap-2">
             <Button
@@ -193,7 +210,7 @@ function FolderRenameInput({ folder, onRename, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex items-center gap-2">
-      <input
+      <Input
         type="text"
         value={newName}
         onChange={(e) => setNewName(e.target.value)}
@@ -253,7 +270,7 @@ function FileRenameInput({ file, onRename, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex items-center gap-2">
-      <input
+      <Input
         type="text"
         value={newName}
         onChange={(e) => setNewName(e.target.value)}
@@ -304,7 +321,7 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
         <thead>
           <tr className="border-b border-border">
             <th className="w-8 px-2">
-              <input type="checkbox" checked={isAllSelected} onChange={e => onSelectAll(e.target.checked)} />
+              <Checkbox checked={isAllSelected} onCheckedChange={onSelectAll} aria-label="Select all" />
             </th>
             <th className="text-left py-2 px-3 font-semibold">Name</th>
             <th className="text-left py-2 px-3 font-semibold">Size</th>
@@ -319,11 +336,11 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
             return (
               <tr key={folder.prefix} className={`border-b border-border group transition ${isSelected ? 'bg-orange-500/90 text-white' : 'hover:bg-accent/30'}`}>
                 <td className="w-8 px-2">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={isSelected}
-                    onChange={e => onSelectFolder(folder.prefix, e.target.checked)}
+                    onCheckedChange={checked => onSelectFolder(folder.prefix, checked)}
                     onClick={e => e.stopPropagation()}
+                    aria-label="Select folder"
                   />
                 </td>
                 <td className="py-2 px-3 flex items-center gap-2 font-semibold cursor-pointer hover:underline" onClick={() => onOpenFolder(folder.prefix)}>
@@ -367,11 +384,11 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
             return (
               <tr key={file.key} className={`border-b border-border group transition ${isSelected ? 'bg-orange-500/90 text-white' : 'hover:bg-accent/30'}`}>
                 <td className="w-8 px-2">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={isSelected}
-                    onChange={e => onSelectFile(file.key, e.target.checked)}
+                    onCheckedChange={checked => onSelectFile(file.key, checked)}
                     onClick={e => e.stopPropagation()}
+                    aria-label="Select file"
                   />
                 </td>
                 <td className="py-2 px-3 flex items-center gap-2">
@@ -472,6 +489,10 @@ export default function FileManager({ activeBucket }) {
   const [search, setSearch] = useState('');
 
   const [allUploadingFiles, setAllUploadingFiles] = useState([]);
+
+  const [pendingDeleteFile, setPendingDeleteFile] = useState(null);
+  const [pendingDeleteFolder, setPendingDeleteFolder] = useState(null);
+  const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
 
   const fetchFiles = async () => {
     setLoading(true);
@@ -594,12 +615,12 @@ export default function FileManager({ activeBucket }) {
 
   const handleDelete = async (fileKey) => {
     if (deleting.has(fileKey)) return;
+    setPendingDeleteFile(fileKey);
+  };
 
-    // Confirm deletion
-    if (!confirm(`Are you sure you want to delete "${fileKey}"? This action cannot be undone.`)) {
-      return;
-    }
-
+  const confirmDeleteFile = async () => {
+    const fileKey = pendingDeleteFile;
+    if (!fileKey) return;
     setDeleting(prev => new Set(prev).add(fileKey));
     try {
       const response = await apiFetch('/api/storage/files', {
@@ -609,15 +630,11 @@ export default function FileManager({ activeBucket }) {
         },
         body: JSON.stringify({ key: fileKey }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to delete file');
       }
-
-      // Refresh the file list
       await fetchFiles();
-
     } catch (err) {
       console.error('Delete failed:', err);
       alert(`Delete failed: ${err.message}`);
@@ -627,6 +644,7 @@ export default function FileManager({ activeBucket }) {
         newSet.delete(fileKey);
         return newSet;
       });
+      setPendingDeleteFile(null);
     }
   };
 
@@ -637,12 +655,12 @@ export default function FileManager({ activeBucket }) {
 
   const handleDeleteFolder = async (folderPrefix, folderName) => {
     if (deletingFolders.has(folderPrefix)) return;
+    setPendingDeleteFolder({ prefix: folderPrefix, name: folderName });
+  };
 
-    // Confirm deletion
-    if (!confirm(`Are you sure you want to delete the folder "${folderName}" and all its contents? This action cannot be undone.`)) {
-      return;
-    }
-
+  const confirmDeleteFolder = async () => {
+    const folderPrefix = pendingDeleteFolder?.prefix;
+    if (!folderPrefix) return;
     setDeletingFolders(prev => new Set(prev).add(folderPrefix));
     try {
       const response = await apiFetch('/api/storage/delete_folder', {
@@ -652,15 +670,11 @@ export default function FileManager({ activeBucket }) {
         },
         body: JSON.stringify({ prefix: folderPrefix }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to delete folder');
       }
-
-      // Refresh the file list
       await fetchFiles();
-
     } catch (err) {
       console.error('Delete folder failed:', err);
       alert(`Delete folder failed: ${err.message}`);
@@ -670,6 +684,7 @@ export default function FileManager({ activeBucket }) {
         newSet.delete(folderPrefix);
         return newSet;
       });
+      setPendingDeleteFolder(null);
     }
   };
 
@@ -823,7 +838,10 @@ export default function FileManager({ activeBucket }) {
 
   // Bulk Delete
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Delete ${selectedFiles.length + selectedFolders.length} items? This cannot be undone.`)) return;
+    setPendingBulkDelete(true);
+  };
+
+  const confirmBulkDelete = async () => {
     setBulkActionLoading(true);
     setBulkActionProgress({});
     setBulkActionError({});
@@ -868,6 +886,7 @@ export default function FileManager({ activeBucket }) {
     setBulkActionLoading(false);
     setSelectedFiles([]);
     setSelectedFolders([]);
+    setPendingBulkDelete(false);
     fetchFiles();
   };
 
@@ -1371,6 +1390,36 @@ export default function FileManager({ activeBucket }) {
           <ShareModal open={showShareModal} onClose={() => { setShowShareModal(false); setSharingFile(null); }} item={sharingFile} />
         </Card>
       </div>
+      {/* ConfirmDialog for file delete */}
+      <ConfirmDialog
+        open={!!pendingDeleteFile}
+        onOpenChange={open => { if (!open) setPendingDeleteFile(null); }}
+        title="Delete File"
+        description={`Are you sure you want to delete "${pendingDeleteFile}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={confirmDeleteFile}
+        loading={deleting.has(pendingDeleteFile)}
+      />
+      {/* ConfirmDialog for folder delete */}
+      <ConfirmDialog
+        open={!!pendingDeleteFolder}
+        onOpenChange={open => { if (!open) setPendingDeleteFolder(null); }}
+        title="Delete Folder"
+        description={`Are you sure you want to delete the folder "${pendingDeleteFolder?.name}" and all its contents? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={confirmDeleteFolder}
+        loading={deletingFolders.has(pendingDeleteFolder?.prefix)}
+      />
+      {/* ConfirmDialog for bulk delete */}
+      <ConfirmDialog
+        open={pendingBulkDelete}
+        onOpenChange={open => { if (!open) setPendingBulkDelete(false); }}
+        title="Delete Selected Items"
+        description={`Delete ${selectedFiles.length + selectedFolders.length} items? This cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={confirmBulkDelete}
+        loading={bulkActionLoading}
+      />
     </div>
   );
 }

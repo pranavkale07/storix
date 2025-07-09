@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
-import ConnectBucket from './pages/ConnectBucket';
 import Settings from './pages/Settings';
 import ShareLinks from './pages/ShareLinks';
 import { AuthProvider, useAuth } from './components/AuthContext';
@@ -76,14 +75,6 @@ function AppRoutes() {
             <PublicRoute>
               <Signup />
             </PublicRoute>
-          }
-        />
-        <Route
-          path="/connect-bucket"
-          element={
-            <ProtectedRoute>
-              <ConnectBucket />
-            </ProtectedRoute>
           }
         />
         <Route

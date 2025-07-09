@@ -13,19 +13,59 @@ import {
   Clock,
   ExternalLink,
 } from 'lucide-react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
+import ConnectBucketForm from '../components/ConnectBucketForm';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { BucketService } from '../lib/bucketService';
+import Header from '../components/Header';
+import LoadingSpinner from '../components/LoadingSpinner';
+import ErrorMessage from '../components/ErrorMessage';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '../components/ui/alert-dialog';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { Badge } from '../components/ui/badge';
+import { StatuBadge } from '../components/ui/badge';
+import useBuckets from '../hooks/useBuckets';
 
 export default function ShareLinks() {
-  const { user, logout, activeBucket } = useAuth();
+  const { user, logout, activeBucket, refreshActiveBucket } = useAuth();
   const navigate = useNavigate();
 
+  const {
+    buckets,
+    loading: bucketsLoading,
+    error: bucketsError,
+    refreshBuckets,
+    switchBucket,
+    switching,
+    setBuckets,
+  } = useBuckets(refreshActiveBucket);
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [connectErrors, setConnectErrors] = useState({});
+  const [connectInitialValues, setConnectInitialValues] = useState({});
+  const [editing, setEditing] = useState(false);
   const [shareLinks, setShareLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(null);
+  const [pendingRevokeId, setPendingRevokeId] = useState(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
-  // Fetch share links on component mount
+  // Fetch share links on component mount and whenever activeBucket changes
   useEffect(() => {
-    fetchShareLinks();
-  }, []);
+    if (activeBucket) {
+      fetchShareLinks();
+    }
+  }, [activeBucket]);
 
   const fetchShareLinks = async () => {
     try {
@@ -43,12 +83,23 @@ export default function ShareLinks() {
     }
   };
 
-
-  const handleRevokeLink = async (linkId) => {
-    if (!confirm('Are you sure you want to revoke this share link? This action cannot be undone.')) {
+  const handleSwitchBucket = async (bucketId) => {
+    if (bucketId === 'add_new') {
+      setShowConnectDialog(true);
+      setConnectInitialValues({});
+      setEditing(false);
       return;
     }
+    switchBucket(bucketId);
+  };
 
+
+  const handleRevokeLink = async (linkId) => {
+    setPendingRevokeId(linkId);
+  };
+
+  const confirmRevokeLink = async () => {
+    if (!pendingRevokeId) return;
     setLoading(true);
     try {
       const response = await apiFetch('/api/storage/revoke_share_link', {
@@ -56,9 +107,8 @@ export default function ShareLinks() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: linkId }),
+        body: JSON.stringify({ id: pendingRevokeId }),
       });
-
       if (response.ok) {
         await fetchShareLinks();
       } else {
@@ -70,6 +120,33 @@ export default function ShareLinks() {
       alert('Failed to revoke share link');
     } finally {
       setLoading(false);
+      setPendingRevokeId(null);
+    }
+  };
+
+  const handleDeleteLink = async (linkId) => {
+    setPendingDeleteId(linkId);
+  };
+
+  const confirmDeleteLink = async () => {
+    if (!pendingDeleteId) return;
+    setLoading(true);
+    try {
+      const response = await apiFetch(`/api/storage/share_links/${pendingDeleteId}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        await fetchShareLinks();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to delete share link');
+      }
+    } catch (error) {
+      console.error('Error deleting share link:', error);
+      alert('Failed to delete share link');
+    } finally {
+      setLoading(false);
+      setPendingDeleteId(null);
     }
   };
 
@@ -83,12 +160,12 @@ export default function ShareLinks() {
 
   const getStatusBadge = (link) => {
     if (link.revoked) {
-      return <span className="text-xs bg-destructive text-destructive-foreground px-2 py-1 rounded">Revoked</span>;
+      return <Badge variant="destructive">Revoked</Badge>;
     }
     if (link.expires_at && new Date(link.expires_at) < new Date()) {
-      return <span className="text-xs bg-yellow-500 text-yellow-foreground px-2 py-1 rounded">Expired</span>;
+      return <Badge variant="secondary">Expired</Badge>;
     }
-    return <span className="text-xs bg-green-500 text-green-foreground px-2 py-1 rounded">Active</span>;
+    return <Badge variant="default">Active</Badge>;
   };
 
   const formatExpiration = (expiresAt) => {
@@ -128,23 +205,76 @@ export default function ShareLinks() {
     }
   };
 
+  const handleDialogOpenChange = (open) => {
+    if (!open) {
+      setShowConnectDialog(false);
+      setConnectErrors({}); // clear errors only on close
+      setConnectLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Topbar */}
-      <header className="w-full flex items-center justify-between px-6 py-4 border-b border-border bg-card/80 backdrop-blur sticky top-0 z-10">
-        <div className="text-xl font-bold tracking-tight">Storix</div>
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/')}
-          >
-            ← Back to Files
-          </Button>
-          {user && <span className="text-sm text-muted-foreground">{user.email}</span>}
-          {user && <button className="btn btn-outline btn-sm" onClick={logout}>Logout</button>}
-        </div>
-      </header>
+      <Header showBackToFiles />
+      <Dialog open={showConnectDialog} onOpenChange={handleDialogOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Connect a Bucket</DialogTitle>
+          </DialogHeader>
+          <ConnectBucketForm
+            initialValues={connectInitialValues}
+            onSubmit={async (data) => {
+              setConnectLoading(true);
+              setConnectErrors({});
+              let submitData = { ...data };
+              if (submitData.provider === 'digitalocean') {
+                submitData.provider = 'do_spaces';
+                if (!submitData.endpoint) {
+                  submitData.endpoint = `https://${submitData.region}.digitaloceanspaces.com`;
+                }
+              }
+              try {
+                const res = await fetch('/api/storage/credentials', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                  },
+                  body: JSON.stringify({ storage_credential: submitData })
+                });
+                const result = await res.json();
+                if (!res.ok) {
+                  setConnectErrors(result.errors || { error: result.error || 'Failed to connect bucket' });
+                  return;
+                }
+                let newBucketId = result.credential?.id || result.id;
+                if (newBucketId) {
+                  await BucketService.setActiveBucket(newBucketId);
+                  await refreshActiveBucket();
+                } else {
+                  await refreshActiveBucket();
+                }
+                setShowConnectDialog(false);
+                setConnectErrors({}); // clear errors on success
+                refreshBuckets();
+              } catch (err) {
+                setConnectErrors({ error: 'Network error' });
+              } finally {
+                setConnectLoading(false);
+              }
+            }}
+            onCancel={() => {
+              setShowConnectDialog(false);
+              setConnectErrors({});
+              setConnectLoading(false);
+            }}
+            loading={connectLoading}
+            errors={connectErrors}
+            editing={editing}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Main content */}
       <main className="max-w-6xl mx-auto py-8 px-6">
@@ -163,23 +293,13 @@ export default function ShareLinks() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading share links...</p>
+              <div className="flex justify-center items-center min-h-[40vh]">
+                <LoadingSpinner message="Loading share links..." />
               </div>
             ) : shareLinks.length === 0 ? (
-              <div className="text-center py-8">
-                <Share2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">No share links found.</p>
-                <p className="text-sm text-muted-foreground mb-4">
-                   To create a share link, go to your files and use the share button (🔗) on any file.
-                </p>
-                <Button onClick={() => navigate('/')}>
-                   Go to Files
-                </Button>
-              </div>
+              <div className="text-center text-muted-foreground py-12">No share links found for this bucket.</div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid gap-6">
                 {shareLinks.map((link) => (
                   <div
                     key={link.id}
@@ -211,16 +331,17 @@ export default function ShareLinks() {
                           <div className="relative flex-1 max-w-md">
                             <Input
                               type="text"
-                              value={`${window.location.origin}/share_links/${link.token}`}
+                              value={link.token ? `${window.location.origin}/share_links/${link.token}` : 'Link unavailable'}
                               readOnly
-                              className="pr-20 font-mono text-sm truncate bg-muted border-border"
+                              className={`pr-20 font-mono text-sm truncate border-border ${(!link.token || link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())) ? 'bg-muted-foreground/10 text-muted-foreground' : 'bg-muted'}`}
                             />
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleCopyLink(link.token)}
+                              onClick={() => link.token && handleCopyLink(link.token)}
                               className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
-                              title="Copy link"
+                              title={link.token ? 'Copy link' : 'Link unavailable'}
+                              disabled={!link.token || link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())}
                             >
                               {copiedLink === link.token ? (
                                 <span className="text-xs text-green-600">Copied!</span>
@@ -233,8 +354,9 @@ export default function ShareLinks() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => window.open(`/share_links/${link.token}`, '_blank')}
-                            title="Open link"
+                            onClick={() => link.token && window.open(`/share_links/${link.token}`, '_blank')}
+                            title={link.token ? 'Open link' : 'Link unavailable'}
+                            disabled={!link.token || link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())}
                           >
                             <ExternalLink className="h-3 w-3" />
                           </Button>
@@ -245,10 +367,9 @@ export default function ShareLinks() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRevokeLink(link.id)}
-                          disabled={link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())}
+                          onClick={() => handleDeleteLink(link.id)}
                           className="text-destructive hover:text-destructive"
-                          title="Revoke link"
+                          title="Delete link"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -261,6 +382,26 @@ export default function ShareLinks() {
           </CardContent>
         </Card>
       </main>
+      {/* ConfirmDialog for Revoke */}
+      <ConfirmDialog
+        open={!!pendingRevokeId}
+        onOpenChange={open => { if (!open) setPendingRevokeId(null); }}
+        title="Revoke Share Link"
+        description="Are you sure you want to revoke this share link? This action cannot be undone."
+        confirmLabel="Revoke"
+        onConfirm={confirmRevokeLink}
+        loading={loading}
+      />
+      {/* ConfirmDialog for Delete */}
+      <ConfirmDialog
+        open={!!pendingDeleteId}
+        onOpenChange={open => { if (!open) setPendingDeleteId(null); }}
+        title="Delete Share Link"
+        description="Are you sure you want to permanently delete this share link? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={confirmDeleteLink}
+        loading={loading}
+      />
     </div>
   );
 }

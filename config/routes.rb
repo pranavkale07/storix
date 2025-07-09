@@ -52,6 +52,7 @@ Rails.application.routes.draw do
       post "copy_folders", to: "storage#copy_folders"
       post "credentials/validate", to: "storage#validate_credential"
       patch '/share_links/:id', to: 'storage#update_share_link'
+      delete 'share_links/:id', to: 'storage#destroy_share_link'
     end
   end
 

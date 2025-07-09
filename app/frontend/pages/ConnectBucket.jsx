@@ -5,8 +5,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { apiFetch } from '../lib/api';
 import { StorageManager } from '../lib/storage';
+import { validateBucketFields } from '../lib/validateBucketFields';
 
 export default function ConnectBucket() {
   const [provider, setProvider] = useState('s3');
@@ -108,7 +110,12 @@ export default function ConnectBucket() {
               <Label htmlFor="endpoint">Endpoint (optional)</Label>
               <Input id="endpoint" value={endpoint} onChange={e => setEndpoint(e.target.value)} />
             </div>
-            {error && <div className="text-red-500 text-sm">{error}</div>}
+            {error && (
+              <Alert variant="destructive">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Connecting...' : 'Connect'}
             </Button>

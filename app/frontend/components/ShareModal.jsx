@@ -4,6 +4,7 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { apiFetch } from '@/lib/api';
 import { Copy, X, Link2, Trash2 } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export default function ShareModal({ open, onClose, item, onLinkCreated }) {
   const [expiresIn, setExpiresIn] = useState(24); // hours
@@ -85,7 +86,12 @@ export default function ShareModal({ open, onClose, item, onLinkCreated }) {
                 className="w-32"
               />
             </div>
-            {error && <div className="text-destructive text-sm">{error}</div>}
+            {error && (
+              <Alert variant="destructive">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <DialogFooter className="flex justify-end gap-2">
               <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
               <Button onClick={handleCreate} loading={loading} disabled={loading || !expiresIn}>Create Link</Button>
@@ -113,7 +119,12 @@ export default function ShareModal({ open, onClose, item, onLinkCreated }) {
               <span>Expires: {shareLink.expires_at ? new Date(shareLink.expires_at).toLocaleString() : 'Never'}</span>
               <span>Status: {shareLink.revoked ? 'Revoked' : expired ? 'Expired' : 'Active'}</span>
             </div>
-            {error && <div className="text-destructive text-sm">{error}</div>}
+            {error && (
+              <Alert variant="destructive">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <DialogFooter className="flex justify-end gap-2">
               <Button variant="outline" onClick={onClose}>Close</Button>
               <Button variant="destructive" onClick={handleRevoke} disabled={revoking || shareLink.revoked || expired}>
