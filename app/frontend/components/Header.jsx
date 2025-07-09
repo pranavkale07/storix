@@ -93,7 +93,7 @@ export default function Header({ showShareLinks, showSettings, showBackToFiles }
             onSubmit={async (data) => {
               setConnectLoading(true);
               setConnectErrors({});
-              let submitData = { ...data };
+              const submitData = { ...data };
               if (submitData.provider === 'digitalocean') {
                 submitData.provider = 'do_spaces';
                 if (!submitData.endpoint) {
@@ -105,9 +105,9 @@ export default function Header({ showShareLinks, showSettings, showBackToFiles }
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                   },
-                  body: JSON.stringify({ storage_credential: submitData })
+                  body: JSON.stringify({ storage_credential: submitData }),
                 });
                 const result = await res.json();
                 if (!res.ok) {
@@ -115,7 +115,7 @@ export default function Header({ showShareLinks, showSettings, showBackToFiles }
                   return;
                 }
                 // Set the new bucket as active and wait for state update before closing dialog
-                let newBucketId = result.credential?.id || result.id;
+                const newBucketId = result.credential?.id || result.id;
                 if (newBucketId) {
                   await BucketService.setActiveBucket(newBucketId);
                   await refreshActiveBucket();
@@ -140,4 +140,4 @@ export default function Header({ showShareLinks, showSettings, showBackToFiles }
       </Dialog>
     </header>
   );
-} 
+}

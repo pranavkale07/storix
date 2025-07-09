@@ -1,38 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
-import { useNavigate } from 'react-router-dom';
+
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
 import { apiFetch } from '../lib/api';
-import { Settings as SettingsIcon, Trash2, Edit, Plus, Save, X } from 'lucide-react';
+import { Settings as SettingsIcon, Trash2, Edit, Plus } from 'lucide-react';
 import ConnectBucketForm from '../components/ConnectBucketForm';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { BucketService } from '../lib/bucketService';
 import Header from '../components/Header';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
-import useBuckets from '../hooks/useBuckets';
 import { validateBucketFields } from '../lib/validateBucketFields';
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from '../components/ui/alert-dialog';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Badge } from '../components/ui/badge';
 
 export default function Settings() {
   const { user, logout, activeBucket, refreshActiveBucket } = useAuth();
-  const navigate = useNavigate();
 
   const [buckets, setBuckets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +73,7 @@ export default function Settings() {
     if (!validateForm()) return;
     setLoading(true);
     try {
-      let submitData = { ...formData };
+      const submitData = { ...formData };
       if (submitData.provider === 'digitalocean') {
         submitData.provider = 'do_spaces';
         if (!submitData.endpoint) {
@@ -230,7 +215,7 @@ export default function Settings() {
                   <ConnectBucketForm
                     initialValues={formData}
                     onSubmit={async (data) => {
-                      let submitData = { ...data };
+                      const submitData = { ...data };
                       if (submitData.provider === 'digitalocean') {
                         submitData.provider = 'do_spaces';
                         if (!submitData.endpoint) {

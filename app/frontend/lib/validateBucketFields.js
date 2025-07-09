@@ -5,4 +5,4 @@ export function validateBucketFields(formData) {
   if (!formData.bucket || !formData.bucket.trim()) errors.bucket = 'Bucket name is required';
   if (!formData.region || !formData.region.trim()) errors.region = 'Region is required';
   return errors;
-} 
+}

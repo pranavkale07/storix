@@ -5,7 +5,7 @@ class JwtService
     JWT.encode(
       payload,
       Rails.application.credentials.secret_key_base,
-      'HS256'
+      "HS256"
     )
   end
-end 
+end

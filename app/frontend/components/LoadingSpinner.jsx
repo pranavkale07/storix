@@ -10,4 +10,4 @@ export default function LoadingSpinner({ size = 8, className = '', message = '' 
       {message && <p className="text-muted-foreground text-center text-sm">{message}</p>}
     </div>
   );
-} 
+}

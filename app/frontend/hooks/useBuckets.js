@@ -10,11 +10,11 @@ export default function useBuckets(refreshActiveBucket) {
     setLoading(true);
     setError(null);
     fetch('/api/storage/credentials', {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
     })
       .then(res => res.json())
       .then(data => setBuckets(data.credentials || []))
-      .catch(err => setError('Failed to fetch buckets'))
+      .catch(() => setError('Failed to fetch buckets'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -29,9 +29,9 @@ export default function useBuckets(refreshActiveBucket) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ credential_id: bucketId })
+        body: JSON.stringify({ credential_id: bucketId }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -54,4 +54,4 @@ export default function useBuckets(refreshActiveBucket) {
     switching,
     setBuckets,
   };
-} 
+}

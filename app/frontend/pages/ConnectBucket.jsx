@@ -8,7 +8,7 @@ import { Label } from '../components/ui/label';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { apiFetch } from '../lib/api';
 import { StorageManager } from '../lib/storage';
-import { validateBucketFields } from '../lib/validateBucketFields';
+
 
 export default function ConnectBucket() {
   const [provider, setProvider] = useState('s3');

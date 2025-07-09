@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Card, CardHeader, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { apiFetch } from '@/lib/api';
 import { Download, Trash2, Share2, X, Search, Filter as FilterIcon } from 'lucide-react';
@@ -494,7 +494,7 @@ export default function FileManager({ activeBucket }) {
   const [pendingDeleteFolder, setPendingDeleteFolder] = useState(null);
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
 
-  const fetchFiles = async () => {
+  const fetchFiles = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -526,11 +526,11 @@ export default function FileManager({ activeBucket }) {
       setFiles([]);
     }
     setLoading(false);
-  };
+  }, [prefix, filterType, minSize, maxSize, search]);
 
   useEffect(() => {
     fetchFiles();
-  }, [activeBucket, prefix]);
+  }, [activeBucket, prefix, fetchFiles]);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -541,7 +541,7 @@ export default function FileManager({ activeBucket }) {
     return () => {
       window.removeEventListener('refreshFileList', handleRefresh);
     };
-  }, []);
+  }, [fetchFiles]);
 
   const handleOpenFolder = (newPrefix) => {
     setPrefix(newPrefix);

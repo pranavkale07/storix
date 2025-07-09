@@ -5,49 +5,25 @@ import AuthLanding from '../components/AuthLanding';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Settings, Share2 } from 'lucide-react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
 import ConnectBucketForm from '../components/ConnectBucketForm';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { BucketService } from '../lib/bucketService';
 import Header from '../components/Header';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
 import useBuckets from '../hooks/useBuckets';
 
 export default function Home() {
-  const { user, logout, loading, activeBucket, bucketLoading, refreshActiveBucket } = useAuth();
-  const navigate = useNavigate();
+  const { user, loading, activeBucket, bucketLoading, refreshActiveBucket } = useAuth();
 
   const {
-    buckets,
-    loading: bucketsLoading,
-    error: bucketsError,
     refreshBuckets,
     switchBucket,
-    switching,
-    setBuckets,
   } = useBuckets(refreshActiveBucket);
   const [showConnectDialog, setShowConnectDialog] = React.useState(false);
   const [connectLoading, setConnectLoading] = React.useState(false);
   const [connectErrors, setConnectErrors] = React.useState({});
   const [connectInitialValues, setConnectInitialValues] = React.useState({});
   const [editing, setEditing] = React.useState(false);
-
-  // Handle bucket switch or add new bucket
-  const handleSwitchBucket = async (bucketId) => {
-    if (bucketId === 'add_new') {
-      setShowConnectDialog(true);
-      setConnectInitialValues({});
-      setEditing(false);
-      return;
-    }
-    switchBucket(bucketId);
-  };
-
-  const handleRefreshBucket = async () => {
-    await refreshActiveBucket();
-  };
 
   const handleDialogOpenChange = (open) => {
     if (!open) {
@@ -113,7 +89,7 @@ export default function Home() {
             onSubmit={async (data) => {
               setConnectLoading(true);
               setConnectErrors({});
-              let submitData = { ...data };
+              const submitData = { ...data };
               if (submitData.provider === 'digitalocean') {
                 submitData.provider = 'do_spaces';
                 if (!submitData.endpoint) {
@@ -125,16 +101,16 @@ export default function Home() {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                   },
-                  body: JSON.stringify({ storage_credential: submitData })
+                  body: JSON.stringify({ storage_credential: submitData }),
                 });
                 const result = await res.json();
                 if (!res.ok) {
                   setConnectErrors(result.errors || { error: result.error || 'Failed to connect bucket' });
                   return;
                 }
-                let newBucketId = result.credential?.id || result.id;
+                const newBucketId = result.credential?.id || result.id;
                 if (newBucketId) {
                   await BucketService.setActiveBucket(newBucketId);
                   await refreshActiveBucket();

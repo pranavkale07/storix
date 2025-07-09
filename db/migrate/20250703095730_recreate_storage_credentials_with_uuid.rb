@@ -3,7 +3,7 @@ class RecreateStorageCredentialsWithUuid < ActiveRecord::Migration[8.0]
     # Drop share_links first due to FK
     drop_table :share_links, if_exists: true
     drop_table :storage_credentials, if_exists: true
-    
+
     create_table :storage_credentials, id: :uuid do |t|
       t.references :user, null: false, foreign_key: true, type: :bigint
       t.string :access_key_id

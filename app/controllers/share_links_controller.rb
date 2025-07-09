@@ -15,7 +15,7 @@ class ShareLinksController < ApplicationController
       # Calculate remaining time (in seconds) until share link expires
       if share_link.expires_at
         remaining = (share_link.expires_at - Time.current).to_i
-        expires_in = [3600, remaining].min # 1 hour or less if less time remains
+        expires_in = [ 3600, remaining ].min # 1 hour or less if less time remains
       else
         expires_in = 3600 # Default to 1 hour if no expiry
       end

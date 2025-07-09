@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -13,41 +12,21 @@ import {
   Clock,
   ExternalLink,
 } from 'lucide-react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
 import ConnectBucketForm from '../components/ConnectBucketForm';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { BucketService } from '../lib/bucketService';
 import Header from '../components/Header';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from '../components/ui/alert-dialog';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Badge } from '../components/ui/badge';
-import { StatuBadge } from '../components/ui/badge';
 import useBuckets from '../hooks/useBuckets';
 
 export default function ShareLinks() {
-  const { user, logout, activeBucket, refreshActiveBucket } = useAuth();
-  const navigate = useNavigate();
+  const { activeBucket, refreshActiveBucket } = useAuth();
 
   const {
-    buckets,
-    loading: bucketsLoading,
-    error: bucketsError,
-    refreshBuckets,
     switchBucket,
-    switching,
-    setBuckets,
+    refreshBuckets,
   } = useBuckets(refreshActiveBucket);
   const [showConnectDialog, setShowConnectDialog] = useState(false);
   const [connectLoading, setConnectLoading] = useState(false);
@@ -227,7 +206,7 @@ export default function ShareLinks() {
             onSubmit={async (data) => {
               setConnectLoading(true);
               setConnectErrors({});
-              let submitData = { ...data };
+              const submitData = { ...data };
               if (submitData.provider === 'digitalocean') {
                 submitData.provider = 'do_spaces';
                 if (!submitData.endpoint) {
@@ -239,16 +218,16 @@ export default function ShareLinks() {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                   },
-                  body: JSON.stringify({ storage_credential: submitData })
+                  body: JSON.stringify({ storage_credential: submitData }),
                 });
                 const result = await res.json();
                 if (!res.ok) {
                   setConnectErrors(result.errors || { error: result.error || 'Failed to connect bucket' });
                   return;
                 }
-                let newBucketId = result.credential?.id || result.id;
+                const newBucketId = result.credential?.id || result.id;
                 if (newBucketId) {
                   await BucketService.setActiveBucket(newBucketId);
                   await refreshActiveBucket();

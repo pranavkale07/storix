@@ -51,15 +51,15 @@ Rails.application.routes.draw do
       post "move_folders", to: "storage#move_folders"
       post "copy_folders", to: "storage#copy_folders"
       post "credentials/validate", to: "storage#validate_credential"
-      patch '/share_links/:id', to: 'storage#update_share_link'
-      delete 'share_links/:id', to: 'storage#destroy_share_link'
+      patch "/share_links/:id", to: "storage#update_share_link"
+      delete "share_links/:id", to: "storage#destroy_share_link"
     end
   end
 
-  get 'share_links/:token', to: 'share_links#show', as: :share_link
+  get "share_links/:token", to: "share_links#show", as: :share_link
 
   # Serve React app for all unmatched routes (except for /api and /rails paths)
-  get '*path', to: 'home#index', constraints: ->(req) do
+  get "*path", to: "home#index", constraints: ->(req) do
     !req.xhr? && req.format.html?
   end
 end

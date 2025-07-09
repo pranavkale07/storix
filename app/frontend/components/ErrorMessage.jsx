@@ -7,4 +7,4 @@ export default function ErrorMessage({ message, className = '' }) {
       {message}
     </div>
   );
-} 
+}

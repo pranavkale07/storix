@@ -1,1 +1,1 @@
-BACKEND_ERROR_LOGGER = Logger.new(Rails.root.join('log', 'backend_errors.log')) 
+BACKEND_ERROR_LOGGER = Logger.new(Rails.root.join("log", "backend_errors.log"))
