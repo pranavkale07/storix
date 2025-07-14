@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { format, formatDistanceToNow, subDays, isAfter, parseISO } from 'date-fns';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Card, CardHeader, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { apiFetch } from '@/lib/api';
@@ -53,10 +53,10 @@ function isViewableFile(filename) {
   const viewableExtensions = [
     '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', // Images
     '.pdf', // PDFs
-    '.txt', '.md', '.json', '.xml', '.csv', '.log', // Text files
+    '.txt', '.json', // Text files
     '.html', '.htm', // Web files
-    '.mp4', '.webm', '.ogg', // Videos
-    '.mp3', '.wav', '.ogg', // Audio
+    '.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv', // Videos
+    '.mp3', '.wav', '.ogg', '.flac', '.aac', // Audio
   ];
 
   const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
@@ -66,17 +66,24 @@ function isViewableFile(filename) {
 function Breadcrumbs({ path, onNavigate, className }) {
   const parts = path ? path.split('/').filter(Boolean) : [];
   return (
-    <nav className={`flex items-center gap-0 text-sm text-muted-foreground ${className || ''}`}>
+    <nav className={`flex items-center gap-0 text-sm text-muted-foreground ${className || ''}`} style={{ minWidth: 0 }}>
       <button className="hover:underline" onClick={() => onNavigate('')}>/</button>
       {parts.map((crumb, idx) => {
         const fullPath = parts.slice(0, idx + 1).join('/') + '/';
         const isLast = idx === parts.length - 1;
         return (
-          <span key={idx} className="flex items-center gap-0">
+          <span key={idx} className="flex items-center gap-0 min-w-0">
             {!isLast ? (
-              <button className="hover:underline" onClick={() => onNavigate(fullPath)}>{crumb}</button>
+              <button
+                className="hover:underline max-w-[120px] truncate"
+                style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}
+                onClick={() => onNavigate(fullPath)}
+                title={crumb}
+              >
+                {crumb}
+              </button>
             ) : (
-              <span className="font-semibold">{crumb}</span>
+              <span className="font-semibold max-w-[120px] truncate" style={{ textOverflow: 'ellipsis', overflow: 'hidden' }} title={crumb}>{crumb}</span>
             )}
             {idx < parts.length - 1 && <span>/</span>}
           </span>
@@ -353,17 +360,7 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-function getFileTypeBadge(filename) {
-  const ext = filename.split('.').pop().toLowerCase();
-  if (["jpg","jpeg","png","gif","bmp","webp","svg"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-blue-600/20 text-blue-400 text-xs">Image</span>;
-  if (["pdf"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-red-600/20 text-red-400 text-xs">PDF</span>;
-  if (["doc","docx"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-indigo-600/20 text-indigo-400 text-xs">Doc</span>;
-  if (["xls","xlsx","csv"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-green-600/20 text-green-400 text-xs">Sheet</span>;
-  if (["mp4","webm","ogg"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-purple-600/20 text-purple-400 text-xs">Video</span>;
-  if (["mp3","wav"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-pink-600/20 text-pink-400 text-xs">Audio</span>;
-  if (["txt","md","json","xml","log"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-gray-600/20 text-gray-400 text-xs">Text</span>;
-  return null;
-}
+
 
 // Map file extensions to Lucide icons and colors
 const fileTypeIconMap = [
@@ -386,11 +383,93 @@ function getFileIconByExtension(filename) {
       return { Icon: icon, color };
     }
   }
-  return { Icon: FileIcon, color: 'text-gray-400' };
+  return { Icon: FileIcon, color: 'text-muted-foreground' };
 }
 
-// Add this new component above FileList
-function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, downloading, onDownload, ...props }) {
+// Add these new components above FileList
+function FolderRow({ folder, isSelected, onSelectFolder, onOpenFolder, renamingFolder, onRenameFolder, onDeleteFolder, deletingFolders, ...props }) {
+  const folderNameRef = React.useRef(null);
+  const [isFolderTruncated, setIsFolderTruncated] = React.useState(false);
+  React.useEffect(() => {
+    if (folderNameRef.current) {
+      setIsFolderTruncated(folderNameRef.current.scrollWidth > folderNameRef.current.clientWidth);
+    }
+  }, [folder.name]);
+
+  return (
+    <tr key={folder.prefix} className={`border-b border-border group transition-all duration-150 ${isSelected ? 'bg-primary/10 border-primary/30 text-primary' : 'hover:bg-accent/40'} rounded-lg` }>
+      <td className="w-8 px-2 h-[65px] align-middle">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={checked => onSelectFolder(folder.prefix, checked)}
+          onClick={e => e.stopPropagation()}
+          aria-label="Select folder"
+        />
+      </td>
+      <td className="py-3 px-4 flex items-center gap-3 h-[65px] align-middle max-w-[60vw] sm:max-w-[40vw] md:max-w-[30vw] min-w-0 w-full cursor-pointer hover:underline font-semibold" onClick={() => onOpenFolder(folder.prefix)}>
+        <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+          <Folder className="w-5 h-5 text-yellow-600 fill-yellow-400 group-hover:scale-110 transition-transform" />
+        </span>
+        {renamingFolder === folder.prefix ? (
+          <FolderRenameInput
+            folder={folder}
+            onRename={() => {
+              onRenameFolder(null);
+              setTimeout(() => {
+                const event = new CustomEvent('refreshFileList');
+                window.dispatchEvent(event);
+              }, 500);
+            }}
+            onCancel={() => onRenameFolder(null)}
+          />
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                ref={folderNameRef}
+                className="truncate overflow-hidden whitespace-nowrap min-w-0 flex-1 cursor-pointer hover:underline font-semibold"
+                onClick={() => onOpenFolder(folder.prefix)}
+              >
+                {folder.name}
+              </span>
+            </TooltipTrigger>
+            {isFolderTruncated && (
+              <TooltipContent>
+                {folder.name}
+              </TooltipContent>
+            )}
+          </Tooltip>
+        )}
+      </td>
+      <td className="py-3 px-4 text-muted-foreground h-[65px] align-middle">—</td>
+      <td className="py-3 px-4 text-muted-foreground h-[65px] align-middle">—</td>
+      <td className="py-3 px-4 text-right h-[65px] align-middle">
+        <div className="flex items-center gap-1 justify-end">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" aria-label="Rename folder" onClick={e => { e.stopPropagation(); onRenameFolder(folder.prefix); }}>
+                  <Pencil className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Rename</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" aria-label="Delete folder" onClick={e => { e.stopPropagation(); onDeleteFolder(folder.prefix, folder.name); }} disabled={deletingFolders.has(folder.prefix)}>
+                  <Trash2 className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, downloading, onDownload, onShareFile, ...props }) {
   const fileNameRef = React.useRef(null);
   const [isFileTruncated, setIsFileTruncated] = React.useState(false);
   React.useEffect(() => {
@@ -404,7 +483,7 @@ function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, d
   // Pass through any other props as needed
 
   return (
-    <tr key={file.key} className={`border-b border-border group transition-all duration-150 ${isSelected ? 'bg-orange-500/90 text-white' : 'hover:bg-accent/40'} rounded-lg`}>
+    <tr key={file.key} className={`border-b border-border group transition-all duration-150 ${isSelected ? 'bg-primary/10 border-primary/30 text-primary' : 'hover:bg-accent/40'} rounded-lg`}>
       <td className="w-8 px-2 align-middle h-[65px]">
         <Checkbox
           checked={isSelected}
@@ -433,9 +512,26 @@ function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, d
             onCancel={() => onRenameFile(null)}
           />
         ) : (
-          <span ref={fileNameRef} className="truncate font-semibold min-w-0 flex-1" title={isFileTruncated ? file.key.split('/').pop() : undefined}>
-            {file.key.split('/').pop()}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span 
+                ref={fileNameRef} 
+                className={`truncate font-semibold min-w-0 flex-1 ${isViewableFile(file.key) ? 'cursor-pointer hover:underline' : 'cursor-default'}`}
+                onClick={() => {
+                  if (isViewableFile(file.key)) {
+                    onDownload(file.key, true); // Open in new tab for viewable files
+                  }
+                }}
+              >
+                {file.key.split('/').pop()}
+              </span>
+            </TooltipTrigger>
+            {isFileTruncated && (
+              <TooltipContent>
+                {file.key.split('/').pop()}
+              </TooltipContent>
+            )}
+          </Tooltip>
         )}
       </td>
       <td className="py-3 px-4 align-middle h-[65px]">{formatSize(file.size)}</td>
@@ -445,7 +541,7 @@ function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, d
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" aria-label="Share file" onClick={e => { e.stopPropagation(); onDownload(file.key, true); }}>
+                <Button size="icon" variant="ghost" aria-label="Share file" onClick={e => { e.stopPropagation(); onShareFile(file); }}>
                   <Share2 className="w-4 h-4 text-muted-foreground" />
                 </Button>
               </TooltipTrigger>
@@ -486,8 +582,8 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
   if (!folders.length && !files.length) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-        <span className="text-6xl mb-3">🗂️</span>
-        <div className="text-base font-medium mb-1">No files or folders</div>
+        <Folder className="w-12 h-12 mb-3 text-muted-foreground/60" />
+        <div className="text-base font-semibold mb-1">No files or folders</div>
         <div className="text-sm">Upload or create a folder to get started.</div>
       </div>
     );
@@ -560,79 +656,19 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
           </thead>
           <tbody>
             {/* Folders */}
-            {folders.map(folder => {
-              const isSelected = selectedFolders.includes(folder.prefix);
-              // Folder name cell
-              const folderNameRef = useRef(null);
-              const [isFolderTruncated, setIsFolderTruncated] = useState(false);
-              useEffect(() => {
-                if (folderNameRef.current) {
-                  setIsFolderTruncated(folderNameRef.current.scrollWidth > folderNameRef.current.clientWidth);
-                }
-              }, [folder.name]);
-              return (
-                <tr key={folder.prefix} className={`border-b border-border group transition-all duration-150 ${isSelected ? 'bg-orange-500/90 text-white' : 'hover:bg-accent/40'} rounded-lg` }>
-                  <td className="w-8 px-2 h-[65px] align-middle">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={checked => onSelectFolder(folder.prefix, checked)}
-                      onClick={e => e.stopPropagation()}
-                      aria-label="Select folder"
-                    />
-                  </td>
-                  <td className="py-3 px-4 flex items-center gap-3 h-[65px] align-middle max-w-[60vw] sm:max-w-[40vw] md:max-w-[30vw] min-w-0 w-full cursor-pointer hover:underline font-semibold" onClick={() => onOpenFolder(folder.prefix)}>
-                    <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
-                      <Folder className="w-5 h-5 text-yellow-600 fill-yellow-400 group-hover:scale-110 transition-transform" />
-                    </span>
-                    {renamingFolder === folder.prefix ? (
-                      <FolderRenameInput
-                        folder={folder}
-                        onRename={() => {
-                          onRenameFolder(null);
-                          setTimeout(() => {
-                            const event = new CustomEvent('refreshFileList');
-                            window.dispatchEvent(event);
-                          }, 500);
-                        }}
-                        onCancel={() => onRenameFolder(null)}
-                      />
-                    ) : (
-                      <span
-                        ref={folderNameRef}
-                        className="truncate overflow-hidden whitespace-nowrap min-w-0 flex-1 cursor-pointer hover:underline font-semibold"
-                        onClick={() => onOpenFolder(folder.prefix)}
-                      >
-                        {folder.name}
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-muted-foreground h-[65px] align-middle">—</td>
-                  <td className="py-3 px-4 text-muted-foreground h-[65px] align-middle">—</td>
-                  <td className="py-3 px-4 text-right h-[65px] align-middle">
-                    <div className="flex items-center gap-1 justify-end">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button size="icon" variant="ghost" aria-label="Rename folder" onClick={e => { e.stopPropagation(); onRenameFolder(folder.prefix); }}>
-                              <Pencil className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Rename</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button size="icon" variant="ghost" aria-label="Delete folder" onClick={e => { e.stopPropagation(); onDeleteFolder(folder.prefix, folder.name); }} disabled={deletingFolders.has(folder.prefix)}>
-                              <Trash2 className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Delete</TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+            {folders.map(folder => (
+              <FolderRow
+                key={folder.prefix}
+                folder={folder}
+                isSelected={selectedFolders.includes(folder.prefix)}
+                onSelectFolder={onSelectFolder}
+                onOpenFolder={onOpenFolder}
+                renamingFolder={renamingFolder}
+                onRenameFolder={onRenameFolder}
+                onDeleteFolder={onDeleteFolder}
+                deletingFolders={deletingFolders}
+              />
+            ))}
             {/* Files */}
             {files.map(file => (
               <FileRow
@@ -644,6 +680,7 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                 onRenameFile={onRenameFile}
                 downloading={downloading}
                 onDownload={onDownload}
+                onShareFile={onShareFile}
                 // ...pass other needed props
               />
             ))}
@@ -1427,6 +1464,10 @@ export default function FileManager({ activeBucket }) {
     }
   };
 
+  const handleRefresh = () => {
+    fetchFiles();
+  };
+
   return (
     <div className="w-full flex justify-center">
       <div className="w-full">
@@ -1447,70 +1488,27 @@ export default function FileManager({ activeBucket }) {
           )}
           <CardHeader className="flex flex-col gap-2">
             {/* Top row: Back button (if not root), Breadcrumbs (left), New Folder and Upload (right) */}
-            <div className="flex items-center justify-between w-full mb-1">
-              <div className="flex items-center gap-2 min-h-[40px]">
-                {prefix && (
-                  <Button size="icon" variant="ghost" onClick={handleBack} title="Back to parent folder">
-                    <span className="text-xl">‹</span>
-                  </Button>
-                )}
-                <Breadcrumbs
-                  path={prefix}
-                  onNavigate={handleBreadcrumbNavigate}
-                  className={!prefix ? 'ml-4' : ''}
-                />
+            <div className="flex items-center gap-2 mb-4 w-full">
+              {prefix && (
+                <Button size="icon" variant="ghost" onClick={handleBack} title="Back to parent folder" className="flex-shrink-0 mr-1">
+                  <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+                </Button>
+              )}
+              <div className="flex-1 min-w-0 overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
+                <Breadcrumbs path={prefix} onNavigate={handleBreadcrumbNavigate} className="whitespace-nowrap" />
               </div>
-              <div className="flex items-center gap-2">
-                <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-md flex items-center gap-2" onClick={() => setShowCreateFolder(true)}>
+              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                <Button size="sm" className="bg-green-700 hover:bg-green-800 text-white font-semibold px-4 py-2 rounded-md flex items-center gap-2" onClick={() => setShowCreateFolder(true)}>
                   <FolderPlus className="w-4 h-4 text-white" />
                   New Folder
                 </Button>
-                <Popover open={showUploadMenu} onOpenChange={setShowUploadMenu}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      size="sm"
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md flex items-center gap-2"
-                      onClick={() => setShowUploadMenu(v => !v)}
-                      disabled={uploading}
-                    >
-                      <Upload className="w-4 h-4 text-white" />
-                      {uploading ? 'Uploading...' : 'Upload'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-44 p-2">
-                    <button
-                      className="w-full text-left px-3 py-2 rounded hover:bg-accent text-foreground"
-                      onClick={() => { setShowUploadMenu(false); fileInputRef.current?.click(); }}
-                      disabled={uploading}
-                    >
-                      Upload Files
-                    </button>
-                    <button
-                      className="w-full text-left px-3 py-2 rounded hover:bg-accent text-foreground"
-                      onClick={() => { setShowUploadMenu(false); folderInputRef.current?.click(); }}
-                      disabled={uploading}
-                    >
-                      Upload Folder
-                    </button>
-                  </PopoverContent>
-                </Popover>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  onChange={handleFileSelect}
-                  style={{ display: 'none' }}
-                  disabled={uploading}
-                />
-                <input
-                  ref={folderInputRef}
-                  type="file"
-                  multiple
-                  webkitdirectory=""
-                  onChange={handleFolderSelect}
-                  style={{ display: 'none' }}
-                  disabled={uploading}
-                />
+                <Button size="sm" className="bg-slate-600 hover:bg-slate-700 text-white font-semibold px-4 py-2 rounded-md flex items-center gap-2" onClick={() => setShowUploadMenu(v => !v)} disabled={uploading}>
+                  <Upload className="w-4 h-4 text-white" />
+                  Upload
+                </Button>
+                <Button size="icon" variant="ghost" onClick={handleRefresh} title="Refresh" className="flex-shrink-0">
+                  <RefreshCw className={`w-5 h-5 text-muted-foreground ${loading ? 'animate-spin' : ''}`} />
+                </Button>
               </div>
             </div>
             {/* Second row: Search (left, full width), Filter (right) */}
@@ -1704,7 +1702,7 @@ export default function FileManager({ activeBucket }) {
                   </button>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-1" onClick={handleBulkDownload} disabled={bulkActionLoading || selectedFiles.length === 0}>
+                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-1" onClick={handleBulkDownload} disabled={bulkActionLoading || selectedFiles.length === 0}>
                     <Download className="w-4 h-4" /> Download Selected
                   </Button>
                   <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-1" onClick={handleBulkDelete} disabled={bulkActionLoading}>
