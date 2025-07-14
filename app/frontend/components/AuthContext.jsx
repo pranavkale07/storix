@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BucketService } from '../lib/bucketService';
 import { StorageManager } from '../lib/storage';
+import { showToast } from '../lib/toast';
 
 const AuthContext = createContext();
 
@@ -40,6 +41,9 @@ export function AuthProvider({ children }) {
 
     // Clear all localStorage data
     StorageManager.clearSession();
+
+    // Show logout toast
+    showToast.success('Logged out successfully');
 
     // Clear any potential browser state
     // Note: We don't use sessionStorage, cookies, or IndexedDB in this app

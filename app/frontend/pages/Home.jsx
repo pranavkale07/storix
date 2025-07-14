@@ -11,6 +11,7 @@ import { BucketService } from '../lib/bucketService';
 import Header from '../components/Header';
 import LoadingSpinner from '../components/LoadingSpinner';
 import useBuckets from '../hooks/useBuckets';
+import { showToast } from '../lib/toast';
 
 export default function Home() {
   const { user, loading, activeBucket, bucketLoading, refreshActiveBucket } = useAuth();
@@ -107,7 +108,35 @@ export default function Home() {
                 });
                 const result = await res.json();
                 if (!res.ok) {
-                  setConnectErrors(result.errors || { error: result.error || 'Failed to connect bucket' });
+                  // Handle specific error cases
+                  let errorMessage = 'Failed to connect bucket';
+                  
+                  // Backend returns errors in an array, not a single error field
+                  const errorText = result.errors ? result.errors.join(', ') : result.error || '';
+                  
+                  if (errorText) {
+                    const errorLower = errorText.toLowerCase();
+                    if (errorLower.includes('credentials') || errorLower.includes('access') || 
+                        errorLower.includes('invalid') || errorLower.includes('auth') ||
+                        errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
+                        errorLower.includes('signature') || errorLower.includes('key') ||
+                        errorLower.includes('credential validation failed')) {
+                      errorMessage = 'Invalid credentials. Please check your access key and secret key.';
+                    } else if (errorLower.includes('bucket') || errorLower.includes('not found') ||
+                               errorLower.includes('no such bucket') || errorLower.includes('does not exist') ||
+                               errorLower.includes('specified bucket does not exist')) {
+                      errorMessage = 'Bucket not found. Please check the bucket name and region.';
+                    } else if (errorLower.includes('permission') || errorLower.includes('denied') ||
+                               errorLower.includes('forbidden') || errorLower.includes('unauthorized')) {
+                      errorMessage = 'Permission denied. Please check your credentials and bucket permissions.';
+                    } else if (errorLower.includes('region') || errorLower.includes('endpoint')) {
+                      errorMessage = 'Invalid region or endpoint. Please check your configuration.';
+                    } else {
+                      errorMessage = errorText;
+                    }
+                  }
+                  setConnectErrors({ error: errorMessage });
+                  showToast.error('Failed to connect bucket', errorMessage);
                   return;
                 }
                 const newBucketId = result.credential?.id || result.id;
@@ -120,8 +149,11 @@ export default function Home() {
                 refreshBuckets();
                 setShowConnectDialog(false);
                 setConnectErrors({}); // clear errors on success
+                showToast.success('Bucket connected successfully');
               } catch (err) {
-                setConnectErrors({ error: 'Network error' });
+                const errorMessage = 'Network error. Please check your connection.';
+                setConnectErrors({ error: errorMessage });
+                showToast.error('Failed to connect bucket', errorMessage);
               } finally {
                 setConnectLoading(false);
               }

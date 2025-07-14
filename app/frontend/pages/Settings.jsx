@@ -15,6 +15,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { validateBucketFields } from '../lib/validateBucketFields';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Badge } from '../components/ui/badge';
+import { showToast } from '../lib/toast';
 
 export default function Settings() {
   const { user, logout, activeBucket, refreshActiveBucket } = useAuth();
@@ -100,13 +101,40 @@ export default function Settings() {
             await refreshActiveBucket();
           }
         }
+        showToast.success(editingBucket ? 'Bucket updated successfully' : 'Bucket added successfully');
       } else {
         const errorData = await response.json();
-        alert(errorData.error || 'Failed to save bucket');
+        let errorMessage = 'Failed to save bucket';
+        
+        // Backend returns errors in an array, not a single error field
+        const errorText = errorData.errors ? errorData.errors.join(', ') : errorData.error || '';
+        
+        if (errorText) {
+          const errorLower = errorText.toLowerCase();
+          if (errorLower.includes('credentials') || errorLower.includes('access') || 
+              errorLower.includes('invalid') || errorLower.includes('auth') ||
+              errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
+              errorLower.includes('signature') || errorLower.includes('key') ||
+              errorLower.includes('credential validation failed')) {
+            errorMessage = 'Invalid credentials. Please check your access key and secret key.';
+          } else if (errorLower.includes('bucket') || errorLower.includes('not found') ||
+                     errorLower.includes('no such bucket') || errorLower.includes('does not exist') ||
+                     errorLower.includes('specified bucket does not exist')) {
+            errorMessage = 'Bucket not found. Please check the bucket name and region.';
+          } else if (errorLower.includes('permission') || errorLower.includes('denied') ||
+                     errorLower.includes('forbidden') || errorLower.includes('unauthorized')) {
+            errorMessage = 'Permission denied. Please check your credentials and bucket permissions.';
+          } else if (errorLower.includes('region') || errorLower.includes('endpoint')) {
+            errorMessage = 'Invalid region or endpoint. Please check your configuration.';
+          } else {
+            errorMessage = errorText;
+          }
+        }
+        showToast.error('Failed to save bucket', errorMessage);
       }
     } catch (error) {
       console.error('Error saving bucket:', error);
-      alert('Failed to save bucket');
+      showToast.error('Failed to save bucket', 'Network error');
     } finally {
       setLoading(false);
     }
@@ -128,13 +156,40 @@ export default function Settings() {
         if (activeBucket && activeBucket.id === pendingDisconnectId) {
           await refreshActiveBucket();
         }
+        showToast.success('Bucket disconnected successfully');
       } else {
         const errorData = await response.json();
-        alert(errorData.error || 'Failed to disconnect bucket');
+        let errorMessage = 'Failed to disconnect bucket';
+        
+        // Backend returns errors in an array, not a single error field
+        const errorText = errorData.errors ? errorData.errors.join(', ') : errorData.error || '';
+        
+        if (errorText) {
+          const errorLower = errorText.toLowerCase();
+          if (errorLower.includes('credentials') || errorLower.includes('access') || 
+              errorLower.includes('invalid') || errorLower.includes('auth') ||
+              errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
+              errorLower.includes('signature') || errorLower.includes('key') ||
+              errorLower.includes('credential validation failed')) {
+            errorMessage = 'Invalid credentials. Please check your access key and secret key.';
+          } else if (errorLower.includes('bucket') || errorLower.includes('not found') ||
+                     errorLower.includes('no such bucket') || errorLower.includes('does not exist') ||
+                     errorLower.includes('specified bucket does not exist')) {
+            errorMessage = 'Bucket not found. Please check the bucket name and region.';
+          } else if (errorLower.includes('permission') || errorLower.includes('denied') ||
+                     errorLower.includes('forbidden') || errorLower.includes('unauthorized')) {
+            errorMessage = 'Permission denied. Please check your credentials and bucket permissions.';
+          } else if (errorLower.includes('region') || errorLower.includes('endpoint')) {
+            errorMessage = 'Invalid region or endpoint. Please check your configuration.';
+          } else {
+            errorMessage = errorText;
+          }
+        }
+        showToast.error('Failed to disconnect bucket', errorMessage);
       }
     } catch (error) {
       console.error('Error disconnecting bucket:', error);
-      alert('Failed to disconnect bucket');
+      showToast.error('Failed to disconnect bucket', 'Network error');
     } finally {
       setLoading(false);
       setPendingDisconnectId(null);
@@ -249,13 +304,46 @@ export default function Settings() {
                             }
                           }
                           setFormErrors({});
+                          showToast.success(editingBucket ? 'Bucket updated successfully' : 'Bucket connected successfully');
                         } else {
                           const errorData = await response.json();
-                          setFormErrors({ error: errorData.error || 'Failed to save bucket' });
+                          
+                          // Handle specific error cases with improved parsing
+                          let errorMessage = 'Failed to save bucket';
+                          
+                          // Backend returns errors in an array, not a single error field
+                          const errorText = errorData.errors ? errorData.errors.join(', ') : errorData.error || '';
+                          
+                          if (errorText) {
+                            const errorLower = errorText.toLowerCase();
+                            if (errorLower.includes('credentials') || errorLower.includes('access') || 
+                                errorLower.includes('invalid') || errorLower.includes('auth') ||
+                                errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
+                                errorLower.includes('signature') || errorLower.includes('key') ||
+                                errorLower.includes('credential validation failed')) {
+                              errorMessage = 'Invalid credentials. Please check your access key and secret key.';
+                            } else if (errorLower.includes('bucket') || errorLower.includes('not found') ||
+                                       errorLower.includes('no such bucket') || errorLower.includes('does not exist') ||
+                                       errorLower.includes('specified bucket does not exist')) {
+                              errorMessage = 'Bucket not found. Please check the bucket name and region.';
+                            } else if (errorLower.includes('permission') || errorLower.includes('denied') ||
+                                       errorLower.includes('forbidden') || errorLower.includes('unauthorized')) {
+                              errorMessage = 'Permission denied. Please check your credentials and bucket permissions.';
+                            } else if (errorLower.includes('region') || errorLower.includes('endpoint')) {
+                              errorMessage = 'Invalid region or endpoint. Please check your configuration.';
+                            } else {
+                              errorMessage = errorText;
+                            }
+                          }
+                          
+                          setFormErrors({ error: errorMessage });
+                          showToast.error('Failed to save bucket', errorMessage);
                         }
                       } catch (error) {
                         console.error('Error saving bucket:', error);
-                        setFormErrors({ error: 'Failed to save bucket' });
+                        const errorMessage = 'Network error. Please check your connection.';
+                        setFormErrors({ error: errorMessage });
+                        showToast.error('Failed to save bucket', errorMessage);
                       } finally {
                         setLoading(false);
                       }

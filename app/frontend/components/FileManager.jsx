@@ -21,6 +21,7 @@ import {
 import ConfirmDialog from './ConfirmDialog';
 import { Checkbox } from './ui/checkbox';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { showToast } from '@/lib/toast';
 
 function formatSize(bytes) {
   if (bytes === 0) return '0 B';
@@ -103,8 +104,16 @@ function CreateFolderModal({ isOpen, onClose, onSuccess, currentPrefix }) {
       setFolderName('');
       onSuccess();
       onClose();
+      showToast.success('Folder created successfully');
     } catch (err) {
-      setError(err.message);
+      let errorMessage = err.message;
+      if (err.message.includes('permission') || err.message.includes('denied')) {
+        errorMessage = 'Permission denied. Cannot create folder in this location.';
+      } else if (err.message.includes('already exists')) {
+        errorMessage = 'A folder with this name already exists.';
+      }
+      setError(errorMessage);
+      showToast.error('Failed to create folder', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -200,8 +209,15 @@ function FolderRenameInput({ folder, onRename, onCancel }) {
       }
 
       onRename();
+      showToast.success('Folder renamed successfully');
     } catch (err) {
-      alert(`Rename failed: ${err.message}`);
+      let errorMessage = err.message;
+      if (err.message.includes('permission') || err.message.includes('denied')) {
+        errorMessage = 'Permission denied. Cannot rename this folder.';
+      } else if (err.message.includes('already exists')) {
+        errorMessage = 'A folder with this name already exists.';
+      }
+      showToast.error('Failed to rename folder', errorMessage);
       onCancel();
     } finally {
       setLoading(false);
@@ -260,8 +276,15 @@ function FileRenameInput({ file, onRename, onCancel }) {
       }
 
       onRename();
+      showToast.success('File renamed successfully');
     } catch (err) {
-      alert(`Rename failed: ${err.message}`);
+      let errorMessage = err.message;
+      if (err.message.includes('permission') || err.message.includes('denied')) {
+        errorMessage = 'Permission denied. Cannot rename this file.';
+      } else if (err.message.includes('already exists')) {
+        errorMessage = 'A file with this name already exists.';
+      }
+      showToast.error('Failed to rename file', errorMessage);
       onCancel();
     } finally {
       setLoading(false);
@@ -494,6 +517,8 @@ export default function FileManager({ activeBucket }) {
   const [pendingDeleteFolder, setPendingDeleteFolder] = useState(null);
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
 
+  const [showUploadProgress, setShowUploadProgress] = useState(false);
+
   const fetchFiles = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -603,7 +628,7 @@ export default function FileManager({ activeBucket }) {
 
     } catch (err) {
       console.error('Download failed:', err);
-      alert(`Download failed: ${err.message}`);
+      showToast.error('Download failed', err.message);
     } finally {
       setDownloading(prev => {
         const newSet = new Set(prev);
@@ -635,9 +660,10 @@ export default function FileManager({ activeBucket }) {
         throw new Error(errorData.error || 'Failed to delete file');
       }
       await fetchFiles();
+      showToast.success('File deleted successfully');
     } catch (err) {
       console.error('Delete failed:', err);
-      alert(`Delete failed: ${err.message}`);
+      showToast.error('Delete failed', err.message);
     } finally {
       setDeleting(prev => {
         const newSet = new Set(prev);
@@ -675,9 +701,10 @@ export default function FileManager({ activeBucket }) {
         throw new Error(errorData.error || 'Failed to delete folder');
       }
       await fetchFiles();
+      showToast.success('Folder deleted successfully');
     } catch (err) {
       console.error('Delete folder failed:', err);
-      alert(`Delete folder failed: ${err.message}`);
+      showToast.error('Delete folder failed', err.message);
     } finally {
       setDeletingFolders(prev => {
         const newSet = new Set(prev);
@@ -792,6 +819,7 @@ export default function FileManager({ activeBucket }) {
 
     if (filesToUpload.length > 0) {
       setUploading(true);
+      setShowUploadProgress(true);
       // Use functional update to ensure we have the latest state
       setAllUploadingFiles(prev => {
         console.log('Previous uploading files:', prev.length);
@@ -888,6 +916,17 @@ export default function FileManager({ activeBucket }) {
     setSelectedFolders([]);
     setPendingBulkDelete(false);
     fetchFiles();
+    
+    // Show bulk operation result
+    const totalItems = selectedFiles.length + selectedFolders.length;
+    const errorCount = Object.keys(bulkActionError).length;
+    if (errorCount === 0) {
+      showToast.success(`Successfully deleted ${totalItems} items`);
+    } else if (errorCount === totalItems) {
+      showToast.error('Failed to delete items', 'All items failed to delete');
+    } else {
+      showToast.warning(`Partially completed`, `${totalItems - errorCount} items deleted, ${errorCount} failed`);
+    }
   };
 
   // Bulk Download
@@ -961,6 +1000,7 @@ export default function FileManager({ activeBucket }) {
 
     console.log('Setting uploading to true');
     setUploading(true);
+    setShowUploadProgress(true);
 
     setAllUploadingFiles(prev => {
       console.log('Previous uploading files:', prev.length);
@@ -997,6 +1037,7 @@ export default function FileManager({ activeBucket }) {
 
     console.log('Setting uploading to true');
     setUploading(true);
+    setShowUploadProgress(true);
 
     setAllUploadingFiles(prev => {
       console.log('Previous uploading files:', prev.length);
@@ -1040,7 +1081,19 @@ export default function FileManager({ activeBucket }) {
         });
         if (!res.ok) {
           const err = await res.json();
-          setUploadErrors(prev => ({ ...prev, [relativePath]: err.error || 'Failed to get upload URL' }));
+          let errorMessage = 'Failed to get upload URL';
+          if (err.error) {
+            if (err.error.includes('permission') || err.error.includes('denied')) {
+              errorMessage = 'Permission denied. Cannot upload to this location.';
+            } else if (err.error.includes('bucket') || err.error.includes('not found')) {
+              errorMessage = 'Bucket not found or inaccessible.';
+            } else if (err.error.includes('credentials')) {
+              errorMessage = 'Invalid credentials. Please reconnect your bucket.';
+            } else {
+              errorMessage = err.error;
+            }
+          }
+          setUploadErrors(prev => ({ ...prev, [relativePath]: errorMessage }));
           anyError = true;
           return;
         }
@@ -1094,18 +1147,19 @@ export default function FileManager({ activeBucket }) {
     console.log('All uploads completed');
     setUploading(false);
     if (!anyError) {
-      fetchFiles();
+      if (filesToUpload.length === 1) {
+        showToast.success('File uploaded successfully');
+      } else {
+        showToast.success('All files uploaded successfully');
+      }
     }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    // Clear all upload state when all uploads are complete
     setTimeout(() => {
       setAllUploadingFiles([]);
       setUploadProgress({});
       setUploadErrors({});
       setUploadSpeeds({});
       setUploadStartTimes({});
+      setShowUploadProgress(false);
     }, 2000); // Wait 2 seconds after completion to show "Done" status
   };
 
@@ -1284,7 +1338,7 @@ export default function FileManager({ activeBucket }) {
           </CardHeader>
           <CardContent>
             {/* Upload progress indicator */}
-            {uploading && (
+            {showUploadProgress && (
               <div className="mb-4 p-3 bg-muted border border-border rounded-lg">
                 <div className="flex items-center justify-between mb-1">
                   <h4 className="font-medium text-foreground text-base">Upload Progress</h4>

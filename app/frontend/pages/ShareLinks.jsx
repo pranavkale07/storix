@@ -20,6 +20,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Badge } from '../components/ui/badge';
 import useBuckets from '../hooks/useBuckets';
+import { showToast } from '../lib/toast';
 
 export default function ShareLinks() {
   const { activeBucket, refreshActiveBucket } = useAuth();
@@ -90,13 +91,14 @@ export default function ShareLinks() {
       });
       if (response.ok) {
         await fetchShareLinks();
+        showToast.success('Share link revoked successfully');
       } else {
         const errorData = await response.json();
-        alert(errorData.error || 'Failed to revoke share link');
+        showToast.error('Failed to revoke share link', errorData.error);
       }
     } catch (error) {
       console.error('Error revoking share link:', error);
-      alert('Failed to revoke share link');
+      showToast.error('Failed to revoke share link', 'Network error');
     } finally {
       setLoading(false);
       setPendingRevokeId(null);
@@ -116,13 +118,14 @@ export default function ShareLinks() {
       });
       if (response.ok) {
         await fetchShareLinks();
+        showToast.success('Share link deleted successfully');
       } else {
         const errorData = await response.json();
-        alert(errorData.error || 'Failed to delete share link');
+        showToast.error('Failed to delete share link', errorData.error);
       }
     } catch (error) {
       console.error('Error deleting share link:', error);
-      alert('Failed to delete share link');
+      showToast.error('Failed to delete share link', 'Network error');
     } finally {
       setLoading(false);
       setPendingDeleteId(null);
@@ -133,6 +136,7 @@ export default function ShareLinks() {
     const url = `${window.location.origin}/share_links/${token}`;
     navigator.clipboard.writeText(url);
     setCopiedLink(token);
+    showToast.success('Link copied to clipboard');
     setTimeout(() => setCopiedLink(null), 1500);
   };
 
@@ -343,6 +347,17 @@ export default function ShareLinks() {
                       </div>
 
                       <div className="flex items-center gap-2 ml-4">
+                        {/* Revoke button: only show if not revoked or expired, and place before Delete */}
+                        {!(link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRevokeLink(link.id)}
+                            title="Revoke link"
+                          >
+                            Revoke
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"

@@ -8,6 +8,7 @@ import { DebugStorage } from './components/DebugStorage';
 import { OAuthLogin } from './components/OAuthLogin';
 import { AuthCallback } from './components/AuthCallback';
 import { AuthError } from './components/AuthError';
+import { Toaster } from './components/ui/sonner';
 
 // Protected Route component
 function ProtectedRoute({ children }) {
@@ -96,6 +97,7 @@ export default function App() {
     <AuthProvider>
       <AppRoutes />
       <DebugStorage />
+      <Toaster />
     </AuthProvider>
   );
 }

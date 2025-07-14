@@ -5,6 +5,7 @@ import { Label } from './ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select';
 import { validateBucketFields } from '../lib/validateBucketFields';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { showToast } from '../lib/toast';
 
 export default function ConnectBucketForm({
   initialValues = {},
