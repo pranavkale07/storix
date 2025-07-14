@@ -621,6 +621,12 @@ class Api::Storage::StorageController < Api::BaseController
         dst_client = S3ClientBuilder.new(dst_cred).client
         src_bucket = src_cred.bucket
         dst_bucket = dst_cred.bucket
+        # Check if destination folder already exists
+        existing = dst_client.list_objects_v2(bucket: dst_bucket, prefix: dst_prefix, max_keys: 1)
+        if existing.common_prefixes.any? || existing.contents.any? { |obj| obj.key.start_with?(dst_prefix) }
+          results << { source_prefix: src_prefix, destination_prefix: dst_prefix, status: "error", error: "A folder with this name already exists." }
+          next
+        end
         # List all objects under the source prefix
         continuation_token = nil
         loop do

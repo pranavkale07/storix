@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Home from './pages/Home';
 import Settings from './pages/Settings';
 import ShareLinks from './pages/ShareLinks';
+import Account from './pages/Account';
+import Buckets from './pages/Buckets';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import { DebugStorage } from './components/DebugStorage';
 import { OAuthLogin } from './components/OAuthLogin';
@@ -80,10 +82,26 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/share-links"
+          path="/shared-links"
           element={
             <ProtectedRoute>
               <ShareLinks />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <Account />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/buckets"
+          element={
+            <ProtectedRoute>
+              <Buckets />
             </ProtectedRoute>
           }
         />

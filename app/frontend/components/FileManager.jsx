@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { format, formatDistanceToNow, subDays, isAfter, parseISO } from 'date-fns';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardHeader, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { apiFetch } from '@/lib/api';
-import { Download, Trash2, Share2, X, Search, Filter as FilterIcon } from 'lucide-react';
+import { Download, Trash2, Share2, X, Search, Filter as FilterIcon, Pencil, FolderPlus, Upload, Folder, File as FileIcon, Image as ImageIcon, FileText, FileCode, FileArchive, FileSpreadsheet, FileAudio, FileVideo } from 'lucide-react';
 import ShareModal from './ShareModal';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select';
 import { Input } from './ui/input';
@@ -22,6 +24,7 @@ import ConfirmDialog from './ConfirmDialog';
 import { Checkbox } from './ui/checkbox';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { showToast } from '@/lib/toast';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 
 function formatSize(bytes) {
   if (bytes === 0) return '0 B';
@@ -32,8 +35,17 @@ function formatSize(bytes) {
 }
 
 function formatDate(dateStr) {
-  const d = new Date(dateStr);
-  return d.toLocaleString();
+  const d = typeof dateStr === 'string' ? parseISO(dateStr) : new Date(dateStr);
+  const sevenDaysAgo = subDays(new Date(), 7);
+  if (isAfter(d, sevenDaysAgo)) {
+    // Show relative time for files modified within the last 7 days
+    let rel = formatDistanceToNow(d, { addSuffix: true });
+    if (rel.startsWith('about ')) rel = rel.replace('about ', '');
+    return rel;
+  } else {
+    // Show short absolute date for older files
+    return format(d, 'd MMM yyyy, h:mm a');
+  }
 }
 
 function isViewableFile(filename) {
@@ -197,7 +209,14 @@ function FolderRenameInput({ folder, onRename, onCancel }) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to rename folder');
+        let errorMessage = errorData.error || 'Failed to rename folder';
+        if (errorMessage.includes('already exists')) {
+          showToast.error('Failed to rename folder', 'A folder with this name already exists.');
+        } else {
+          showToast.error('Failed to rename folder', errorMessage);
+        }
+        setLoading(false);
+        return;
       }
 
       const result = await response.json();
@@ -205,7 +224,13 @@ function FolderRenameInput({ folder, onRename, onCancel }) {
 
       if (hasErrors) {
         const errors = result.results.filter(r => r.status === 'error').map(r => r.error).join(', ');
-        throw new Error(`Some files failed to move: ${errors}`);
+        if (errors.includes('already exists')) {
+          showToast.error('Failed to rename folder', 'A folder with this name already exists.');
+        } else {
+          showToast.error('Failed to rename folder', errors);
+        }
+        setLoading(false);
+        return;
       }
 
       onRename();
@@ -327,143 +352,326 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-function FileList({ folders, files, onOpenFolder, onDownload, onDelete, downloading, deleting, onDeleteFolder, deletingFolders, onRenameFolder, renamingFolder, onRenameFile, renamingFile, selectedFiles, selectedFolders, onSelectFile, onSelectFolder, isAllSelected, onSelectAll, onShareFile }) {
-  console.log('FileList received:', { folders, files, foldersLength: folders?.length, filesLength: files?.length });
+function getFileTypeBadge(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  if (["jpg","jpeg","png","gif","bmp","webp","svg"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-blue-600/20 text-blue-400 text-xs">Image</span>;
+  if (["pdf"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-red-600/20 text-red-400 text-xs">PDF</span>;
+  if (["doc","docx"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-indigo-600/20 text-indigo-400 text-xs">Doc</span>;
+  if (["xls","xlsx","csv"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-green-600/20 text-green-400 text-xs">Sheet</span>;
+  if (["mp4","webm","ogg"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-purple-600/20 text-purple-400 text-xs">Video</span>;
+  if (["mp3","wav"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-pink-600/20 text-pink-400 text-xs">Audio</span>;
+  if (["txt","md","json","xml","log"].includes(ext)) return <span className="ml-2 px-2 py-0.5 rounded bg-gray-600/20 text-gray-400 text-xs">Text</span>;
+  return null;
+}
+
+// Map file extensions to Lucide icons and colors
+const fileTypeIconMap = [
+  { exts: ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'], icon: ImageIcon, color: 'text-blue-400' },
+  { exts: ['.pdf'], icon: FileText, color: 'text-red-500' },
+  { exts: ['.txt', '.md', '.json', '.xml', '.log'], icon: FileText, color: 'text-gray-400' },
+  { exts: ['.zip', '.rar', '.tar', '.gz', '.7z'], icon: FileArchive, color: 'text-yellow-600' },
+  { exts: ['.xls', '.xlsx', '.ods', '.csv'], icon: FileSpreadsheet, color: 'text-green-500' },
+  { exts: ['.mp3', '.wav', '.ogg'], icon: FileAudio, color: 'text-purple-500' },
+  { exts: ['.mp4', '.webm', '.ogg', '.mov'], icon: FileVideo, color: 'text-indigo-500' },
+  { exts: ['.js', '.ts', '.jsx', '.tsx', '.py', '.rb', '.go', '.java', '.c', '.cpp', '.cs', '.sh'], icon: FileCode, color: 'text-pink-500' },
+  { exts: ['.doc', '.docx'], icon: FileText, color: 'text-blue-600' },
+  { exts: ['.exe'], icon: FileArchive, color: 'text-gray-500' },
+];
+
+function getFileIconByExtension(filename) {
+  const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+  for (const { exts, icon, color } of fileTypeIconMap) {
+    if (exts.includes(ext)) {
+      return { Icon: icon, color };
+    }
+  }
+  return { Icon: FileIcon, color: 'text-gray-400' };
+}
+
+function FileList({ folders, files, onOpenFolder, onDownload, onDelete, downloading, deleting, onDeleteFolder, deletingFolders, onRenameFolder, renamingFolder, onRenameFile, renamingFile, selectedFiles, selectedFolders, onSelectFile, onSelectFolder, isAllSelected, onSelectAll, onShareFile, onSort, sortBy, sortOrder }) {
   if (!folders.length && !files.length) {
     return (
-      <div className="text-center text-muted-foreground py-12">
-        <div className="text-4xl mb-2">📁</div>
-        <div className="text-lg font-medium">No files or folders yet</div>
-        <div className="text-sm">Upload your first file or create a folder to get started.</div>
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <span className="text-6xl mb-3">🗂️</span>
+        <div className="text-base font-medium mb-1">No files or folders</div>
+        <div className="text-sm">Upload or create a folder to get started.</div>
       </div>
     );
   }
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-sm">
-        <thead>
-          <tr className="border-b border-border">
-            <th className="w-8 px-2">
-              <Checkbox checked={isAllSelected} onCheckedChange={onSelectAll} aria-label="Select all" />
-            </th>
-            <th className="text-left py-2 px-3 font-semibold">Name</th>
-            <th className="text-left py-2 px-3 font-semibold">Size</th>
-            <th className="text-left py-2 px-3 font-semibold">Last Modified</th>
-            <th className="py-2 px-3"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {/* Folders */}
-          {folders.map(folder => {
-            const isSelected = selectedFolders.includes(folder.prefix);
-            return (
-              <tr key={folder.prefix} className={`border-b border-border group transition ${isSelected ? 'bg-orange-500/90 text-white' : 'hover:bg-accent/30'}`}>
-                <td className="w-8 px-2">
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={checked => onSelectFolder(folder.prefix, checked)}
-                    onClick={e => e.stopPropagation()}
-                    aria-label="Select folder"
-                  />
-                </td>
-                <td className="py-2 px-3 flex items-center gap-2 font-semibold cursor-pointer hover:underline" onClick={() => onOpenFolder(folder.prefix)}>
-                  <span className="text-lg">📁</span>
-                  {renamingFolder === folder.prefix ? (
-                    <FolderRenameInput
-                      folder={folder}
-                      onRename={() => {
-                        onRenameFolder(null);
-                        setTimeout(() => {
-                          const event = new CustomEvent('refreshFileList');
-                          window.dispatchEvent(event);
-                        }, 500);
-                      }}
-                      onCancel={() => onRenameFolder(null)}
-                    />
+    <TooltipProvider>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm rounded-lg overflow-hidden shadow-lg bg-card">
+          <thead className="bg-muted/60">
+            <tr className="border-b border-border">
+              <th className="w-8 px-2 py-3">
+                <Checkbox checked={isAllSelected} onCheckedChange={onSelectAll} aria-label="Select all" />
+              </th>
+              <th
+                className={`text-left py-3 px-4 font-semibold cursor-pointer select-none group transition-colors ${sortBy === 'name' ? 'text-primary font-bold' : ''}`}
+                onClick={() => onSort('name')}
+                title="Sort by Name"
+              >
+                <span className="inline-flex items-center gap-1 group-hover:text-primary transition-colors">
+                  Name
+                  {sortBy === 'name' ? (
+                    sortOrder === 'asc' ? (
+                      <ArrowUp className="w-5 h-5 text-primary" />
+                    ) : (
+                      <ArrowDown className="w-5 h-5 text-primary" />
+                    )
                   ) : (
-                    <span>{folder.name}</span>
+                    <ArrowDown className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
                   )}
-                </td>
-                <td className="py-2 px-3 text-muted-foreground">—</td>
-                <td className="py-2 px-3 text-muted-foreground">—</td>
-                <td className="py-2 px-3 text-right">
-                  <div className="flex items-center gap-1 justify-end">
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button size="icon" variant="ghost" title="Rename" onClick={e => { e.stopPropagation(); onRenameFolder(folder.prefix); }}>
-                        ✏️
-                      </Button>
-                      <Button size="icon" variant="ghost" title="Delete" onClick={e => { e.stopPropagation(); onDeleteFolder(folder.prefix, folder.name); }} disabled={deletingFolders.has(folder.prefix)}>
-                        {deletingFolders.has(folder.prefix) ? '⏳' : '🗑️'}
-                      </Button>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-          {/* Files */}
-          {files.map(file => {
-            const isSelected = selectedFiles.includes(file.key);
-            return (
-              <tr key={file.key} className={`border-b border-border group transition ${isSelected ? 'bg-orange-500/90 text-white' : 'hover:bg-accent/30'}`}>
-                <td className="w-8 px-2">
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={checked => onSelectFile(file.key, checked)}
-                    onClick={e => e.stopPropagation()}
-                    aria-label="Select file"
-                  />
-                </td>
-                <td className="py-2 px-3 flex items-center gap-2">
-                  <span className="text-lg">📄</span>
-                  {renamingFile === file.key ? (
-                    <FileRenameInput
-                      file={file}
-                      onRename={() => {
-                        onRenameFile(null);
-                        setTimeout(() => {
-                          const event = new CustomEvent('refreshFileList');
-                          window.dispatchEvent(event);
-                        }, 500);
-                      }}
-                      onCancel={() => onRenameFile(null)}
-                    />
+                </span>
+              </th>
+              <th
+                className={`text-left py-3 px-4 font-semibold cursor-pointer select-none group transition-colors ${sortBy === 'size' ? 'text-primary font-bold' : ''}`}
+                onClick={() => onSort('size')}
+                title="Sort by Size"
+              >
+                <span className="inline-flex items-center gap-1 group-hover:text-primary transition-colors">
+                  Size
+                  {sortBy === 'size' ? (
+                    sortOrder === 'asc' ? (
+                      <ArrowUp className="w-5 h-5 text-primary" />
+                    ) : (
+                      <ArrowDown className="w-5 h-5 text-primary" />
+                    )
                   ) : (
-                    <span
-                      className={isViewableFile(file.key) ? 'cursor-pointer hover:underline' : ''}
-                      onClick={isViewableFile(file.key) ? () => onDownload(file.key, true) : undefined}
-                      title={isViewableFile(file.key) ? 'Click to view' : undefined}
-                    >
-                      {file.key}
-                    </span>
+                    <ArrowDown className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
                   )}
-                </td>
-                <td className="py-2 px-3">{formatSize(file.size)}</td>
-                <td className="py-2 px-3">{formatDate(file.last_modified)}</td>
-                <td className="py-2 px-3 text-right">
-                  <div className="flex items-center gap-1 justify-end">
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button size="icon" variant="ghost" title="Share" onClick={e => { e.stopPropagation(); onShareFile(file); }}>
-                        🔗
-                      </Button>
-                      <Button size="icon" variant="ghost" title="Rename" onClick={e => { e.stopPropagation(); onRenameFile(file.key); }}>
-                        ✏️
-                      </Button>
-                      <Button size="icon" variant="ghost" title="Delete" onClick={e => { e.stopPropagation(); onDelete(file.key); }} disabled={deleting.has(file.key)}>
-                        {deleting.has(file.key) ? '⏳' : '🗑️'}
-                      </Button>
+                </span>
+              </th>
+              <th
+                className={`text-left py-3 px-4 font-semibold cursor-pointer select-none group transition-colors ${sortBy === 'last_modified' ? 'text-primary font-bold' : ''}`}
+                onClick={() => onSort('last_modified')}
+                title="Sort by Last Modified"
+              >
+                <span className="inline-flex items-center gap-1 group-hover:text-primary transition-colors">
+                  Last Modified
+                  {sortBy === 'last_modified' ? (
+                    sortOrder === 'asc' ? (
+                      <ArrowUp className="w-5 h-5 text-primary" />
+                    ) : (
+                      <ArrowDown className="w-5 h-5 text-primary" />
+                    )
+                  ) : (
+                    <ArrowDown className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                  )}
+                </span>
+              </th>
+              <th className="py-3 px-4"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Folders */}
+            {folders.map(folder => {
+              const isSelected = selectedFolders.includes(folder.prefix);
+              // Folder name cell
+              const folderNameRef = useRef(null);
+              const [isFolderTruncated, setIsFolderTruncated] = useState(false);
+              useEffect(() => {
+                if (folderNameRef.current) {
+                  setIsFolderTruncated(folderNameRef.current.scrollWidth > folderNameRef.current.clientWidth);
+                }
+              }, [folder.name]);
+              return (
+                <tr key={folder.prefix} className={`border-b border-border group transition-all duration-150 ${isSelected ? 'bg-orange-500/90 text-white' : 'hover:bg-accent/40'} rounded-lg` }>
+                  <td className="w-8 px-2 h-[65px] align-middle">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={checked => onSelectFolder(folder.prefix, checked)}
+                      onClick={e => e.stopPropagation()}
+                      aria-label="Select folder"
+                    />
+                  </td>
+                  <td className="py-3 px-4 flex items-center gap-3 h-[65px] align-middle max-w-[60vw] sm:max-w-[40vw] md:max-w-[30vw] min-w-0 w-full cursor-pointer hover:underline font-semibold" onClick={() => onOpenFolder(folder.prefix)}>
+                    <Folder className="w-5 h-5 text-yellow-600 fill-yellow-400 group-hover:scale-110 transition-transform" />
+                    {renamingFolder === folder.prefix ? (
+                      <FolderRenameInput
+                        folder={folder}
+                        onRename={() => {
+                          onRenameFolder(null);
+                          setTimeout(() => {
+                            const event = new CustomEvent('refreshFileList');
+                            window.dispatchEvent(event);
+                          }, 500);
+                        }}
+                        onCancel={() => onRenameFolder(null)}
+                      />
+                    ) : (
+                      isFolderTruncated ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span
+                                ref={folderNameRef}
+                                className="truncate overflow-hidden whitespace-nowrap min-w-0 w-full cursor-pointer hover:underline font-semibold"
+                                onClick={() => onOpenFolder(folder.prefix)}
+                              >
+                                {folder.name}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>{folder.name}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <span
+                          ref={folderNameRef}
+                          className="truncate overflow-hidden whitespace-nowrap min-w-0 w-full cursor-pointer hover:underline font-semibold"
+                          onClick={() => onOpenFolder(folder.prefix)}
+                        >
+                          {folder.name}
+                        </span>
+                      )
+                    )}
+                  </td>
+                  <td className="py-3 px-4 text-muted-foreground h-[65px] align-middle">—</td>
+                  <td className="py-3 px-4 text-muted-foreground h-[65px] align-middle">—</td>
+                  <td className="py-3 px-4 text-right h-[65px] align-middle">
+                    <div className="flex items-center gap-1 justify-end">
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="icon" variant="ghost" aria-label="Rename folder" onClick={e => { e.stopPropagation(); onRenameFolder(folder.prefix); }}>
+                              <Pencil className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Rename</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="icon" variant="ghost" aria-label="Delete folder" onClick={e => { e.stopPropagation(); onDeleteFolder(folder.prefix, folder.name); }} disabled={deletingFolders.has(folder.prefix)}>
+                              <Trash2 className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete</TooltipContent>
+                        </Tooltip>
+                      </div>
                     </div>
-                    <Button size="icon" variant="ghost" title="Download" onClick={e => { e.stopPropagation(); onDownload(file.key, false); }} disabled={downloading.has(file.key)}>
-                      {downloading.has(file.key) ? '⏳' : '⬇️'}
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                  </td>
+                </tr>
+              );
+            })}
+            {/* Files */}
+            {files.map(file => {
+              const isSelected = selectedFiles.includes(file.key);
+              // File name cell
+              const fileNameRef = useRef(null);
+              const [isFileTruncated, setIsFileTruncated] = useState(false);
+              useEffect(() => {
+                if (fileNameRef.current) {
+                  setIsFileTruncated(fileNameRef.current.scrollWidth > fileNameRef.current.clientWidth);
+                }
+              }, [file.key]);
+              return (
+                <tr key={file.key} className={`border-b border-border group transition-all duration-150 ${isSelected ? 'bg-orange-500/90 text-white' : 'hover:bg-accent/40'} rounded-lg`}>
+                  <td className="w-8 px-2 align-middle h-[65px]">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={checked => onSelectFile(file.key, checked)}
+                      onClick={e => e.stopPropagation()}
+                      aria-label="Select file"
+                    />
+                  </td>
+                  <td className="py-3 px-4 flex items-center gap-3 align-middle h-[65px] max-w-[60vw] sm:max-w-[40vw] md:max-w-[30vw] min-w-0 w-full">
+                    {(() => {
+                      const { Icon, color } = getFileIconByExtension(file.key);
+                      return <Icon className={`w-5 h-5 ${color} group-hover:scale-110 transition-transform`} />;
+                    })()}
+                    {renamingFile === file.key ? (
+                      <FileRenameInput
+                        file={file}
+                        onRename={() => {
+                          onRenameFile(null);
+                          setTimeout(() => {
+                            const event = new CustomEvent('refreshFileList');
+                            window.dispatchEvent(event);
+                          }, 500);
+                        }}
+                        onCancel={() => onRenameFile(null)}
+                      />
+                    ) : (
+                      isFileTruncated ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span
+                                ref={fileNameRef}
+                                className={
+                                  (isViewableFile(file.key) ? 'cursor-pointer hover:underline ' : '') +
+                                  'truncate overflow-hidden whitespace-nowrap min-w-0 w-full'
+                                }
+                                onClick={isViewableFile(file.key) ? () => onDownload(file.key, true) : undefined}
+                              >
+                                {file.key.split('/').pop()}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>{file.key.split('/').pop()}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <span
+                          ref={fileNameRef}
+                          className={
+                            (isViewableFile(file.key) ? 'cursor-pointer hover:underline ' : '') +
+                            'truncate overflow-hidden whitespace-nowrap min-w-0 w-full'
+                          }
+                          onClick={isViewableFile(file.key) ? () => onDownload(file.key, true) : undefined}
+                        >
+                          {file.key.split('/').pop()}
+                        </span>
+                      )
+                    )}
+                  </td>
+                  <td className="py-3 px-4 align-middle h-[65px]">{formatSize(file.size)}</td>
+                  <td className="py-3 px-4 align-middle h-[65px]">{formatDate(file.last_modified)}</td>
+                  <td className="py-3 px-4 text-right align-middle h-[65px]">
+                    <div className="flex items-center gap-1 justify-end">
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="icon" variant="ghost" aria-label="Share file" onClick={e => { e.stopPropagation(); onShareFile(file); }}>
+                              <Share2 className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Share</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="icon" variant="ghost" aria-label="Rename file" onClick={e => { e.stopPropagation(); onRenameFile(file.key); }}>
+                              <Pencil className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Rename</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="icon" variant="ghost" aria-label="Delete file" onClick={e => { e.stopPropagation(); onDelete(file.key); }} disabled={deleting.has(file.key)}>
+                              <Trash2 className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete</TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="icon" variant="ghost" aria-label="Download file" onClick={e => { e.stopPropagation(); onDownload(file.key, false); }} disabled={downloading.has(file.key)}>
+                            <Download className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Download</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -473,6 +681,8 @@ export default function FileManager({ activeBucket }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [prefix, setPrefix] = useState(''); // current folder path
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
   const [downloading, setDownloading] = useState(new Set());
   const [deleting, setDeleting] = useState(new Set());
   const [deletingFolders, setDeletingFolders] = useState(new Set());
@@ -529,6 +739,8 @@ export default function FileManager({ activeBucket }) {
       if (minSize) params.push(`min_size=${parseInt(minSize * 1024 * 1024)}`); // MB to bytes
       if (maxSize) params.push(`max_size=${parseInt(maxSize * 1024 * 1024)}`);
       if (search) params.push(`search=${encodeURIComponent(search)}`);
+      if (sortBy) params.push(`sort_by=${encodeURIComponent(sortBy)}`);
+      if (sortOrder) params.push(`sort_order=${encodeURIComponent(sortOrder)}`);
       if (params.length) url += (url.includes('?') ? '&' : '?') + params.join('&');
       console.log('Fetching files from:', url);
       const res = await apiFetch(url);
@@ -539,10 +751,27 @@ export default function FileManager({ activeBucket }) {
         setFolders([]);
         setFiles([]);
       } else {
-        console.log('Setting folders:', data.folders);
-        console.log('Setting files:', data.files);
-        setFolders(data.folders || []);
-        setFiles(data.files || []);
+        // Sort folders and files by selected column and direction
+        const sortFn = (a, b) => {
+          let aVal, bVal;
+          if (sortBy === 'name') {
+            aVal = (a.name || a.key || a.prefix || '').toLowerCase();
+            bVal = (b.name || b.key || b.prefix || '').toLowerCase();
+          } else if (sortBy === 'size') {
+            aVal = a.size || 0;
+            bVal = b.size || 0;
+          } else if (sortBy === 'last_modified') {
+            aVal = new Date(a.last_modified || 0).getTime();
+            bVal = new Date(b.last_modified || 0).getTime();
+          }
+          if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+          if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+          return 0;
+        };
+        const sortedFolders = (data.folders || []).slice().sort(sortFn);
+        const sortedFiles = (data.files || []).slice().sort(sortFn);
+        setFolders(sortedFolders);
+        setFiles(sortedFiles);
       }
     } catch (err) {
       console.error('Error fetching files:', err);
@@ -551,7 +780,7 @@ export default function FileManager({ activeBucket }) {
       setFiles([]);
     }
     setLoading(false);
-  }, [prefix, filterType, minSize, maxSize, search]);
+  }, [prefix, filterType, minSize, maxSize, search, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchFiles();
@@ -955,6 +1184,8 @@ export default function FileManager({ activeBucket }) {
         link.click();
         document.body.removeChild(link);
         setBulkActionProgress(prev => ({ ...prev, [key]: 'downloaded' }));
+        // Add a 500ms delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (err) {
         setBulkActionError(prev => ({ ...prev, [key]: err.message || 'Download error' }));
       }
@@ -1163,9 +1394,19 @@ export default function FileManager({ activeBucket }) {
     }, 2000); // Wait 2 seconds after completion to show "Done" status
   };
 
+  // Sorting handler for column headers
+  const onSort = (column) => {
+    if (sortBy === column) {
+      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
+
   return (
     <div className="w-full flex justify-center">
-      <div className="w-full max-w-4xl">
+      <div className="w-full">
         <Card
           className={`w-full transition-all duration-200 ${dragActive ? 'ring-2 ring-primary ring-opacity-50 bg-primary/5' : ''}`}
           onDragOver={handleDragOver}
@@ -1198,7 +1439,7 @@ export default function FileManager({ activeBucket }) {
               </div>
               <div className="flex items-center gap-2">
                 <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-md flex items-center gap-2" onClick={() => setShowCreateFolder(true)}>
-                  <span><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-folder"><path d="M3 7V5a2 2 0 0 1 2-2h2.17a2 2 0 0 1 1.41.59l1.83 1.82A2 2 0 0 0 12.83 6H19a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg></span>
+                  <FolderPlus className="w-4 h-4 text-white" />
                   New Folder
                 </Button>
                 <Popover open={showUploadMenu} onOpenChange={setShowUploadMenu}>
@@ -1209,7 +1450,7 @@ export default function FileManager({ activeBucket }) {
                       onClick={() => setShowUploadMenu(v => !v)}
                       disabled={uploading}
                     >
-                      <span><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-upload"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg></span>
+                      <Upload className="w-4 h-4 text-white" />
                       {uploading ? 'Uploading...' : 'Upload'}
                     </Button>
                   </PopoverTrigger>
@@ -1390,7 +1631,7 @@ export default function FileManager({ activeBucket }) {
             )}
 
             {(selectedFiles.length > 0 || selectedFolders.length > 0) && (
-              <div className="flex items-center justify-between bg-muted border border-border rounded-lg px-4 py-2 mb-2 w-full">
+              <div className="flex items-center justify-between bg-muted/80 border border-border rounded-lg px-4 py-2 mb-3 w-full animate-in fade-in-0 transition-all duration-200">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-foreground">
                     {selectedFiles.length + selectedFolders.length} item{selectedFiles.length + selectedFolders.length > 1 ? 's' : ''} selected
@@ -1406,9 +1647,21 @@ export default function FileManager({ activeBucket }) {
                   <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-1" onClick={handleBulkDelete} disabled={bulkActionLoading}>
                     <Trash2 className="w-4 h-4" /> Delete Selected
                   </Button>
-                  <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-1" onClick={() => setShowShareModal(true)} disabled={selectedFiles.length + selectedFolders.length !== 1}>
-                    <Share2 className="w-4 h-4" /> Share Selected
-                  </Button>
+                </div>
+              </div>
+            )}
+            {loading && (
+              <div className="flex items-center justify-center py-12">
+                <svg className="animate-spin h-6 w-6 text-muted-foreground" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+              </div>
+            )}
+            {error && !loading && (
+              <div className="mb-4 w-full flex items-center justify-center">
+                <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-2 rounded text-sm">
+                  {error}
                 </div>
               </div>
             )}
@@ -1433,6 +1686,9 @@ export default function FileManager({ activeBucket }) {
               isAllSelected={isAllSelected}
               onSelectAll={handleSelectAll}
               onShareFile={handleShareFile}
+              onSort={onSort}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
             />
           </CardContent>
           <CreateFolderModal

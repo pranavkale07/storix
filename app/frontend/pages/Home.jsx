@@ -67,7 +67,9 @@ export default function Home() {
       {/* Main content */}
       <main className="flex justify-center items-start min-h-[80vh] py-12">
         {activeBucket ? (
-          <FileManager activeBucket={activeBucket} />
+          <div className="w-full max-w-7xl px-4">
+            <FileManager activeBucket={activeBucket} />
+          </div>
         ) : (
           <Card className="w-full max-w-md">
             <CardHeader>
