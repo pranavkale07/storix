@@ -26,6 +26,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { showToast } from '@/lib/toast';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 import { Progress } from './ui/progress';
+import { Skeleton } from './ui/skeleton';
 
 function formatSize(bytes) {
   if (bytes === 0) return '0 B';
@@ -578,7 +579,47 @@ function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, d
   );
 }
 
-function FileList({ folders, files, onOpenFolder, onDownload, onDelete, downloading, deleting, onDeleteFolder, deletingFolders, onRenameFolder, renamingFolder, onRenameFile, renamingFile, selectedFiles, selectedFolders, onSelectFile, onSelectFolder, isAllSelected, onSelectAll, onShareFile, onSort, sortBy, sortOrder }) {
+function FileList({ folders, files, onOpenFolder, onDownload, onDelete, downloading, deleting, onDeleteFolder, deletingFolders, onRenameFolder, renamingFolder, onRenameFile, renamingFile, selectedFiles, selectedFolders, onSelectFile, onSelectFolder, isAllSelected, onSelectAll, onShareFile, onSort, sortBy, sortOrder, loading }) {
+  if (loading) {
+    // Render skeleton table
+    return (
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm rounded-lg overflow-hidden shadow-lg bg-card">
+          <thead className="bg-muted/60">
+            <tr className="border-b border-border">
+              <th className="w-8 px-2 py-3">
+                <Skeleton className="h-4 w-4 rounded" />
+              </th>
+              <th className="text-left py-3 px-4 font-semibold"> <Skeleton className="h-4 w-24 rounded" /> </th>
+              <th className="text-left py-3 px-4 font-semibold"> <Skeleton className="h-4 w-16 rounded" /> </th>
+              <th className="text-left py-3 px-4 font-semibold"> <Skeleton className="h-4 w-24 rounded" /> </th>
+              <th className="py-3 px-4"> <Skeleton className="h-4 w-8 rounded" /> </th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <tr key={i} className="border-b border-border">
+                <td className="w-8 px-2 align-middle h-[65px]"> <Skeleton className="h-4 w-4 rounded" /> </td>
+                <td className="py-3 px-4 align-middle h-[65px]">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-5 h-5 rounded" />
+                    <Skeleton className="h-4 w-40 rounded" />
+                  </div>
+                </td>
+                <td className="py-3 px-4 align-middle h-[65px]"> <Skeleton className="h-4 w-12 rounded" /> </td>
+                <td className="py-3 px-4 align-middle h-[65px]"> <Skeleton className="h-4 w-20 rounded" /> </td>
+                <td className="py-3 px-4 text-right align-middle h-[65px]">
+                  <div className="flex items-center gap-1 justify-end">
+                    <Skeleton className="h-4 w-16 rounded" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
   if (!folders.length && !files.length) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -1750,6 +1791,7 @@ export default function FileManager({ activeBucket }) {
               onSort={onSort}
               sortBy={sortBy}
               sortOrder={sortOrder}
+              loading={loading}
             />
           </CardContent>
           <CreateFolderModal
