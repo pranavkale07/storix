@@ -524,8 +524,8 @@ function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, d
                   }
                 }}
               >
-                {file.key.split('/').pop()}
-              </span>
+            {file.key.split('/').pop()}
+          </span>
             </TooltipTrigger>
             {isFileTruncated && (
               <TooltipContent>
@@ -580,35 +580,41 @@ function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, d
 }
 
 function FileList({ folders, files, onOpenFolder, onDownload, onDelete, downloading, deleting, onDeleteFolder, deletingFolders, onRenameFolder, renamingFolder, onRenameFile, renamingFile, selectedFiles, selectedFolders, onSelectFile, onSelectFolder, isAllSelected, onSelectAll, onShareFile, onSort, sortBy, sortOrder, loading }) {
+  const tableClass = "min-w-full text-sm rounded-lg overflow-hidden shadow-lg bg-card table-fixed";
+  const colWidths = [
+    "w-8 px-2 py-3", // Checkbox
+    "w-[40%] text-left py-3 px-4 font-semibold", // Name
+    "w-[15%] text-left py-3 px-4 font-semibold", // Size
+    "w-[25%] text-left py-3 px-4 font-semibold", // Last Modified
+    "w-[20%] py-3 px-4" // Actions
+  ];
   if (loading) {
     // Render skeleton table
     return (
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm rounded-lg overflow-hidden shadow-lg bg-card">
+        <table className={tableClass}>
           <thead className="bg-muted/60">
             <tr className="border-b border-border">
-              <th className="w-8 px-2 py-3">
-                <Skeleton className="h-4 w-4 rounded" />
-              </th>
-              <th className="text-left py-3 px-4 font-semibold"> <Skeleton className="h-4 w-24 rounded" /> </th>
-              <th className="text-left py-3 px-4 font-semibold"> <Skeleton className="h-4 w-16 rounded" /> </th>
-              <th className="text-left py-3 px-4 font-semibold"> <Skeleton className="h-4 w-24 rounded" /> </th>
-              <th className="py-3 px-4"> <Skeleton className="h-4 w-8 rounded" /> </th>
+              <th className={colWidths[0]}><Skeleton className="h-4 w-4 rounded" /></th>
+              <th className={colWidths[1]}> <Skeleton className="h-4 w-24 rounded" /> </th>
+              <th className={colWidths[2]}> <Skeleton className="h-4 w-16 rounded" /> </th>
+              <th className={colWidths[3]}> <Skeleton className="h-4 w-24 rounded" /> </th>
+              <th className={colWidths[4]}> <Skeleton className="h-4 w-8 rounded" /> </th>
             </tr>
           </thead>
           <tbody>
             {Array.from({ length: 8 }).map((_, i) => (
               <tr key={i} className="border-b border-border">
-                <td className="w-8 px-2 align-middle h-[65px]"> <Skeleton className="h-4 w-4 rounded" /> </td>
-                <td className="py-3 px-4 align-middle h-[65px]">
+                <td className={colWidths[0]}> <Skeleton className="h-4 w-4 rounded" /> </td>
+                <td className={colWidths[1]}>
                   <div className="flex items-center gap-3">
                     <Skeleton className="w-5 h-5 rounded" />
                     <Skeleton className="h-4 w-40 rounded" />
                   </div>
                 </td>
-                <td className="py-3 px-4 align-middle h-[65px]"> <Skeleton className="h-4 w-12 rounded" /> </td>
-                <td className="py-3 px-4 align-middle h-[65px]"> <Skeleton className="h-4 w-20 rounded" /> </td>
-                <td className="py-3 px-4 text-right align-middle h-[65px]">
+                <td className={colWidths[2]}> <Skeleton className="h-4 w-12 rounded" /> </td>
+                <td className={colWidths[3]}> <Skeleton className="h-4 w-20 rounded" /> </td>
+                <td className={colWidths[4]}>
                   <div className="flex items-center gap-1 justify-end">
                     <Skeleton className="h-4 w-16 rounded" />
                   </div>
@@ -632,14 +638,14 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
   return (
     <TooltipProvider>
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm rounded-lg overflow-hidden shadow-lg bg-card">
+        <table className={tableClass}>
           <thead className="bg-muted/60">
             <tr className="border-b border-border">
-              <th className="w-8 px-2 py-3">
+              <th className={colWidths[0]}>
                 <Checkbox checked={isAllSelected} onCheckedChange={onSelectAll} aria-label="Select all" />
               </th>
               <th
-                className={`text-left py-3 px-4 font-semibold cursor-pointer select-none group transition-colors ${sortBy === 'name' ? 'text-primary font-bold' : ''}`}
+                className={colWidths[1] + ` group transition-colors ${sortBy === 'name' ? 'text-primary font-bold' : ''}`}
                 onClick={() => onSort('name')}
                 title="Sort by Name"
               >
@@ -657,7 +663,7 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                 </span>
               </th>
               <th
-                className={`text-left py-3 px-4 font-semibold cursor-pointer select-none group transition-colors ${sortBy === 'size' ? 'text-primary font-bold' : ''}`}
+                className={colWidths[2] + ` group transition-colors ${sortBy === 'size' ? 'text-primary font-bold' : ''}`}
                 onClick={() => onSort('size')}
                 title="Sort by Size"
               >
@@ -675,7 +681,7 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                 </span>
               </th>
               <th
-                className={`text-left py-3 px-4 font-semibold cursor-pointer select-none group transition-colors ${sortBy === 'last_modified' ? 'text-primary font-bold' : ''}`}
+                className={colWidths[3] + ` group transition-colors ${sortBy === 'last_modified' ? 'text-primary font-bold' : ''}`}
                 onClick={() => onSort('last_modified')}
                 title="Sort by Last Modified"
               >
@@ -692,7 +698,7 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                   )}
                 </span>
               </th>
-              <th className="py-3 px-4"></th>
+              <th className={colWidths[4]}></th>
             </tr>
           </thead>
           <tbody>
@@ -700,7 +706,7 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
             {folders.map(folder => (
               <FolderRow
                 key={folder.prefix}
-                folder={folder}
+                        folder={folder}
                 isSelected={selectedFolders.includes(folder.prefix)}
                 onSelectFolder={onSelectFolder}
                 onOpenFolder={onOpenFolder}
@@ -1530,11 +1536,11 @@ export default function FileManager({ activeBucket }) {
           <CardHeader className="flex flex-col gap-2">
             {/* Top row: Back button (if not root), Breadcrumbs (left), New Folder and Upload (right) */}
             <div className="flex items-center gap-2 mb-4 w-full">
-              {prefix && (
+                {prefix && (
                 <Button size="icon" variant="ghost" onClick={handleBack} title="Back to parent folder" className="flex-shrink-0 mr-1">
                   <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-                </Button>
-              )}
+                  </Button>
+                )}
               <div className="flex-1 min-w-0 overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
                 <Breadcrumbs path={prefix} onNavigate={handleBreadcrumbNavigate} className="whitespace-nowrap" />
               </div>
@@ -1544,9 +1550,9 @@ export default function FileManager({ activeBucket }) {
                   New Folder
                 </Button>
                 <Button size="sm" className="bg-slate-600 hover:bg-slate-700 text-white font-semibold px-4 py-2 rounded-md flex items-center gap-2" onClick={() => setShowUploadMenu(v => !v)} disabled={uploading}>
-                  <Upload className="w-4 h-4 text-white" />
+                      <Upload className="w-4 h-4 text-white" />
                   Upload
-                </Button>
+                    </Button>
                 <Button size="icon" variant="ghost" onClick={handleRefresh} title="Refresh" className="flex-shrink-0">
                   <RefreshCw className={`w-5 h-5 text-muted-foreground ${loading ? 'animate-spin' : ''}`} />
                 </Button>
@@ -1750,14 +1756,6 @@ export default function FileManager({ activeBucket }) {
                     <Trash2 className="w-4 h-4" /> Delete Selected
                   </Button>
                 </div>
-              </div>
-            )}
-            {loading && (
-              <div className="flex items-center justify-center py-12">
-                <svg className="animate-spin h-6 w-6 text-muted-foreground" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                </svg>
               </div>
             )}
             {error && !loading && (
