@@ -25,6 +25,7 @@ import { Checkbox } from './ui/checkbox';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { showToast } from '@/lib/toast';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
+import { Progress } from './ui/progress';
 
 function formatSize(bytes) {
   if (bytes === 0) return '0 B';
@@ -388,6 +389,99 @@ function getFileIconByExtension(filename) {
   return { Icon: FileIcon, color: 'text-gray-400' };
 }
 
+// Add this new component above FileList
+function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, downloading, onDownload, ...props }) {
+  const fileNameRef = React.useRef(null);
+  const [isFileTruncated, setIsFileTruncated] = React.useState(false);
+  React.useEffect(() => {
+    if (fileNameRef.current) {
+      setIsFileTruncated(fileNameRef.current.scrollWidth > fileNameRef.current.clientWidth);
+    }
+  }, [file.key]);
+
+  // ...copy the row rendering logic from FileList's files.map here, replacing hooks with the above
+  // Use fileNameRef and isFileTruncated as needed
+  // Pass through any other props as needed
+
+  return (
+    <tr key={file.key} className={`border-b border-border group transition-all duration-150 ${isSelected ? 'bg-orange-500/90 text-white' : 'hover:bg-accent/40'} rounded-lg`}>
+      <td className="w-8 px-2 align-middle h-[65px]">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={checked => onSelectFile(file.key, checked)}
+          onClick={e => e.stopPropagation()}
+          aria-label="Select file"
+        />
+      </td>
+      <td className="py-3 px-4 flex items-center gap-3 align-middle h-[65px] max-w-[60vw] sm:max-w-[40vw] md:max-w-[30vw] min-w-0 w-full">
+        <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+          {(() => {
+            const { Icon, color } = getFileIconByExtension(file.key);
+            return <Icon className={`w-5 h-5 ${color} group-hover:scale-110 transition-transform`} />;
+          })()}
+        </span>
+        {renamingFile === file.key ? (
+          <FileRenameInput
+            file={file}
+            onRename={() => {
+              onRenameFile(null);
+              setTimeout(() => {
+                const event = new CustomEvent('refreshFileList');
+                window.dispatchEvent(event);
+              }, 500);
+            }}
+            onCancel={() => onRenameFile(null)}
+          />
+        ) : (
+          <span ref={fileNameRef} className="truncate font-semibold min-w-0 flex-1" title={isFileTruncated ? file.key.split('/').pop() : undefined}>
+            {file.key.split('/').pop()}
+          </span>
+        )}
+      </td>
+      <td className="py-3 px-4 align-middle h-[65px]">{formatSize(file.size)}</td>
+      <td className="py-3 px-4 align-middle h-[65px]">{formatDate(file.last_modified)}</td>
+      <td className="py-3 px-4 text-right align-middle h-[65px]">
+        <div className="flex items-center gap-1 justify-end">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" aria-label="Share file" onClick={e => { e.stopPropagation(); onDownload(file.key, true); }}>
+                  <Share2 className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Share</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" aria-label="Rename file" onClick={e => { e.stopPropagation(); onRenameFile(file.key); }}>
+                  <Pencil className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Rename</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" aria-label="Delete file" onClick={e => { e.stopPropagation(); onDownload(file.key, false); }} disabled={downloading.has(file.key)}>
+                  <Trash2 className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete</TooltipContent>
+            </Tooltip>
+          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="ghost" aria-label="Download file" onClick={e => { e.stopPropagation(); onDownload(file.key, false); }} disabled={downloading.has(file.key)}>
+                <Download className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Download</TooltipContent>
+          </Tooltip>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 function FileList({ folders, files, onOpenFolder, onDownload, onDelete, downloading, deleting, onDeleteFolder, deletingFolders, onRenameFolder, renamingFolder, onRenameFile, renamingFile, selectedFiles, selectedFolders, onSelectFile, onSelectFolder, isAllSelected, onSelectAll, onShareFile, onSort, sortBy, sortOrder }) {
   if (!folders.length && !files.length) {
     return (
@@ -487,7 +581,9 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                     />
                   </td>
                   <td className="py-3 px-4 flex items-center gap-3 h-[65px] align-middle max-w-[60vw] sm:max-w-[40vw] md:max-w-[30vw] min-w-0 w-full cursor-pointer hover:underline font-semibold" onClick={() => onOpenFolder(folder.prefix)}>
-                    <Folder className="w-5 h-5 text-yellow-600 fill-yellow-400 group-hover:scale-110 transition-transform" />
+                    <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                      <Folder className="w-5 h-5 text-yellow-600 fill-yellow-400 group-hover:scale-110 transition-transform" />
+                    </span>
                     {renamingFolder === folder.prefix ? (
                       <FolderRenameInput
                         folder={folder}
@@ -501,30 +597,13 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                         onCancel={() => onRenameFolder(null)}
                       />
                     ) : (
-                      isFolderTruncated ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span
-                                ref={folderNameRef}
-                                className="truncate overflow-hidden whitespace-nowrap min-w-0 w-full cursor-pointer hover:underline font-semibold"
-                                onClick={() => onOpenFolder(folder.prefix)}
-                              >
-                                {folder.name}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>{folder.name}</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : (
-                        <span
-                          ref={folderNameRef}
-                          className="truncate overflow-hidden whitespace-nowrap min-w-0 w-full cursor-pointer hover:underline font-semibold"
-                          onClick={() => onOpenFolder(folder.prefix)}
-                        >
-                          {folder.name}
-                        </span>
-                      )
+                      <span
+                        ref={folderNameRef}
+                        className="truncate overflow-hidden whitespace-nowrap min-w-0 flex-1 cursor-pointer hover:underline font-semibold"
+                        onClick={() => onOpenFolder(folder.prefix)}
+                      >
+                        {folder.name}
+                      </span>
                     )}
                   </td>
                   <td className="py-3 px-4 text-muted-foreground h-[65px] align-middle">—</td>
@@ -555,119 +634,19 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
               );
             })}
             {/* Files */}
-            {files.map(file => {
-              const isSelected = selectedFiles.includes(file.key);
-              // File name cell
-              const fileNameRef = useRef(null);
-              const [isFileTruncated, setIsFileTruncated] = useState(false);
-              useEffect(() => {
-                if (fileNameRef.current) {
-                  setIsFileTruncated(fileNameRef.current.scrollWidth > fileNameRef.current.clientWidth);
-                }
-              }, [file.key]);
-              return (
-                <tr key={file.key} className={`border-b border-border group transition-all duration-150 ${isSelected ? 'bg-orange-500/90 text-white' : 'hover:bg-accent/40'} rounded-lg`}>
-                  <td className="w-8 px-2 align-middle h-[65px]">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={checked => onSelectFile(file.key, checked)}
-                      onClick={e => e.stopPropagation()}
-                      aria-label="Select file"
-                    />
-                  </td>
-                  <td className="py-3 px-4 flex items-center gap-3 align-middle h-[65px] max-w-[60vw] sm:max-w-[40vw] md:max-w-[30vw] min-w-0 w-full">
-                    {(() => {
-                      const { Icon, color } = getFileIconByExtension(file.key);
-                      return <Icon className={`w-5 h-5 ${color} group-hover:scale-110 transition-transform`} />;
-                    })()}
-                    {renamingFile === file.key ? (
-                      <FileRenameInput
-                        file={file}
-                        onRename={() => {
-                          onRenameFile(null);
-                          setTimeout(() => {
-                            const event = new CustomEvent('refreshFileList');
-                            window.dispatchEvent(event);
-                          }, 500);
-                        }}
-                        onCancel={() => onRenameFile(null)}
-                      />
-                    ) : (
-                      isFileTruncated ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span
-                                ref={fileNameRef}
-                                className={
-                                  (isViewableFile(file.key) ? 'cursor-pointer hover:underline ' : '') +
-                                  'truncate overflow-hidden whitespace-nowrap min-w-0 w-full'
-                                }
-                                onClick={isViewableFile(file.key) ? () => onDownload(file.key, true) : undefined}
-                              >
-                                {file.key.split('/').pop()}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>{file.key.split('/').pop()}</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : (
-                        <span
-                          ref={fileNameRef}
-                          className={
-                            (isViewableFile(file.key) ? 'cursor-pointer hover:underline ' : '') +
-                            'truncate overflow-hidden whitespace-nowrap min-w-0 w-full'
-                          }
-                          onClick={isViewableFile(file.key) ? () => onDownload(file.key, true) : undefined}
-                        >
-                          {file.key.split('/').pop()}
-                        </span>
-                      )
-                    )}
-                  </td>
-                  <td className="py-3 px-4 align-middle h-[65px]">{formatSize(file.size)}</td>
-                  <td className="py-3 px-4 align-middle h-[65px]">{formatDate(file.last_modified)}</td>
-                  <td className="py-3 px-4 text-right align-middle h-[65px]">
-                    <div className="flex items-center gap-1 justify-end">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button size="icon" variant="ghost" aria-label="Share file" onClick={e => { e.stopPropagation(); onShareFile(file); }}>
-                              <Share2 className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Share</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button size="icon" variant="ghost" aria-label="Rename file" onClick={e => { e.stopPropagation(); onRenameFile(file.key); }}>
-                              <Pencil className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Rename</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button size="icon" variant="ghost" aria-label="Delete file" onClick={e => { e.stopPropagation(); onDelete(file.key); }} disabled={deleting.has(file.key)}>
-                              <Trash2 className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Delete</TooltipContent>
-                        </Tooltip>
-                      </div>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button size="icon" variant="ghost" aria-label="Download file" onClick={e => { e.stopPropagation(); onDownload(file.key, false); }} disabled={downloading.has(file.key)}>
-                            <Download className="w-4 h-4 text-muted-foreground" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Download</TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+            {files.map(file => (
+              <FileRow
+                key={file.key}
+                file={file}
+                isSelected={selectedFiles.includes(file.key)}
+                onSelectFile={onSelectFile}
+                renamingFile={renamingFile}
+                onRenameFile={onRenameFile}
+                downloading={downloading}
+                onDownload={onDownload}
+                // ...pass other needed props
+              />
+            ))}
           </tbody>
         </table>
       </div>
@@ -729,62 +708,106 @@ export default function FileManager({ activeBucket }) {
 
   const [showUploadProgress, setShowUploadProgress] = useState(false);
 
+  const CATEGORY_OPTIONS = [
+    { value: 'all', label: 'All Categories' },
+    { value: 'documents', label: 'Documents' },
+    { value: 'images', label: 'Images' },
+    { value: 'videos', label: 'Videos' },
+    { value: 'audio', label: 'Audio' },
+    { value: 'archives', label: 'Archives' },
+    { value: 'code', label: 'Code' },
+    { value: 'spreadsheets', label: 'Spreadsheets' },
+    { value: 'presentations', label: 'Presentations' },
+  ];
+  const FILE_TYPE_OPTIONS = [
+    { value: 'all', label: 'All Types' },
+    { value: 'pdf', label: 'PDF' },
+    { value: 'docx', label: 'DOCX' },
+    { value: 'txt', label: 'TXT' },
+    { value: 'jpg', label: 'JPG' },
+    { value: 'png', label: 'PNG' },
+    { value: 'csv', label: 'CSV' },
+    { value: 'mp4', label: 'MP4' },
+    { value: 'mp3', label: 'MP3' },
+    { value: 'zip', label: 'ZIP' },
+    { value: 'json', label: 'JSON' },
+    { value: 'xlsx', label: 'XLSX' },
+    { value: 'pptx', label: 'PPTX' },
+  ];
+  const [category, setCategory] = useState('all');
+  const [fileType, setFileType] = useState('all');
+
+  // Add a mapping from category to extensions
+  const CATEGORY_EXTENSION_MAP = {
+    documents: ['pdf', 'doc', 'docx', 'txt', 'md', 'odt', 'rtf'],
+    images: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'],
+    videos: ['mp4', 'avi', 'mov', 'webm', 'mkv', 'flv'],
+    audio: ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a'],
+    archives: ['zip', 'rar', '7z', 'tar', 'gz'],
+    code: ['js', 'ts', 'jsx', 'tsx', 'py', 'rb', 'go', 'java', 'c', 'cpp', 'cs', 'sh', 'json'],
+    spreadsheets: ['xls', 'xlsx', 'ods', 'csv'],
+    presentations: ['ppt', 'pptx', 'odp'],
+  };
+
   const fetchFiles = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       let url = prefix ? `/api/storage/files?prefix=${encodeURIComponent(prefix)}` : '/api/storage/files';
       const params = [];
-      if (filterType && filterType !== 'all') params.push(`filter_type=${encodeURIComponent(filterType)}`);
+      if (filterType && filterType !== 'all' && category === 'all') params.push(`filter_type=${encodeURIComponent(fileType)}`);
+      if (category && category !== 'all' && fileType === 'all') {
+        // Send all extensions in this category as a comma-separated list
+        const exts = CATEGORY_EXTENSION_MAP[category];
+        if (exts && exts.length) params.push(`filter_category=${encodeURIComponent(exts.join(','))}`);
+      }
       if (minSize) params.push(`min_size=${parseInt(minSize * 1024 * 1024)}`); // MB to bytes
       if (maxSize) params.push(`max_size=${parseInt(maxSize * 1024 * 1024)}`);
       if (search) params.push(`search=${encodeURIComponent(search)}`);
       if (sortBy) params.push(`sort_by=${encodeURIComponent(sortBy)}`);
       if (sortOrder) params.push(`sort_order=${encodeURIComponent(sortOrder)}`);
       if (params.length) url += (url.includes('?') ? '&' : '?') + params.join('&');
-      console.log('Fetching files from:', url);
       const res = await apiFetch(url);
       const data = await res.json();
-      console.log('API Response:', { status: res.status, ok: res.ok, data });
       if (!res.ok) {
         setError(data.error || 'Failed to fetch files');
         setFolders([]);
         setFiles([]);
-      } else {
-        // Sort folders and files by selected column and direction
-        const sortFn = (a, b) => {
-          let aVal, bVal;
-          if (sortBy === 'name') {
-            aVal = (a.name || a.key || a.prefix || '').toLowerCase();
-            bVal = (b.name || b.key || b.prefix || '').toLowerCase();
-          } else if (sortBy === 'size') {
-            aVal = a.size || 0;
-            bVal = b.size || 0;
-          } else if (sortBy === 'last_modified') {
-            aVal = new Date(a.last_modified || 0).getTime();
-            bVal = new Date(b.last_modified || 0).getTime();
-          }
-          if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-          if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-          return 0;
-        };
-        const sortedFolders = (data.folders || []).slice().sort(sortFn);
-        const sortedFiles = (data.files || []).slice().sort(sortFn);
-        setFolders(sortedFolders);
-        setFiles(sortedFiles);
+        setLoading(false);
+        return;
       }
+      // Sort folders and files by selected column and direction
+      const sortFn = (a, b) => {
+        let aVal, bVal;
+        if (sortBy === 'name') {
+          aVal = (a.name || a.key || a.prefix || '').toLowerCase();
+          bVal = (b.name || b.key || b.prefix || '').toLowerCase();
+        } else if (sortBy === 'size') {
+          aVal = a.size || 0;
+          bVal = b.size || 0;
+        } else if (sortBy === 'last_modified') {
+          aVal = new Date(a.last_modified || 0).getTime();
+          bVal = new Date(b.last_modified || 0).getTime();
+        }
+        if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      };
+      const sortedFolders = (data.folders || []).slice().sort(sortFn);
+      const sortedFiles = (data.files || []).slice().sort(sortFn);
+      setFolders(sortedFolders);
+      setFiles(sortedFiles);
     } catch (err) {
-      console.error('Error fetching files:', err);
       setError('Network error');
       setFolders([]);
       setFiles([]);
     }
     setLoading(false);
-  }, [prefix, filterType, minSize, maxSize, search, sortBy, sortOrder]);
+  }, [prefix, filterType, fileType, category, minSize, maxSize, search, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchFiles();
-  }, [activeBucket, prefix, fetchFiles]);
+  }, [category, fileType, minSize, maxSize, search, sortBy, sortOrder, prefix]);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -1526,54 +1549,97 @@ export default function FileManager({ activeBucket }) {
             </div>
             {/* Filter Bar (only visible when toggled) */}
             {showFilterBar && (
-              <div className="flex items-center gap-4 bg-accent border border-border rounded-lg px-6 py-3 mb-2 min-h-[48px] relative shadow-sm">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-muted-foreground">File Type</label>
-                  <Select value={filterType} onValueChange={v => setFilterType(v)}>
-                    <SelectTrigger className="w-32 h-9">
-                      <SelectValue placeholder="All Types" />
+              <div className="flex flex-col sm:flex-row sm:items-end gap-4 bg-muted/80 border border-border rounded-lg px-6 py-4 mb-4 shadow-sm w-full">
+                <div className="flex-1 flex flex-col gap-1 min-w-[120px]">
+                  <label className="text-xs text-muted-foreground font-medium mb-1" htmlFor="filter-category">Category</label>
+                  <Select
+                    value={category}
+                    onValueChange={v => {
+                      setCategory(v);
+                      if (v !== 'all') {
+                        setFileType('all');
+                      }
+                    }}
+                    disabled={fileType !== 'all'}
+                  >
+                    <SelectTrigger id="filter-category" className="w-full h-9">
+                      <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="pdf">PDF</SelectItem>
-                      <SelectItem value="jpg">JPG</SelectItem>
-                      <SelectItem value="png">PNG</SelectItem>
-                      <SelectItem value="docx">DOCX</SelectItem>
-                      <SelectItem value="txt">TXT</SelectItem>
-                      <SelectItem value="csv">CSV</SelectItem>
-                      <SelectItem value="mp4">MP4</SelectItem>
-                      <SelectItem value="mp3">MP3</SelectItem>
+                      {CATEGORY_OPTIONS.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-muted-foreground">Min Size (MB)</label>
+                <div className="flex-1 flex flex-col gap-1 min-w-[120px]">
+                  <label className="text-xs text-muted-foreground font-medium mb-1" htmlFor="filter-type">File Type</label>
+                  <Select
+                    value={fileType}
+                    onValueChange={v => {
+                      setFileType(v);
+                      if (v !== 'all') {
+                        setCategory('all');
+                      }
+                    }}
+                    disabled={category !== 'all'}
+                  >
+                    <SelectTrigger id="filter-type" className="w-full h-9">
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FILE_TYPE_OPTIONS.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1 flex flex-col gap-1 min-w-[100px]">
+                  <label className="text-xs text-muted-foreground font-medium mb-1" htmlFor="min-size">Min Size (MB)</label>
                   <Input
+                    id="min-size"
                     type="number"
                     min="0"
                     value={minSize}
                     onChange={e => setMinSize(e.target.value)}
-                    className="w-24 h-9"
+                    className="w-full h-9"
                     placeholder="Any"
                   />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-muted-foreground">Max Size (MB)</label>
+                <div className="flex-1 flex flex-col gap-1 min-w-[100px]">
+                  <label className="text-xs text-muted-foreground font-medium mb-1" htmlFor="max-size">Max Size (MB)</label>
                   <Input
+                    id="max-size"
                     type="number"
                     min="0"
                     value={maxSize}
                     onChange={e => setMaxSize(e.target.value)}
-                    className="w-24 h-9"
+                    className="w-full h-9"
                     placeholder="Any"
                   />
                 </div>
-                <div className="flex gap-2 ml-auto">
-                  <Button size="sm" variant="outline" onClick={() => { setFilterType('all'); setMinSize(''); setMaxSize(''); fetchFiles(); }} className="h-9">Clear</Button>
+                <div className="flex flex-row gap-2 sm:ml-4 mt-2 sm:mt-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9"
+                    onClick={() => {
+                      setCategory('all');
+                      setFileType('all');
+                      setMinSize('');
+                      setMaxSize('');
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                  <Button
+                    type="button"
+                    className="h-9"
+                    onClick={() => setShowFilterBar(false)}
+                  >
+                    Close
+                  </Button>
                 </div>
-                <Button size="icon" variant="ghost" className="absolute top-2 right-2 text-muted-foreground hover:text-foreground" onClick={() => setShowFilterBar(false)} title="Close filter bar">
-                  <X className="w-4 h-4" />
-                </Button>
               </div>
             )}
           </CardHeader>
@@ -1607,12 +1673,9 @@ export default function FileManager({ activeBucket }) {
                             {eta !== null && <span className="text-muted-foreground">{eta}s left</span>}
                           </div>
                           <div className="flex items-center gap-2 flex-1 ml-2">
-                            <div className="h-2 bg-muted rounded-full overflow-hidden flex-1">
-                              <div
-                                className="h-2 rounded-full bg-green-500 transition-all duration-300"
-                                style={{ width: `${progress}%` }}
-                              />
-                            </div>
+                            <Progress value={progress} className={error ? 'bg-destructive/20' : ''}>
+                              <div className={`h-2 rounded-full ${error ? 'bg-destructive' : 'bg-primary'} transition-all`} style={{ width: `${progress}%` }} />
+                            </Progress>
                             <span className="font-semibold text-foreground" style={{ minWidth: 28, textAlign: 'right' }}>{progress}%</span>
                           </div>
                         </div>
