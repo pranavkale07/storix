@@ -48,8 +48,8 @@ function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, d
         ) : (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span 
-                ref={fileNameRef} 
+              <span
+                ref={fileNameRef}
                 className={`truncate font-semibold min-w-0 flex-1 ${isViewableFile(file.key) ? 'cursor-pointer hover:underline' : 'cursor-default'}`}
                 onClick={() => {
                   if (isViewableFile(file.key)) {
@@ -57,8 +57,8 @@ function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, d
                   }
                 }}
               >
-            {file.key.split('/').pop()}
-          </span>
+                {file.key.split('/').pop()}
+              </span>
             </TooltipTrigger>
             {isFileTruncated && (
               <TooltipContent>
@@ -112,4 +112,4 @@ function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, d
   );
 }
 
-export default FileRow; 
+export default FileRow;

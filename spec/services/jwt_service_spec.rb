@@ -20,4 +20,4 @@ describe JwtService do
     payload = JWT.decode(token, Rails.application.credentials.secret_key_base, true, { algorithm: 'HS256' }).first
     expect(Time.at(payload['exp'])).to be_within(5).of(24.hours.from_now)
   end
-end 
+end

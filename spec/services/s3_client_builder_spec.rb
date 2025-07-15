@@ -26,4 +26,4 @@ describe S3ClientBuilder do
       expect(client.config.force_path_style).to be true
     end
   end
-end 
+end

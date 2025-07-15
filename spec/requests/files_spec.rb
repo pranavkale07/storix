@@ -63,4 +63,4 @@ RSpec.describe 'File Operations (Real S3)', type: :request, if: REAL_S3 do
     files = JSON.parse(response.body)['files']
     expect(files.map { |f| f['key'] }).not_to include(file_key)
   end
-end 
+end

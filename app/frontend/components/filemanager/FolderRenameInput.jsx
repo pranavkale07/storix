@@ -34,7 +34,7 @@ function FolderRenameInput({ folder, onRename, onCancel, clearCache }) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        let errorMessage = errorData.error || 'Failed to rename folder';
+        const errorMessage = errorData.error || 'Failed to rename folder';
         if (errorMessage.includes('already exists')) {
           showToast.error('Failed to rename folder', 'A folder with this name already exists.');
         } else {
@@ -91,4 +91,4 @@ function FolderRenameInput({ folder, onRename, onCancel, clearCache }) {
   );
 }
 
-export default FolderRenameInput; 
+export default FolderRenameInput;

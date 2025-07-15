@@ -167,13 +167,13 @@ export default function Header({ showShareLinks, showSettings, showBackToFiles }
                 if (!res.ok) {
                   // Handle specific error cases
                   let errorMessage = 'Failed to connect bucket';
-                  
+
                   // Backend returns errors in an array, not a single error field
                   const errorText = result.errors ? result.errors.join(', ') : result.error || '';
-                  
+
                   if (errorText) {
                     const errorLower = errorText.toLowerCase();
-                    if (errorLower.includes('credentials') || errorLower.includes('access') || 
+                    if (errorLower.includes('credentials') || errorLower.includes('access') ||
                         errorLower.includes('invalid') || errorLower.includes('auth') ||
                         errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
                         errorLower.includes('signature') || errorLower.includes('key') ||

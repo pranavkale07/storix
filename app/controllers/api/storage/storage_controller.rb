@@ -139,9 +139,9 @@ class Api::Storage::StorageController < Api::BaseController
 
       # Filtering by file extension (single or multiple)
       if params[:filter_category].present?
-        exts = params[:filter_category].split(',').map { |e| e.strip.downcase }
+        exts = params[:filter_category].split(",").map { |e| e.strip.downcase }
         files = files.select do |f|
-          ext = File.extname(f[:key]).delete('.').downcase
+          ext = File.extname(f[:key]).delete(".").downcase
           exts.include?(ext)
         end
       elsif params[:filter_type].present?

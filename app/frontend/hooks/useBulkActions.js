@@ -68,7 +68,7 @@ export function useBulkActions({ selectedFiles, selectedFolders, setSelectedFile
     } else if (errorCount === totalItems) {
       showToast.error('Failed to delete items', 'All items failed to delete');
     } else {
-      showToast.warning(`Partially completed`, `${totalItems - errorCount} items deleted, ${errorCount} failed`);
+      showToast.warning('Partially completed', `${totalItems - errorCount} items deleted, ${errorCount} failed`);
     }
   };
 
@@ -119,4 +119,4 @@ export function useBulkActions({ selectedFiles, selectedFolders, setSelectedFile
     confirmBulkDelete,
     handleBulkDownload,
   };
-} 
+}

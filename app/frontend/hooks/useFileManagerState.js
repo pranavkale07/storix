@@ -176,4 +176,4 @@ export function useFileManagerState(activeBucket) {
     setPrefix,
     clearCache,
   };
-} 
+}

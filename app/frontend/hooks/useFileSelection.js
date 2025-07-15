@@ -47,4 +47,4 @@ export function useFileSelection(files, folders) {
     setSelectedFiles,
     setSelectedFolders,
   };
-} 
+}

@@ -25,4 +25,4 @@ describe ShareLink, type: :model do
       expect(link).not_to be_expired
     end
   end
-end 
+end

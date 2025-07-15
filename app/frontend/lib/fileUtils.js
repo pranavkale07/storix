@@ -65,4 +65,4 @@ export function getFileIconByExtension(filename) {
     }
   }
   return { Icon: FileIcon, color: 'text-muted-foreground' };
-} 
+}

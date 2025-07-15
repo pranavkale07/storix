@@ -77,4 +77,4 @@ describe 'StorageCredentials API', type: :request do
       expect(response).to have_http_status(:ok).or have_http_status(:no_content)
     end
   end
-end 
+end

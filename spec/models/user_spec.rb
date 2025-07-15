@@ -49,4 +49,4 @@ describe User, type: :model do
       expect(result.avatar_url).to eq('http://new.avatar')
     end
   end
-end 
+end

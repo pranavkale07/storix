@@ -7,4 +7,4 @@ FactoryBot.define do
     revoked { false }
     token { SecureRandom.hex(16) }
   end
-end 
+end

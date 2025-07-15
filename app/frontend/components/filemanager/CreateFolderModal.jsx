@@ -96,4 +96,4 @@ function CreateFolderModal({ isOpen, onClose, onSuccess, currentPrefix }) {
   );
 }
 
-export default CreateFolderModal; 
+export default CreateFolderModal;

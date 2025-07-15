@@ -14,7 +14,7 @@ export function apiFetch(url, options = {}) {
 export async function apiFetchWithToast(url, options = {}) {
   try {
     const response = await apiFetch(url, options);
-    
+
     // Handle non-JSON responses (like file downloads)
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
@@ -25,14 +25,14 @@ export async function apiFetchWithToast(url, options = {}) {
     }
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       // Handle API errors with toast
       const errorMessage = data.error || data.message || 'An error occurred';
       handleApiError(errorMessage, response.status);
       throw new Error(errorMessage);
     }
-    
+
     return { response, data };
   } catch (error) {
     // Handle network errors

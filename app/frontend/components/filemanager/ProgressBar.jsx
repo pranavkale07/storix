@@ -11,4 +11,4 @@ function ProgressBar({ value, error }) {
   );
 }
 
-export default ProgressBar; 
+export default ProgressBar;

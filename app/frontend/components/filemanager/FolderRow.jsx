@@ -88,4 +88,4 @@ function FolderRow({ folder, isSelected, onSelectFolder, onOpenFolder, renamingF
   );
 }
 
-export default FolderRow; 
+export default FolderRow;

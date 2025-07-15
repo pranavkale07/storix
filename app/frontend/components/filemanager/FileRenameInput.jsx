@@ -70,4 +70,4 @@ function FileRenameInput({ file, onRename, onCancel, clearCache }) {
   );
 }
 
-export default FileRenameInput; 
+export default FileRenameInput;

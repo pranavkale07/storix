@@ -28,8 +28,8 @@ export function OAuthLogin({ className, ...props }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Button 
-              onClick={handleGoogleLogin} 
+            <Button
+              onClick={handleGoogleLogin}
               className="w-full"
               size="lg"
             >
@@ -41,9 +41,9 @@ export function OAuthLogin({ className, ...props }) {
               </svg>
               Continue with Google
             </Button>
-            
-            <Button 
-              onClick={handleGitHubLogin} 
+
+            <Button
+              onClick={handleGitHubLogin}
               className="w-full"
               size="lg"
               variant="outline"

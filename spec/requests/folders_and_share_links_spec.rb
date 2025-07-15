@@ -87,4 +87,4 @@ RSpec.describe 'Folder and Share Link Operations (Real S3)', type: :request, if:
     post '/api/storage/delete_folder', params: { prefix: folder_prefix }.to_json, headers: active_headers
     expect(response).to have_http_status(:ok)
   end
-end 
+end

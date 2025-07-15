@@ -107,4 +107,4 @@ RSpec.describe 'Edge Cases and Security (Real S3)', type: :request, if: REAL_S3 
     get '/api/auth/me', headers: headers
     expect(response).to have_http_status(:unauthorized)
   end
-end 
+end

@@ -112,9 +112,9 @@ class Api::StorageController < ApplicationController
 
       # Filter by extension if filter_category is present
       if params[:filter_category].present?
-        exts = params[:filter_category].split(',').map { |e| e.strip.downcase }
+        exts = params[:filter_category].split(",").map { |e| e.strip.downcase }
         files.select! do |file|
-          ext = File.extname(file[:key]).delete('.').downcase
+          ext = File.extname(file[:key]).delete(".").downcase
           exts.include?(ext)
         end
       end

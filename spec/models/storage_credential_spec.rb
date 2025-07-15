@@ -33,4 +33,4 @@ describe StorageCredential, type: :model do
     expect(cred.secret_access_key).to be_present
     # Encryption is handled by Rails, so we just check presence here
   end
-end 
+end

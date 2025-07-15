@@ -8,4 +8,4 @@ FactoryBot.define do
     provider { %w[s3 do_spaces].sample }
     endpoint { provider == 'do_spaces' ? "https://#{region}.digitaloceanspaces.com" : nil }
   end
-end 
+end

@@ -143,4 +143,4 @@ export function useFileUpload(prefix, fetchFiles, clearCache) {
     handleFolderSelect,
     uploadFiles,
   };
-} 
+}

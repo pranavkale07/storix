@@ -20,7 +20,7 @@ import { useBuckets } from '../components/BucketsContext';
 
 export default function Buckets() {
   const { activeBucket, refreshActiveBucket } = useAuth();
-  const { buckets, loading, fetchBuckets } = useBuckets();
+  const { buckets, loading: bucketsLoading, fetchBuckets } = useBuckets();
   const [editingBucket, setEditingBucket] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,6 +33,7 @@ export default function Buckets() {
   });
   const [formErrors, setFormErrors] = useState({});
   const [pendingDisconnectId, setPendingDisconnectId] = useState(null);
+  const [loading, setLoading] = useState(false); // <-- Add this line
 
   useEffect(() => {
     // The useBuckets hook manages its own fetching, so we don't need to call fetchBuckets here.
@@ -90,7 +91,7 @@ export default function Buckets() {
         const errorText = errorData.errors ? errorData.errors.join(', ') : errorData.error || '';
         if (errorText) {
           const errorLower = errorText.toLowerCase();
-          if (errorLower.includes('credentials') || errorLower.includes('access') || 
+          if (errorLower.includes('credentials') || errorLower.includes('access') ||
               errorLower.includes('invalid') || errorLower.includes('auth') ||
               errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
               errorLower.includes('signature') || errorLower.includes('key') ||
@@ -139,7 +140,7 @@ export default function Buckets() {
         const errorText = errorData.errors ? errorData.errors.join(', ') : errorData.error || '';
         if (errorText) {
           const errorLower = errorText.toLowerCase();
-          if (errorLower.includes('credentials') || errorLower.includes('access') || 
+          if (errorLower.includes('credentials') || errorLower.includes('access') ||
               errorLower.includes('invalid') || errorLower.includes('auth') ||
               errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
               errorLower.includes('signature') || errorLower.includes('key') ||
@@ -199,7 +200,7 @@ export default function Buckets() {
     return activeBucket && activeBucket.id === bucket.id;
   };
 
-  if (loading) {
+  if (bucketsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="space-y-4 w-full max-w-2xl">
@@ -291,7 +292,7 @@ export default function Buckets() {
                           const errorText = errorData.errors ? errorData.errors.join(', ') : errorData.error || '';
                           if (errorText) {
                             const errorLower = errorText.toLowerCase();
-                            if (errorLower.includes('credentials') || errorLower.includes('access') || 
+                            if (errorLower.includes('credentials') || errorLower.includes('access') ||
                                 errorLower.includes('invalid') || errorLower.includes('auth') ||
                                 errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
                                 errorLower.includes('signature') || errorLower.includes('key') ||
@@ -418,4 +419,4 @@ export default function Buckets() {
       />
     </div>
   );
-} 
+}

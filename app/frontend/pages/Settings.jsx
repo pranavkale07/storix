@@ -162,13 +162,13 @@ export default function Settings() {
       } else {
         const errorData = await response.json();
         let errorMessage = 'Failed to save bucket';
-        
+
         // Backend returns errors in an array, not a single error field
         const errorText = errorData.errors ? errorData.errors.join(', ') : errorData.error || '';
-        
+
         if (errorText) {
           const errorLower = errorText.toLowerCase();
-          if (errorLower.includes('credentials') || errorLower.includes('access') || 
+          if (errorLower.includes('credentials') || errorLower.includes('access') ||
               errorLower.includes('invalid') || errorLower.includes('auth') ||
               errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
               errorLower.includes('signature') || errorLower.includes('key') ||
@@ -217,13 +217,13 @@ export default function Settings() {
       } else {
         const errorData = await response.json();
         let errorMessage = 'Failed to disconnect bucket';
-        
+
         // Backend returns errors in an array, not a single error field
         const errorText = errorData.errors ? errorData.errors.join(', ') : errorData.error || '';
-        
+
         if (errorText) {
           const errorLower = errorText.toLowerCase();
-          if (errorLower.includes('credentials') || errorLower.includes('access') || 
+          if (errorLower.includes('credentials') || errorLower.includes('access') ||
               errorLower.includes('invalid') || errorLower.includes('auth') ||
               errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
               errorLower.includes('signature') || errorLower.includes('key') ||
@@ -382,7 +382,7 @@ export default function Settings() {
                           const errorText = errorData.errors ? errorData.errors.join(', ') : errorData.error || '';
                           if (errorText) {
                             const errorLower = errorText.toLowerCase();
-                            if (errorLower.includes('credentials') || errorLower.includes('access') || 
+                            if (errorLower.includes('credentials') || errorLower.includes('access') ||
                                 errorLower.includes('invalid') || errorLower.includes('auth') ||
                                 errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
                                 errorLower.includes('signature') || errorLower.includes('key') ||

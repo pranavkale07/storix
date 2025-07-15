@@ -31,7 +31,7 @@ RSpec.describe 'Usage Reporting (Real S3)', type: :request, if: REAL_S3 do
     active_headers = { 'Authorization' => "Bearer #{active_token}", 'Content-Type' => 'application/json' }
 
     # 2. Upload two files
-    [{ key: file1, content: content1 }, { key: file2, content: content2 }].each do |f|
+    [ { key: file1, content: content1 }, { key: file2, content: content2 } ].each do |f|
       post '/api/storage/presign_upload', params: { key: f[:key], content_type: 'text/plain' }.to_json, headers: active_headers
       expect(response).to have_http_status(:ok)
       url = JSON.parse(response.body)['presigned_url']
@@ -57,4 +57,4 @@ RSpec.describe 'Usage Reporting (Real S3)', type: :request, if: REAL_S3 do
     # 5. Clean up
     delete '/api/storage/files', params: { key: file2 }.to_json, headers: active_headers
   end
-end 
+end

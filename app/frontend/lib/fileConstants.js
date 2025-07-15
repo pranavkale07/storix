@@ -35,4 +35,4 @@ export const CATEGORY_EXTENSION_MAP = {
   code: ['js', 'ts', 'jsx', 'tsx', 'py', 'rb', 'go', 'java', 'c', 'cpp', 'cs', 'sh', 'json'],
   spreadsheets: ['xls', 'xlsx', 'ods', 'csv'],
   presentations: ['ppt', 'pptx', 'odp'],
-}; 
+};

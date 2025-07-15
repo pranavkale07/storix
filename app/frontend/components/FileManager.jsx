@@ -1,11 +1,9 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { format, formatDistanceToNow, subDays, isAfter, parseISO } from 'date-fns';
-import { ArrowUp, ArrowDown, ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowLeft, RefreshCw, Download, Trash2, Share2, X, Search, Filter as FilterIcon, Pencil, FolderPlus, Upload, Folder, File as FileIcon, Image as ImageIcon, FileText, FileCode, FileArchive, FileSpreadsheet, FileAudio, FileVideo } from 'lucide-react';
 import { Card, CardHeader, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { apiFetch } from '@/lib/api';
-import { Download, Trash2, Share2, X, Search, Filter as FilterIcon, Pencil, FolderPlus, Upload, Folder, File as FileIcon, Image as ImageIcon, FileText, FileCode, FileArchive, FileSpreadsheet, FileAudio, FileVideo } from 'lucide-react';
-import ShareModal from './ShareModal';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select';
 import { Input } from './ui/input';
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
@@ -43,6 +41,7 @@ import { useFileSelection } from '@/hooks/useFileSelection';
 import { useBulkActions } from '@/hooks/useBulkActions';
 import { useFileDrop } from '@/hooks/useFileDrop';
 import { useDialogState } from '@/hooks/useDialogState';
+import ShareModal from './ShareModal';
 
 export default function FileManager({ activeBucket }) {
   // Use the custom hook for all core state and logic
@@ -307,13 +306,13 @@ export default function FileManager({ activeBucket }) {
   // const handleBulkDownload = async () => { ... };
 
   // Determine the single selected item (file or folder)
-  const singleSelectedFile = useMemo(() => selectedFiles.length === 1 ? files.find(f => f.key === selectedFiles[0]) : null, [selectedFiles, files]);
-  const singleSelectedFolder = useMemo(() => selectedFolders.length === 1 ? folders.find(f => f.prefix === selectedFolders[0]) : null, [selectedFolders, folders]);
+  const singleSelectedFile = useMemo(() => (selectedFiles.length === 1 ? files.find(f => f.key === selectedFiles[0]) : null), [selectedFiles, files]);
+  const singleSelectedFolder = useMemo(() => (selectedFolders.length === 1 ? folders.find(f => f.prefix === selectedFolders[0]) : null), [selectedFolders, folders]);
   const singleSelectedItem = useMemo(() => {
     if (singleSelectedFile || singleSelectedFolder) {
       return {
-    key: singleSelectedFile ? singleSelectedFile.key : singleSelectedFolder.prefix,
-    name: singleSelectedFile ? singleSelectedFile.key.split('/').pop() : singleSelectedFolder.name,
+        key: singleSelectedFile ? singleSelectedFile.key : singleSelectedFolder.prefix,
+        name: singleSelectedFile ? singleSelectedFile.key.split('/').pop() : singleSelectedFolder.name,
       };
     }
     return null;
@@ -360,11 +359,11 @@ export default function FileManager({ activeBucket }) {
           <CardHeader className="flex flex-col gap-2">
             {/* Top row: Back button (if not root), Breadcrumbs (left), New Folder and Upload (right) */}
             <div className="flex items-center gap-2 mb-4 w-full">
-                {prefix && (
+              {prefix && (
                 <Button size="icon" variant="ghost" onClick={handleBack} title="Back to parent folder" className="flex-shrink-0 mr-1">
                   <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-                  </Button>
-                )}
+                </Button>
+              )}
               <div className="flex-1 min-w-0 overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
                 <Breadcrumbs path={prefix} onNavigate={handleBreadcrumbNavigate} className="whitespace-nowrap" />
               </div>
@@ -416,7 +415,6 @@ export default function FileManager({ activeBucket }) {
                 <input
                   type="file"
                   webkitdirectory="true"
-                  directory="true"
                   ref={folderInputRef}
                   style={{ display: 'none' }}
                   onChange={e => {

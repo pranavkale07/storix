@@ -30,4 +30,4 @@ function Breadcrumbs({ path, onNavigate, className }) {
   );
 }
 
-export default Breadcrumbs; 
+export default Breadcrumbs;

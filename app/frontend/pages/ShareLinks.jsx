@@ -53,7 +53,7 @@ export default function ShareLinks() {
   const [copiedLink, setCopiedLink] = useState(null);
   const [pendingRevokeId, setPendingRevokeId] = useState(null);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
-  
+
   // Edit modal state
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingLink, setEditingLink] = useState(null);
@@ -189,19 +189,19 @@ export default function ShareLinks() {
 
   const handleUpdateLink = async () => {
     if (!editingLink) return;
-    
+
     setEditLoading(true);
     setEditError('');
-    
+
     try {
       // Convert duration/unit to seconds
       let expiresInSeconds = 0;
       if (editUnit === 'minute') expiresInSeconds = editDuration * 60;
       else if (editUnit === 'hour') expiresInSeconds = editDuration * 3600;
-      
+
       const newExpiresAt = new Date();
       newExpiresAt.setSeconds(newExpiresAt.getSeconds() + expiresInSeconds);
-      
+
       const response = await apiFetch(`/api/storage/share_links/${editingLink.id}`, {
         method: 'PATCH',
         headers: {
@@ -209,7 +209,7 @@ export default function ShareLinks() {
         },
         body: JSON.stringify({ expires_at: newExpiresAt.toISOString() }),
       });
-      
+
       if (response.ok) {
         await fetchShareLinks(page, perPage);
         showToast.success('Share link updated successfully');
@@ -572,7 +572,7 @@ export default function ShareLinks() {
                 <p><strong>Path:</strong> {editingLink.key}</p>
                 <p><strong>Current expiration:</strong> {editingLink.expires_at ? new Date(editingLink.expires_at).toLocaleString() : 'Never'}</p>
               </div>
-              
+
               <div>
                 <label className="block text-sm mb-1">New expiration (from now)</label>
                 <div className="flex gap-2 items-center">
@@ -600,14 +600,14 @@ export default function ShareLinks() {
                   <Button type="button" variant="outline" size="sm" onClick={() => { setEditDuration(168); setEditUnit('hour'); }}>1 week</Button>
                 </div>
               </div>
-              
+
               {editError && (
                 <Alert variant="destructive">
                   <AlertTitle>Error</AlertTitle>
                   <AlertDescription>{editError}</AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setShowEditDialog(false)} disabled={editLoading}>
                   Cancel

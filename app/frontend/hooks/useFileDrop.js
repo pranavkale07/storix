@@ -115,4 +115,4 @@ export function useFileDrop({ uploadFiles, setShowUploadProgress, setAllUploadin
     handleDragLeave,
     handleDrop,
   };
-} 
+}

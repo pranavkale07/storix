@@ -90,22 +90,22 @@ export const getErrorType = (statusCode) => {
 // Helper function to get user-friendly error messages
 export const getErrorMessage = (error, statusCode = null) => {
   const errorType = getErrorType(statusCode);
-  
+
   switch (errorType) {
-    case 'server':
-      return 'Server error. Please try again later.';
-    case 'auth':
-      return 'Authentication failed. Please log in again.';
-    case 'permission':
-      return 'You don\'t have permission to perform this action.';
-    case 'not_found':
-      return 'The requested resource was not found.';
-    case 'validation':
-      return error || 'Please check your input and try again.';
-    case 'network':
-      return 'Network error. Please check your connection.';
-    default:
-      return error || 'An unexpected error occurred.';
+  case 'server':
+    return 'Server error. Please try again later.';
+  case 'auth':
+    return 'Authentication failed. Please log in again.';
+  case 'permission':
+    return 'You don\'t have permission to perform this action.';
+  case 'not_found':
+    return 'The requested resource was not found.';
+  case 'validation':
+    return error || 'Please check your input and try again.';
+  case 'network':
+    return 'Network error. Please check your connection.';
+  default:
+    return error || 'An unexpected error occurred.';
   }
 };
 
@@ -114,4 +114,4 @@ export const handleApiError = (error, statusCode = null) => {
   const message = getErrorMessage(error, statusCode);
   showToast.error(message);
   console.error('API Error:', { error, statusCode });
-}; 
+};

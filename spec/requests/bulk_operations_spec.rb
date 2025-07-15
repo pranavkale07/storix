@@ -37,7 +37,7 @@ RSpec.describe 'Bulk File and Folder Operations (Real S3)', type: :request, if: 
     expect(response).to have_http_status(:ok)
 
     # 3. Upload two files to source folder
-    [file1, file2].each do |fname|
+    [ file1, file2 ].each do |fname|
       post '/api/storage/presign_upload', params: { key: fname, content_type: 'text/plain' }.to_json, headers: active_headers
       expect(response).to have_http_status(:ok)
       url = JSON.parse(response.body)['presigned_url']
@@ -46,7 +46,7 @@ RSpec.describe 'Bulk File and Folder Operations (Real S3)', type: :request, if: 
     end
 
     # 4. Bulk copy files to destination folder
-    files_to_copy = [file1, file2].map { |f| { source_key: f, destination_key: f.sub(src_folder, dst_folder) } }
+    files_to_copy = [ file1, file2 ].map { |f| { source_key: f, destination_key: f.sub(src_folder, dst_folder) } }
     post '/api/storage/copy_files', params: { files: files_to_copy }.to_json, headers: active_headers
     expect(response).to have_http_status(:ok)
     # Verify files exist in both src and dst
@@ -58,7 +58,7 @@ RSpec.describe 'Bulk File and Folder Operations (Real S3)', type: :request, if: 
     expect(dst_files).to include(file1.sub(src_folder, dst_folder), file2.sub(src_folder, dst_folder))
 
     # 5. Bulk move files to move_folder
-    files_to_move = [file1, file2].map { |f| { source_key: f, destination_key: f.sub(src_folder, move_folder) } }
+    files_to_move = [ file1, file2 ].map { |f| { source_key: f, destination_key: f.sub(src_folder, move_folder) } }
     post '/api/storage/move_files', params: { files: files_to_move }.to_json, headers: active_headers
     expect(response).to have_http_status(:ok)
     # Verify files only in move_folder
@@ -71,7 +71,7 @@ RSpec.describe 'Bulk File and Folder Operations (Real S3)', type: :request, if: 
 
     # 6. Bulk copy the move_folder to a new folder
     copy_folder = "bulk_copy_#{SecureRandom.hex(4)}/"
-    post '/api/storage/copy_folders', params: { folders: [{ source_prefix: move_folder, destination_prefix: copy_folder }] }.to_json, headers: active_headers
+    post '/api/storage/copy_folders', params: { folders: [ { source_prefix: move_folder, destination_prefix: copy_folder } ] }.to_json, headers: active_headers
     expect(response).to have_http_status(:ok)
     get '/api/storage/files', params: { prefix: copy_folder }, headers: active_headers
     copied_files = JSON.parse(response.body)['files'].map { |f| f['key'] }
@@ -79,7 +79,7 @@ RSpec.describe 'Bulk File and Folder Operations (Real S3)', type: :request, if: 
 
     # 7. Bulk move the copied folder to another folder
     move_folder2 = "bulk_move2_#{SecureRandom.hex(4)}/"
-    post '/api/storage/move_folders', params: { folders: [{ source_prefix: copy_folder, destination_prefix: move_folder2 }] }.to_json, headers: active_headers
+    post '/api/storage/move_folders', params: { folders: [ { source_prefix: copy_folder, destination_prefix: move_folder2 } ] }.to_json, headers: active_headers
     expect(response).to have_http_status(:ok)
     get '/api/storage/files', params: { prefix: move_folder2 }, headers: active_headers
     moved2_files = JSON.parse(response.body)['files'].map { |f| f['key'] }
@@ -88,8 +88,8 @@ RSpec.describe 'Bulk File and Folder Operations (Real S3)', type: :request, if: 
     expect(JSON.parse(response.body)['files']).to be_empty
 
     # 8. Clean up: delete all test files and folders
-    [src_folder, dst_folder, move_folder, move_folder2].each do |folder|
+    [ src_folder, dst_folder, move_folder, move_folder2 ].each do |folder|
       post '/api/storage/delete_folder', params: { prefix: folder }.to_json, headers: active_headers
     end
   end
-end 
+end
