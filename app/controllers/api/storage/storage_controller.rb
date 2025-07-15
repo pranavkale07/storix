@@ -1,6 +1,7 @@
 class Api::Storage::StorageController < Api::BaseController
   before_action :authenticate_user!
   before_action :set_storage_credential, except: [ :create_credential, :validate_credential, :list_credentials, :show_credential, :update_credential, :destroy_credential ]
+  include Pagy::Backend
 
   # POST /api/storage_credentials
   def create_credential
@@ -322,7 +323,11 @@ class Api::Storage::StorageController < Api::BaseController
 
   # GET /api/storage/share_links
   def share_links
-    links = ShareLink.where(user: current_user, storage_credential: @storage_credential).order(created_at: :desc)
+    Rails.logger.debug "Pagy version: #{Pagy::VERSION} - share_links method called"
+    page  = params[:page].to_i > 0 ? params[:page].to_i : 1
+    items = params[:items].to_i > 0 ? params[:items].to_i : Pagy::DEFAULT[:items]
+    relation = ShareLink.where(user: current_user, storage_credential: @storage_credential).order(created_at: :desc)
+    pagy, links = pagy(relation, page: page, items: items)
     render json: {
       share_links: links.map { |l| {
         id: l.id,
@@ -332,7 +337,8 @@ class Api::Storage::StorageController < Api::BaseController
         expires_at: l.expires_at,
         revoked: l.revoked,
         expired: l.expired?
-      } }
+      } },
+      pagy: pagy_metadata(pagy)
     }
   end
 

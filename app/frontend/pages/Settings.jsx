@@ -18,6 +18,7 @@ import { Badge } from '../components/ui/badge';
 import { showToast } from '../components/utils/toast';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { Skeleton } from '../components/ui/skeleton';
+import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
 
 function formatMemberSince(dateStr) {
   if (!dateStr) return '';
@@ -48,22 +49,28 @@ function ProviderLogo({ provider }) {
 export default function Settings() {
   const { user, logout, activeBucket, refreshActiveBucket } = useAuth();
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const handleDeleteAccount = async () => {
-    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
+    setShowDeleteDialog(true);
+  };
+  const confirmDeleteAccount = async () => {
     setDeleting(true);
+    setDeleteError('');
     try {
       const res = await fetch('/api/auth/me', {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
       });
       if (res.ok) {
+        setShowDeleteDialog(false);
         logout();
       } else {
-        alert('Failed to delete account.');
+        setDeleteError('Failed to delete account.');
       }
     } catch (e) {
-      alert('Network error.');
+      setDeleteError('Network error.');
     }
     setDeleting(false);
   };
@@ -501,6 +508,34 @@ export default function Settings() {
         onConfirm={confirmDisconnect}
         loading={loading}
       />
+      {/* Delete Account Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Account</DialogTitle>
+          </DialogHeader>
+          <div className="mb-2 text-sm text-muted-foreground">
+            Are you sure you want to delete your account? This action cannot be undone.
+          </div>
+          {deleteError && (
+            <Alert variant="destructive" className="mb-2">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{deleteError}</AlertDescription>
+            </Alert>
+          )}
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" size="sm" onClick={() => setShowDeleteDialog(false)} disabled={deleting}>Cancel</Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={deleting}
+              onClick={confirmDeleteAccount}
+            >
+              Delete Account
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

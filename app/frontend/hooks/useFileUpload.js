@@ -12,13 +12,15 @@ export function useFileUpload(prefix, fetchFiles, clearCache) {
 
   // Drag & drop and file input handlers
   const handleFileSelect = (e, uploadFiles) => {
-    const selectedFiles = Array.from(e.target.files);
+    let selectedFiles = Array.from(e.target.files);
     if (selectedFiles.length === 0) return;
+    // Wrap in { file, relativePath }
+    selectedFiles = selectedFiles.map(file => ({ file, relativePath: file.webkitRelativePath || file.name }));
     setUploading(true);
     setShowUploadProgress(true);
     setAllUploadingFiles(prev => {
-      const prevPaths = new Set(prev.map(f => f._relativePath || f.webkitRelativePath || f.name));
-      const newFiles = selectedFiles.filter(f => !prevPaths.has(f._relativePath || f.webkitRelativePath || f.name));
+      const prevPaths = new Set(prev.map(f => f.relativePath || f.file.webkitRelativePath || f.file.name));
+      const newFiles = selectedFiles.filter(f => !prevPaths.has(f.relativePath));
       if (newFiles.length > 0) {
         setTimeout(() => uploadFiles(newFiles), 0);
       }
@@ -27,13 +29,15 @@ export function useFileUpload(prefix, fetchFiles, clearCache) {
   };
 
   const handleFolderSelect = (e, uploadFiles) => {
-    const selectedFiles = Array.from(e.target.files);
+    let selectedFiles = Array.from(e.target.files);
     if (selectedFiles.length === 0) return;
+    // Wrap in { file, relativePath }
+    selectedFiles = selectedFiles.map(file => ({ file, relativePath: file.webkitRelativePath || file.name }));
     setUploading(true);
     setShowUploadProgress(true);
     setAllUploadingFiles(prev => {
-      const prevPaths = new Set(prev.map(f => f._relativePath || f.webkitRelativePath || f.name));
-      const newFiles = selectedFiles.filter(f => !prevPaths.has(f._relativePath || f.webkitRelativePath || f.name));
+      const prevPaths = new Set(prev.map(f => f.relativePath || f.file.webkitRelativePath || f.file.name));
+      const newFiles = selectedFiles.filter(f => !prevPaths.has(f.relativePath));
       if (newFiles.length > 0) {
         setTimeout(() => uploadFiles(newFiles), 0);
       }
@@ -44,9 +48,12 @@ export function useFileUpload(prefix, fetchFiles, clearCache) {
   // Main upload logic
   const uploadFiles = async (filesToUpload) => {
     let anyError = false;
-    await Promise.all(filesToUpload.map(async (file) => {
+    await Promise.all(filesToUpload.map(async (fileObj) => {
       try {
-        const relativePath = file._relativePath || file.webkitRelativePath || file.name;
+        // fileObj: { file, relativePath }
+        const file = fileObj.file || fileObj;
+        const relativePath = fileObj.relativePath || file.webkitRelativePath || file.name;
+        if (!relativePath) throw new Error('Missing relative path for upload.');
         const key = (prefix || '') + relativePath;
         const res = await apiFetch('/api/storage/presign_upload', {
           method: 'POST',
@@ -56,7 +63,7 @@ export function useFileUpload(prefix, fetchFiles, clearCache) {
         if (!res.ok) {
           const err = await res.json();
           let errorMessage = 'Failed to get upload URL';
-          if (err.error) errorMessage = err.error;
+          if (err && err.error) errorMessage = err.error;
           setUploadErrors(prev => ({ ...prev, [relativePath]: errorMessage }));
           anyError = true;
           return;
@@ -102,8 +109,8 @@ export function useFileUpload(prefix, fetchFiles, clearCache) {
           xhr.send(file);
         });
       } catch (err) {
-        const relativePath = file._relativePath || file.webkitRelativePath || file.name;
-        setUploadErrors(prev => ({ ...prev, [relativePath]: err.message || 'Unknown error' }));
+        const relativePath = (fileObj && fileObj.relativePath) || (fileObj && fileObj.file && fileObj.file.webkitRelativePath) || (fileObj && fileObj.file && fileObj.file.name) || 'unknown';
+        setUploadErrors(prev => ({ ...prev, [relativePath]: (err && err.message) || 'Unknown error' }));
         anyError = true;
       }
     }));

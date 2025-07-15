@@ -72,7 +72,7 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                 <Checkbox checked={isAllSelected} onCheckedChange={onSelectAll} aria-label="Select all" />
               </th>
               <th
-                className={colWidths[1] + ` group transition-colors ${sortBy === 'name' ? 'text-primary font-bold' : ''}`}
+                className={colWidths[1] + ` group transition-colors ${sortBy === 'name' ? 'text-primary font-bold' : ''} cursor-pointer`}
                 onClick={() => onSort('name')}
                 title="Sort by Name"
               >
@@ -90,7 +90,7 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                 </span>
               </th>
               <th
-                className={colWidths[2] + ` group transition-colors ${sortBy === 'size' ? 'text-primary font-bold' : ''}`}
+                className={colWidths[2] + ` group transition-colors ${sortBy === 'size' ? 'text-primary font-bold' : ''} cursor-pointer`}
                 onClick={() => onSort('size')}
                 title="Sort by Size"
               >
@@ -108,7 +108,7 @@ function FileList({ folders, files, onOpenFolder, onDownload, onDelete, download
                 </span>
               </th>
               <th
-                className={colWidths[3] + ` group transition-colors ${sortBy === 'last_modified' ? 'text-primary font-bold' : ''}`}
+                className={colWidths[3] + ` group transition-colors ${sortBy === 'last_modified' ? 'text-primary font-bold' : ''} cursor-pointer`}
                 onClick={() => onSort('last_modified')}
                 title="Sort by Last Modified"
               >

@@ -6,6 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import Header from '../components/Header';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
+import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
 
 function formatMemberSince(dateStr) {
   if (!dateStr) return '';
@@ -38,6 +39,7 @@ export default function Account() {
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   const handleDeleteAccount = async () => {
     setShowDeleteDialog(true);
@@ -46,6 +48,7 @@ export default function Account() {
   const confirmDeleteAccount = async () => {
     if (deleteInput !== 'DELETE') return;
     setDeleting(true);
+    setDeleteError('');
     try {
       const res = await fetch('/api/auth/me', {
         method: 'DELETE',
@@ -56,10 +59,10 @@ export default function Account() {
         setDeleteInput('');
         logout();
       } else {
-        alert('Failed to delete account.');
+        setDeleteError('Failed to delete account.');
       }
     } catch (e) {
-      alert('Network error.');
+      setDeleteError('Network error.');
     }
     setDeleting(false);
   };
@@ -118,6 +121,12 @@ export default function Account() {
               disabled={deleting}
               className="mb-2"
             />
+            {deleteError && (
+              <Alert variant="destructive" className="mb-2">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{deleteError}</AlertDescription>
+              </Alert>
+            )}
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setShowDeleteDialog(false)} disabled={deleting}>Cancel</Button>
               <Button

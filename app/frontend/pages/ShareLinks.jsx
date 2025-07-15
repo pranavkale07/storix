@@ -27,6 +27,14 @@ import { showToast } from '../components/utils/toast';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
 import { Skeleton } from '../components/ui/skeleton';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from '../components/ui/pagination';
 
 export default function ShareLinks() {
   const { activeBucket, refreshActiveBucket } = useAuth();
@@ -54,19 +62,36 @@ export default function ShareLinks() {
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20); // Changed from 5 to 20 for default
+  const [totalCount, setTotalCount] = useState(0);
+  const [pages, setPages] = useState(1);
+
   // Fetch share links on component mount and whenever activeBucket changes
   useEffect(() => {
     if (activeBucket) {
-      fetchShareLinks();
+      fetchShareLinks(page, perPage);
     }
-  }, [activeBucket]);
+  }, [activeBucket, page, perPage]);
 
-  const fetchShareLinks = async () => {
+  const fetchShareLinks = async (page = 1, perPage = 20) => { // Default perPage to 20
+    setLoading(true);
     try {
-      const response = await apiFetch('/api/storage/share_links');
+      const response = await apiFetch(`/api/storage/share_links?page=${page}&items=${perPage}`);
       if (response.ok) {
         const data = await response.json();
         setShareLinks(data.share_links || []);
+        if (data.pagy) {
+          setTotalCount(data.pagy.count || 0);
+          setPages(data.pagy.pages || 1);
+          setPage(data.pagy.page || 1);
+          setPerPage(data.pagy.items || 20);
+        } else {
+          setTotalCount(data.total_count || 0);
+          setPages(data.pages || 1);
+          setPage(data.page || 1);
+        }
       } else {
         console.error('Failed to fetch share links');
       }
@@ -104,7 +129,7 @@ export default function ShareLinks() {
         body: JSON.stringify({ id: pendingRevokeId }),
       });
       if (response.ok) {
-        await fetchShareLinks();
+        await fetchShareLinks(page, perPage);
         showToast.success('Share link revoked successfully');
       } else {
         const errorData = await response.json();
@@ -131,7 +156,7 @@ export default function ShareLinks() {
         method: 'DELETE',
       });
       if (response.ok) {
-        await fetchShareLinks();
+        await fetchShareLinks(page, perPage);
         showToast.success('Share link deleted successfully');
       } else {
         const errorData = await response.json();
@@ -186,7 +211,7 @@ export default function ShareLinks() {
       });
       
       if (response.ok) {
-        await fetchShareLinks();
+        await fetchShareLinks(page, perPage);
         showToast.success('Share link updated successfully');
         setShowEditDialog(false);
       } else {
@@ -465,6 +490,54 @@ export default function ShareLinks() {
           </Card>
         </div>
       </main>
+      {/* Pagination Controls */}
+      {pages > 1 && (
+        <div className="flex flex-col items-center mt-8 gap-2 pb-8"> {/* Added pb-8 for bottom padding */}
+          {/* <div className="flex items-center gap-2 mb-2">
+            <span>Rows per page:</span>
+            <Select value={String(perPage)} onValueChange={val => setPerPage(Number(val))}>
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 10, 20, 50, 100].map(n => (
+                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="ml-4 text-muted-foreground text-sm">Total: {totalCount}</span>
+          </div> */}
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setPage(page > 1 ? page - 1 : 1)}
+                  disabled={page === 1}
+                  className="cursor-pointer"
+                />
+              </PaginationItem>
+              {Array.from({ length: pages }).map((_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    isActive={page === i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className="cursor-pointer"
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setPage(page < pages ? page + 1 : pages)}
+                  disabled={page === pages}
+                  className="cursor-pointer"
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
       {/* ConfirmDialog for Revoke */}
       <ConfirmDialog
         open={!!pendingRevokeId}

@@ -297,6 +297,7 @@ export default function FileManager({ activeBucket }) {
     uploadFiles,
     setShowUploadProgress,
     setAllUploadingFiles,
+    onDropError: (msg) => showToast.error('Upload Error', msg),
   });
 
   // Bulk Delete
@@ -372,10 +373,57 @@ export default function FileManager({ activeBucket }) {
                   <FolderPlus className="w-4 h-4 text-white" />
                   New Folder
                 </Button>
-                <Button size="sm" className="bg-slate-600 hover:bg-slate-700 text-white font-semibold px-4 py-2 rounded-md flex items-center gap-2" onClick={() => setShowUploadMenu(v => !v)} disabled={uploading}>
+                <Popover open={showUploadMenu} onOpenChange={setShowUploadMenu}>
+                  <PopoverTrigger asChild>
+                    <Button size="sm" className="bg-slate-600 hover:bg-slate-700 text-white font-semibold px-4 py-2 rounded-md flex items-center gap-2" disabled={uploading}>
                       <Upload className="w-4 h-4 text-white" />
-                  Upload
+                      Upload
                     </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-40 p-0">
+                    <div className="flex flex-col">
+                      <button
+                        className="w-full text-left px-4 py-2 hover:bg-muted cursor-pointer"
+                        onClick={() => {
+                          setShowUploadMenu(false);
+                          fileInputRef.current?.click();
+                        }}
+                      >
+                        Upload Files
+                      </button>
+                      <button
+                        className="w-full text-left px-4 py-2 hover:bg-muted cursor-pointer"
+                        onClick={() => {
+                          setShowUploadMenu(false);
+                          folderInputRef.current?.click();
+                        }}
+                      >
+                        Upload Folder
+                      </button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <input
+                  type="file"
+                  multiple
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    handleFileSelect(e, uploadFiles);
+                    e.target.value = '';
+                  }}
+                />
+                <input
+                  type="file"
+                  webkitdirectory="true"
+                  directory="true"
+                  ref={folderInputRef}
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    handleFolderSelect(e, uploadFiles);
+                    e.target.value = '';
+                  }}
+                />
                 <Button size="icon" variant="ghost" onClick={handleRefresh} title="Refresh" className="flex-shrink-0">
                   <RefreshCw className={`w-5 h-5 text-muted-foreground ${loading ? 'animate-spin' : ''}`} />
                 </Button>
@@ -522,28 +570,32 @@ export default function FileManager({ activeBucket }) {
                   </span>
                 </div>
                 <div className="space-y-1 max-h-40 overflow-y-auto">
-                  {allUploadingFiles.map(file => {
-                    const progress = uploadProgress[file._relativePath || file.webkitRelativePath || file.name] || 0;
-                    const error = uploadErrors[file._relativePath || file.webkitRelativePath || file.name];
-                    const speed = uploadSpeeds[file._relativePath || file.webkitRelativePath || file.name];
+                  {allUploadingFiles.map(fileObj => {
+                    const file = fileObj.file || fileObj;
+                    const relativePath = fileObj.relativePath || file.webkitRelativePath || file.name;
+                    const progress = uploadProgress[relativePath] || 0;
+                    const error = uploadErrors[relativePath];
+                    const speed = uploadSpeeds[relativePath];
                     let eta = null;
                     if (speed && file.size && progress < 100) {
                       const remaining = file.size * (1 - progress / 100);
                       eta = speed > 0 ? Math.ceil(remaining / speed) : null;
                     }
                     return (
-                      <div key={file._relativePath || file.webkitRelativePath || file.name} className="flex flex-col gap-0 px-0 py-1">
+                      <div key={relativePath} className="flex flex-col gap-0 px-0 py-1">
                         <div className="flex items-center justify-between text-xs mb-0.5 w-full">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <span className="truncate font-semibold text-foreground max-w-[180px]">{file._relativePath || file.webkitRelativePath || file.name}</span>
-                            {file.size && <span className="text-muted-foreground">{formatBytes(file.size)}</span>}
-                            {speed && <span className="text-muted-foreground">{formatBytes(speed)}/s</span>}
-                            {eta !== null && <span className="text-muted-foreground">{eta}s left</span>}
+                            <span className="truncate font-semibold text-foreground max-w-[180px]">{relativePath}</span>
+                            <span className="text-muted-foreground">{formatBytes(file.size)}</span>
+                            <span className="text-muted-foreground">{formatBytes(speed || 0)}/s</span>
+                            <span className="text-muted-foreground">{eta !== null ? `${eta}s left` : '—'}</span>
                           </div>
                           <div className="flex items-center gap-2 flex-1 ml-2">
-                            <Progress value={progress} className={error ? 'bg-destructive/20' : ''}>
-                              <div className={`h-2 rounded-full ${error ? 'bg-destructive' : 'bg-primary'} transition-all`} style={{ width: `${progress}%` }} />
-                            </Progress>
+                            <Progress
+                              value={progress}
+                              className="bg-muted border border-border"
+                              indicatorClassName={error ? 'bg-destructive' : 'bg-green-600'}
+                            />
                             <span className="font-semibold text-foreground" style={{ minWidth: 28, textAlign: 'right' }}>{progress}%</span>
                           </div>
                         </div>
