@@ -65,8 +65,8 @@ export default function ShareLinks() {
   // Pagination state
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20); // Changed from 5 to 20 for default
-  const [totalCount, setTotalCount] = useState(0);
   const [pages, setPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Fetch share links on component mount and whenever activeBucket changes
   useEffect(() => {
@@ -328,7 +328,7 @@ export default function ShareLinks() {
                 setShowConnectDialog(false);
                 setConnectErrors({}); // clear errors on success
                 refreshBuckets();
-              } catch (err) {
+              } catch {
                 setConnectErrors({ error: 'Network error' });
               } finally {
                 setConnectLoading(false);

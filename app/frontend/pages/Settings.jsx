@@ -3,20 +3,16 @@ import { useAuth } from '../components/AuthContext';
 
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
 import { apiFetch } from '../lib/api';
 import { Settings as SettingsIcon, Trash2, Edit, Plus } from 'lucide-react';
 import ConnectBucketForm from '../components/ConnectBucketForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { BucketService } from '../lib/bucketService';
 import Header from '../components/Header';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { validateBucketFields } from '../lib/validateBucketFields';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Badge } from '../components/ui/badge';
 import { showToast } from '../components/utils/toast';
-import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { Skeleton } from '../components/ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
 
@@ -52,9 +48,6 @@ export default function Settings() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
-  const handleDeleteAccount = async () => {
-    setShowDeleteDialog(true);
-  };
   const confirmDeleteAccount = async () => {
     setDeleting(true);
     setDeleteError('');
@@ -110,13 +103,6 @@ export default function Settings() {
       console.error('Error fetching buckets:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (formErrors[field]) {
-      setFormErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 

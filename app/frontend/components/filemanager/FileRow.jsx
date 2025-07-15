@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import FileRenameInput from './FileRenameInput';
 import { isViewableFile, getFileIconByExtension, formatSize, formatDate } from '@/lib/fileUtils';
 
-function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, downloading, onDownload, onShareFile, onDelete, clearCache, ...props }) {
+function FileRow({ file, isSelected, onSelectFile, renamingFile, onRenameFile, downloading, onDownload, onShareFile, onDelete, clearCache }) {
   const fileNameRef = useRef(null);
   const [isFileTruncated, setIsFileTruncated] = useState(false);
   useEffect(() => {

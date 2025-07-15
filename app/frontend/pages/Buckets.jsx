@@ -2,14 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
 import { apiFetch } from '../lib/api';
 import { Trash2, Edit, Plus } from 'lucide-react';
 import ConnectBucketForm from '../components/ConnectBucketForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { BucketService } from '../lib/bucketService';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { validateBucketFields } from '../lib/validateBucketFields';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Badge } from '../components/ui/badge';
@@ -39,84 +36,6 @@ export default function Buckets() {
     // The useBuckets hook manages its own fetching, so we don't need to call fetchBuckets here.
     // However, if we want to re-fetch or invalidate cache, we can call refreshBuckets(true).
   }, []);
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (formErrors[field]) {
-      setFormErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const validateForm = () => {
-    const errors = validateBucketFields(formData);
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    try {
-      const submitData = { ...formData };
-      if (submitData.provider === 'digitalocean') {
-        submitData.provider = 'do_spaces';
-        if (!submitData.endpoint) {
-          submitData.endpoint = `https://${submitData.region}.digitaloceanspaces.com`;
-        }
-      }
-      const url = editingBucket
-        ? `/api/storage/credentials/${editingBucket.id}`
-        : '/api/storage/credentials';
-      const method = editingBucket ? 'PUT' : 'POST';
-      const response = await apiFetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ storage_credential: submitData }),
-      });
-      if (response.ok) {
-        await fetchBuckets(true);
-        resetForm();
-        if (!editingBucket) {
-          const data = await response.json();
-          if (data.credential) {
-            await refreshActiveBucket();
-          }
-        }
-        showToast.success(editingBucket ? 'Bucket updated successfully' : 'Bucket added successfully');
-      } else {
-        const errorData = await response.json();
-        let errorMessage = 'Failed to save bucket';
-        const errorText = errorData.errors ? errorData.errors.join(', ') : errorData.error || '';
-        if (errorText) {
-          const errorLower = errorText.toLowerCase();
-          if (errorLower.includes('credentials') || errorLower.includes('access') ||
-              errorLower.includes('invalid') || errorLower.includes('auth') ||
-              errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
-              errorLower.includes('signature') || errorLower.includes('key') ||
-              errorLower.includes('credential validation failed')) {
-            errorMessage = 'Invalid credentials. Please check your access key and secret key.';
-          } else if (errorLower.includes('bucket') || errorLower.includes('not found') ||
-                     errorLower.includes('no such bucket') || errorLower.includes('does not exist') ||
-                     errorLower.includes('specified bucket does not exist')) {
-            errorMessage = 'Bucket not found. Please check the bucket name and region.';
-          } else if (errorLower.includes('permission') || errorLower.includes('denied') ||
-                     errorLower.includes('forbidden') || errorLower.includes('unauthorized')) {
-            errorMessage = 'Permission denied. Please check your credentials and bucket permissions.';
-          } else if (errorLower.includes('region') || errorLower.includes('endpoint')) {
-            errorMessage = 'Invalid region or endpoint. Please check your configuration.';
-          } else {
-            errorMessage = errorText;
-          }
-        }
-        showToast.error('Failed to save bucket', errorMessage);
-      }
-    } catch (error) {
-      console.error('Error saving bucket:', error);
-      showToast.error('Failed to save bucket', 'Network error');
-    }
-  };
 
   const handleDisconnect = async (bucketId) => {
     setPendingDisconnectId(bucketId);

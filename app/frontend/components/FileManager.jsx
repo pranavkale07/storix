@@ -1,47 +1,27 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { format, formatDistanceToNow, subDays, isAfter, parseISO } from 'date-fns';
-import { ArrowUp, ArrowDown, ArrowLeft, RefreshCw, Download, Trash2, Share2, X, Search, Filter as FilterIcon, Pencil, FolderPlus, Upload, Folder, File as FileIcon, Image as ImageIcon, FileText, FileCode, FileArchive, FileSpreadsheet, FileAudio, FileVideo } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Download, Trash2, X, Search, Filter as FilterIcon, FolderPlus, Upload, Folder, ArrowUp, ArrowDown, Share2, Pencil, File as FileIcon, Image as ImageIcon, FileText, FileCode, FileArchive, FileSpreadsheet, FileAudio, FileVideo } from 'lucide-react';
 import { Card, CardHeader, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { apiFetch } from '@/lib/api';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select';
-import { Input } from './ui/input';
-import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from './ui/alert-dialog';
 import ConfirmDialog from './ConfirmDialog';
-import { Checkbox } from './ui/checkbox';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { showToast } from '@/components/utils/toast';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
-import { Progress } from './ui/progress';
-import { Skeleton } from './ui/skeleton';
-import Breadcrumbs from './filemanager/Breadcrumbs';
-import CreateFolderModal from './filemanager/CreateFolderModal';
-import FolderRenameInput from './filemanager/FolderRenameInput';
-import FileRenameInput from './filemanager/FileRenameInput';
-import ProgressBar from './filemanager/ProgressBar';
-import FolderRow from './filemanager/FolderRow';
-import FileRow from './filemanager/FileRow';
-import FileList from './filemanager/FileList';
-import { formatSize, formatBytes, formatDate, isViewableFile, getFileIconByExtension } from '@/lib/fileUtils';
-import { CATEGORY_OPTIONS, FILE_TYPE_OPTIONS, CATEGORY_EXTENSION_MAP } from '@/lib/fileConstants';
 import { useFileManagerState } from '@/hooks/useFileManagerState';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useFileSelection } from '@/hooks/useFileSelection';
 import { useBulkActions } from '@/hooks/useBulkActions';
 import { useFileDrop } from '@/hooks/useFileDrop';
 import { useDialogState } from '@/hooks/useDialogState';
+import FileList from './filemanager/FileList';
+import CreateFolderModal from './filemanager/CreateFolderModal';
 import ShareModal from './ShareModal';
+import { format, formatDistanceToNow, subDays, isAfter, parseISO } from 'date-fns';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select';
+import { Input } from './ui/input';
+import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import Breadcrumbs from './filemanager/Breadcrumbs';
+import { Progress } from './ui/progress';
+import { CATEGORY_OPTIONS, FILE_TYPE_OPTIONS, CATEGORY_EXTENSION_MAP } from '@/lib/fileConstants';
+import { formatBytes } from '@/lib/fileUtils';
 
 export default function FileManager({ activeBucket }) {
   // Use the custom hook for all core state and logic
@@ -108,7 +88,6 @@ export default function FileManager({ activeBucket }) {
 
   // Remove all now-redundant state and logic for these from the component.
   // Keep upload, selection, and bulk action logic in the component for now.
-  const [downloading, setDownloading] = useState(new Set());
   const [deleting, setDeleting] = useState(new Set());
   const [deletingFolders, setDeletingFolders] = useState(new Set());
   // Dialog/modal state (from useDialogState)
@@ -150,14 +129,11 @@ export default function FileManager({ activeBucket }) {
     clearCache,
   });
 
-  const fileListRef = useRef();
   const fileInputRef = useRef();
   const folderInputRef = useRef();
   const [showUploadMenu, setShowUploadMenu] = useState(false);
-
-  const filterDebounceRef = useRef();
-
   const [showFilterBar, setShowFilterBar] = useState(false);
+  const filterDebounceRef = useRef();
 
   useEffect(() => {
     fetchFiles();
@@ -176,8 +152,8 @@ export default function FileManager({ activeBucket }) {
 
   // Memoized handlers
   const handleDownload = useCallback(async (fileKey, inline = false) => {
-    if (downloading.has(fileKey)) return;
-    setDownloading(prev => new Set(prev).add(fileKey));
+    if (deleting.has(fileKey)) return;
+    setDeleting(prev => new Set(prev).add(fileKey));
     try {
       const response = await apiFetch('/api/storage/presign_download', {
         method: 'POST',
@@ -203,13 +179,13 @@ export default function FileManager({ activeBucket }) {
       console.error('Download failed:', err);
       showToast.error('Download failed', err.message);
     } finally {
-      setDownloading(prev => {
+      setDeleting(prev => {
         const newSet = new Set(prev);
         newSet.delete(fileKey);
         return newSet;
       });
     }
-  }, [downloading, showToast]);
+  }, [deleting, showToast]);
 
   const handleDelete = useCallback(async (fileKey) => {
     if (deleting.has(fileKey)) return;
@@ -644,7 +620,7 @@ export default function FileManager({ activeBucket }) {
               onOpenFolder={handleOpenFolder}
               onDownload={handleDownload}
               onDelete={handleDelete}
-              downloading={downloading}
+              downloading={deleting}
               deleting={deleting}
               onDeleteFolder={handleDeleteFolder}
               deletingFolders={deletingFolders}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
@@ -6,14 +6,13 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import ConnectBucketForm from './ConnectBucketForm';
 import { BucketService } from '../lib/bucketService';
-import { Share2, Settings as SettingsIcon, ArrowLeft, User2, FolderCog, Link2, LogOut } from 'lucide-react';
+import { ArrowLeft, User2, FolderCog, Link2, LogOut } from 'lucide-react';
 import useBuckets from '../hooks/useBuckets';
 import { showToast } from './utils/toast';
-import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from './ui/dropdown-menu';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 
-export default function Header({ showShareLinks, showSettings, showBackToFiles }) {
+export default function Header({ showBackToFiles }) {
   const { user, logout, activeBucket, refreshActiveBucket } = useAuth();
   const navigate = useNavigate();
 
@@ -24,16 +23,12 @@ export default function Header({ showShareLinks, showSettings, showBackToFiles }
     refreshBuckets,
     switchBucket,
     switching,
-    setBuckets,
   } = useBuckets(refreshActiveBucket);
   const [showConnectDialog, setShowConnectDialog] = useState(false);
   const [connectLoading, setConnectLoading] = useState(false);
   const [connectErrors, setConnectErrors] = useState({});
   const [connectInitialValues, setConnectInitialValues] = useState({});
   const [editing, setEditing] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleteInput, setDeleteInput] = useState('');
-  const [deleting, setDeleting] = useState(false);
 
   const handleSwitchBucket = (bucketId) => {
     if (bucketId === 'add_new') {

@@ -4,7 +4,7 @@ import { Input } from './ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select';
 import { Button } from './ui/button';
 import { apiFetch } from '@/lib/api';
-import { Copy, X, Link2, Trash2 } from 'lucide-react';
+import { Copy, Link2, Trash2 } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { showToast } from '@/components/utils/toast';
 

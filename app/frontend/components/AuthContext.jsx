@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
         } else {
           setUser(session.user); // fallback
         }
-      } catch (e) {
+      } catch {
         setUser(session.user); // fallback
       }
     }
@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
         setUser(user);
         StorageManager.setUser(user);
       }
-    } catch (e) {
+    } catch {
       setUser(user);
       StorageManager.setUser(user);
     }

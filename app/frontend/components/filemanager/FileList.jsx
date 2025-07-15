@@ -6,7 +6,7 @@ import FileRow from './FileRow';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
-function FileList({ folders, files, onOpenFolder, onDownload, onDelete, downloading, deleting, onDeleteFolder, deletingFolders, onRenameFolder, renamingFolder, onRenameFile, renamingFile, selectedFiles, selectedFolders, onSelectFile, onSelectFolder, isAllSelected, onSelectAll, onShareFile, onSort, sortBy, sortOrder, loading, clearCache }) {
+function FileList({ folders, files, onOpenFolder, onDownload, onDelete, downloading, onDeleteFolder, deletingFolders, onRenameFolder, renamingFolder, onRenameFile, renamingFile, selectedFiles, selectedFolders, onSelectFile, onSelectFolder, isAllSelected, onSelectAll, onShareFile, onSort, sortBy, sortOrder, loading, clearCache }) {
   const tableClass = 'min-w-full text-sm rounded-lg overflow-hidden shadow-lg bg-card table-fixed';
   const colWidths = [
     'w-8 px-2 py-3', // Checkbox

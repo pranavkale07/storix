@@ -2,14 +2,12 @@ import React from 'react';
 import { useAuth } from '../components/AuthContext';
 import FileManager from '../components/FileManager';
 import AuthLanding from '../components/AuthLanding';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import ConnectBucketForm from '../components/ConnectBucketForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { BucketService } from '../lib/bucketService';
 import Header from '../components/Header';
-import LoadingSpinner from '../components/LoadingSpinner';
 import useBuckets from '../hooks/useBuckets';
 import { showToast } from '../components/utils/toast';
 import { Skeleton } from '../components/ui/skeleton';
@@ -19,13 +17,12 @@ export default function Home() {
 
   const {
     refreshBuckets,
-    switchBucket,
   } = useBuckets(refreshActiveBucket);
   const [showConnectDialog, setShowConnectDialog] = React.useState(false);
   const [connectLoading, setConnectLoading] = React.useState(false);
   const [connectErrors, setConnectErrors] = React.useState({});
-  const [connectInitialValues, setConnectInitialValues] = React.useState({});
-  const [editing, setEditing] = React.useState(false);
+  const [connectInitialValues] = React.useState({});
+  const [editing] = React.useState(false);
 
   const handleDialogOpenChange = (open) => {
     if (!open) {
@@ -181,7 +178,7 @@ export default function Home() {
                 setShowConnectDialog(false);
                 setConnectErrors({}); // clear errors on success
                 showToast.success('Bucket connected successfully');
-              } catch (err) {
+              } catch {
                 const errorMessage = 'Network error. Please check your connection.';
                 setConnectErrors({ error: errorMessage });
                 showToast.error('Failed to connect bucket', errorMessage);

@@ -15,7 +15,6 @@ export function useFileManagerState(activeBucket) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [fileType, setFileType] = useState('all');
-  const filterDebounceRef = useRef();
 
   // In-memory cache for folder contents
   const folderCache = useRef({});
@@ -111,7 +110,7 @@ export function useFileManagerState(activeBucket) {
         folders: sortedFolders,
         files: sortedFiles,
       };
-    } catch (err) {
+    } catch {
       setError('Network error');
       setFolders([]);
       setFiles([]);

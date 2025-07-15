@@ -61,7 +61,7 @@ export default function Account() {
       } else {
         setDeleteError('Failed to delete account.');
       }
-    } catch (e) {
+    } catch {
       setDeleteError('Network error.');
     }
     setDeleting(false);

@@ -5,7 +5,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { Checkbox } from '@/components/ui/checkbox';
 import FolderRenameInput from './FolderRenameInput';
 
-function FolderRow({ folder, isSelected, onSelectFolder, onOpenFolder, renamingFolder, onRenameFolder, onDeleteFolder, deletingFolders, clearCache, ...props }) {
+function FolderRow({ folder, isSelected, onSelectFolder, onOpenFolder, renamingFolder, onRenameFolder, onDeleteFolder, deletingFolders, clearCache }) {
   const folderNameRef = useRef(null);
   const [isFolderTruncated, setIsFolderTruncated] = useState(false);
   useEffect(() => {
