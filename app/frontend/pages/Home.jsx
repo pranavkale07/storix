@@ -11,7 +11,7 @@ import { BucketService } from '../lib/bucketService';
 import Header from '../components/Header';
 import LoadingSpinner from '../components/LoadingSpinner';
 import useBuckets from '../hooks/useBuckets';
-import { showToast } from '../lib/toast';
+import { showToast } from '../components/utils/toast';
 
 export default function Home() {
   const { user, loading, activeBucket, bucketLoading, refreshActiveBucket } = useAuth();

@@ -23,7 +23,7 @@ import {
 import ConfirmDialog from './ConfirmDialog';
 import { Checkbox } from './ui/checkbox';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { showToast } from '@/lib/toast';
+import { showToast } from '@/components/utils/toast';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 import { Progress } from './ui/progress';
 import { Skeleton } from './ui/skeleton';
@@ -1527,7 +1527,7 @@ export default function FileManager({ activeBucket }) {
           {dragActive && (
             <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center z-10 pointer-events-none">
               <div className="text-center">
-                <div className="text-2xl mb-2">📁</div>
+                <Folder className="w-8 h-8 text-primary mb-2" />
                 <div className="text-lg font-semibold">Drop files or folders here</div>
                 <div className="text-sm text-muted-foreground">Release to upload</div>
               </div>

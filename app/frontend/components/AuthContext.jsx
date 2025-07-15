@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BucketService } from '../lib/bucketService';
 import { StorageManager } from '../lib/storage';
-import { showToast } from '../lib/toast';
+import { showToast } from './utils/toast';
 import { apiFetch } from '../lib/api';
 
 const AuthContext = createContext();

@@ -12,6 +12,8 @@ import {
   Clock,
   ExternalLink,
   Edit,
+  Folder,
+  Link2,
 } from 'lucide-react';
 import ConnectBucketForm from '../components/ConnectBucketForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
@@ -21,7 +23,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Badge } from '../components/ui/badge';
 import useBuckets from '../hooks/useBuckets';
-import { showToast } from '../lib/toast';
+import { showToast } from '../components/utils/toast';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
 
@@ -243,7 +245,7 @@ export default function ShareLinks() {
     } else if (['zip', 'rar', '7z'].includes(extension)) {
       return '📦';
     } else {
-      return '📁';
+      return <Folder className="inline w-4 h-4 align-text-bottom" />;
     }
   };
 
@@ -331,7 +333,7 @@ export default function ShareLinks() {
             <CardHeader>
               <CardTitle>Your Share Links</CardTitle>
               <p className="text-sm text-muted-foreground">
-                View and manage all your file sharing links. To create new share links, go to your files and use the share button (🔗) on any file.
+                View and manage all your file sharing links. To create new share links, go to your files and use the share button (<Link2 className="inline w-4 h-4 align-text-bottom" />) on any file.
               </p>
             </CardHeader>
             <CardContent>

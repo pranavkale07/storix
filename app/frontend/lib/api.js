@@ -1,5 +1,5 @@
 import { StorageManager } from './storage';
-import { showToast, handleApiError } from './toast';
+import { showToast, handleApiError } from '../components/utils/toast';
 
 export function apiFetch(url, options = {}) {
   const token = StorageManager.getToken();

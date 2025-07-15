@@ -8,7 +8,7 @@ import ConnectBucketForm from './ConnectBucketForm';
 import { BucketService } from '../lib/bucketService';
 import { Share2, Settings as SettingsIcon, ArrowLeft, User2, FolderCog, Link2, LogOut } from 'lucide-react';
 import useBuckets from '../hooks/useBuckets';
-import { showToast } from '../lib/toast';
+import { showToast } from './utils/toast';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from './ui/dropdown-menu';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';

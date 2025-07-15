@@ -13,7 +13,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { validateBucketFields } from '../lib/validateBucketFields';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Badge } from '../components/ui/badge';
-import { showToast } from '../lib/toast';
+import { showToast } from '../components/utils/toast';
 import Header from '../components/Header';
 
 export default function Buckets() {

@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { apiFetch } from '@/lib/api';
 import { Copy, X, Link2, Trash2 } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { showToast } from '@/lib/toast';
+import { showToast } from '@/components/utils/toast';
 
 export default function ShareModal({ open, onClose, item, onLinkCreated }) {
   const [duration, setDuration] = useState(1);
