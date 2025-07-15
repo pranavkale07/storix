@@ -26,6 +26,7 @@ import useBuckets from '../hooks/useBuckets';
 import { showToast } from '../components/utils/toast';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
+import { Skeleton } from '../components/ui/skeleton';
 
 export default function ShareLinks() {
   const { activeBucket, refreshActiveBucket } = useAuth();
@@ -338,8 +339,20 @@ export default function ShareLinks() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="flex justify-center items-center min-h-[40vh]">
-                  <LoadingSpinner message="Loading share links..." />
+                <div className="flex flex-col gap-4 min-h-[40vh]">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="p-4 border rounded-lg border-border bg-card w-full">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Skeleton className="h-6 w-32 rounded" />
+                        <Skeleton className="h-5 w-16 rounded" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-40 rounded" />
+                        <Skeleton className="h-4 w-32 rounded" />
+                        <Skeleton className="h-4 w-48 rounded" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : shareLinks.length === 0 ? (
                 <div className="text-center text-muted-foreground py-12">No share links found for this bucket.</div>

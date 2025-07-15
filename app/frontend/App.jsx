@@ -11,6 +11,7 @@ import { OAuthLogin } from './components/OAuthLogin';
 import { AuthCallback } from './components/AuthCallback';
 import { AuthError } from './components/AuthError';
 import { Toaster } from './components/ui/sonner';
+import { BucketsProvider } from './components/BucketsContext';
 
 // Protected Route component
 function ProtectedRoute({ children }) {
@@ -113,9 +114,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
-      <DebugStorage />
-      <Toaster />
+      <BucketsProvider>
+        <AppRoutes />
+        <DebugStorage />
+        <Toaster />
+      </BucketsProvider>
     </AuthProvider>
   );
 }

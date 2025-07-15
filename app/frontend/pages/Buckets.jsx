@@ -15,11 +15,12 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { Badge } from '../components/ui/badge';
 import { showToast } from '../components/utils/toast';
 import Header from '../components/Header';
+import { Skeleton } from '../components/ui/skeleton';
+import { useBuckets } from '../components/BucketsContext';
 
 export default function Buckets() {
   const { activeBucket, refreshActiveBucket } = useAuth();
-  const [buckets, setBuckets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { buckets, loading, fetchBuckets } = useBuckets();
   const [editingBucket, setEditingBucket] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -34,24 +35,9 @@ export default function Buckets() {
   const [pendingDisconnectId, setPendingDisconnectId] = useState(null);
 
   useEffect(() => {
-    fetchBuckets();
+    // The useBuckets hook manages its own fetching, so we don't need to call fetchBuckets here.
+    // However, if we want to re-fetch or invalidate cache, we can call refreshBuckets(true).
   }, []);
-
-  const fetchBuckets = async () => {
-    try {
-      const response = await apiFetch('/api/storage/credentials');
-      if (response.ok) {
-        const data = await response.json();
-        setBuckets(data.credentials || []);
-      } else {
-        console.error('Failed to fetch buckets');
-      }
-    } catch (error) {
-      console.error('Error fetching buckets:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -69,7 +55,6 @@ export default function Buckets() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-    setLoading(true);
     try {
       const submitData = { ...formData };
       if (submitData.provider === 'digitalocean') {
@@ -90,7 +75,7 @@ export default function Buckets() {
         body: JSON.stringify({ storage_credential: submitData }),
       });
       if (response.ok) {
-        await fetchBuckets();
+        await fetchBuckets(true);
         resetForm();
         if (!editingBucket) {
           const data = await response.json();
@@ -129,8 +114,6 @@ export default function Buckets() {
     } catch (error) {
       console.error('Error saving bucket:', error);
       showToast.error('Failed to save bucket', 'Network error');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -140,13 +123,12 @@ export default function Buckets() {
 
   const confirmDisconnect = async () => {
     if (!pendingDisconnectId) return;
-    setLoading(true);
     try {
       const response = await apiFetch(`/api/storage/credentials/${pendingDisconnectId}`, {
         method: 'DELETE',
       });
       if (response.ok) {
-        await fetchBuckets();
+        await fetchBuckets(true);
         if (activeBucket && activeBucket.id === pendingDisconnectId) {
           await refreshActiveBucket();
         }
@@ -182,7 +164,6 @@ export default function Buckets() {
       console.error('Error disconnecting bucket:', error);
       showToast.error('Failed to disconnect bucket', 'Network error');
     } finally {
-      setLoading(false);
       setPendingDisconnectId(null);
     }
   };
@@ -221,7 +202,21 @@ export default function Buckets() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <LoadingSpinner message="Loading..." />
+        <div className="space-y-4 w-full max-w-2xl">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="p-4 border rounded-lg border-border bg-card">
+              <div className="flex items-center gap-2 mb-2">
+                <Skeleton className="h-6 w-32 rounded" />
+                <Skeleton className="h-5 w-16 rounded" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-40 rounded" />
+                <Skeleton className="h-4 w-32 rounded" />
+                <Skeleton className="h-4 w-48 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -274,7 +269,7 @@ export default function Buckets() {
                           body: JSON.stringify({ storage_credential: submitData }),
                         });
                         if (response.ok) {
-                          await fetchBuckets();
+                          await fetchBuckets(true);
                           resetForm();
                           if (!editingBucket) {
                             const data = await response.json();
@@ -338,8 +333,20 @@ export default function Buckets() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8">
-                <LoadingSpinner message="Loading buckets..." />
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="p-4 border rounded-lg border-border bg-card">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Skeleton className="h-6 w-32 rounded" />
+                      <Skeleton className="h-5 w-16 rounded" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-40 rounded" />
+                      <Skeleton className="h-4 w-32 rounded" />
+                      <Skeleton className="h-4 w-48 rounded" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : buckets.length === 0 ? (
               <div className="text-center py-8">

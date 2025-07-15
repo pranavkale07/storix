@@ -12,6 +12,7 @@ import Header from '../components/Header';
 import LoadingSpinner from '../components/LoadingSpinner';
 import useBuckets from '../hooks/useBuckets';
 import { showToast } from '../components/utils/toast';
+import { Skeleton } from '../components/ui/skeleton';
 
 export default function Home() {
   const { user, loading, activeBucket, bucketLoading, refreshActiveBucket } = useAuth();
@@ -38,7 +39,21 @@ export default function Home() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <LoadingSpinner message="Loading..." />
+        <div className="space-y-4 w-full max-w-2xl">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="p-4 border rounded-lg border-border bg-card">
+              <div className="flex items-center gap-2 mb-2">
+                <Skeleton className="h-6 w-32 rounded" />
+                <Skeleton className="h-5 w-16 rounded" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-40 rounded" />
+                <Skeleton className="h-4 w-32 rounded" />
+                <Skeleton className="h-4 w-48 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -54,7 +69,21 @@ export default function Home() {
       <div className="min-h-screen bg-background">
         <Header showShareLinks showSettings />
         <main className="flex justify-center items-center min-h-[80vh]">
-          <LoadingSpinner message="Loading your storage..." />
+          <div className="space-y-4 w-full max-w-2xl">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="p-4 border rounded-lg border-border bg-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <Skeleton className="h-6 w-32 rounded" />
+                  <Skeleton className="h-5 w-16 rounded" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-40 rounded" />
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <Skeleton className="h-4 w-48 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
         </main>
       </div>
     );

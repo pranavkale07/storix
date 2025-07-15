@@ -17,6 +17,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { Badge } from '../components/ui/badge';
 import { showToast } from '../components/utils/toast';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
+import { Skeleton } from '../components/ui/skeleton';
 
 function formatMemberSince(dateStr) {
   if (!dateStr) return '';
@@ -87,9 +88,11 @@ export default function Settings() {
     fetchBuckets();
   }, []);
 
-  const fetchBuckets = async () => {
+  const fetchBuckets = async (invalidateCache = false) => {
     try {
-      const response = await apiFetch('/api/storage/credentials');
+      const response = await apiFetch('/api/storage/credentials', {
+        cache: invalidateCache ? 'no-cache' : 'default',
+      });
       if (response.ok) {
         const data = await response.json();
         setBuckets(data.credentials || []);
@@ -140,7 +143,7 @@ export default function Settings() {
         body: JSON.stringify({ storage_credential: submitData }),
       });
       if (response.ok) {
-        await fetchBuckets();
+        await fetchBuckets(true);
         resetForm();
         if (!editingBucket) {
           const data = await response.json();
@@ -199,7 +202,7 @@ export default function Settings() {
         method: 'DELETE',
       });
       if (response.ok) {
-        await fetchBuckets();
+        await fetchBuckets(true);
         if (activeBucket && activeBucket.id === pendingDisconnectId) {
           await refreshActiveBucket();
         }
@@ -277,7 +280,21 @@ export default function Settings() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <LoadingSpinner message="Loading..." />
+        <div className="space-y-4 w-full max-w-2xl">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="p-4 border rounded-lg border-border bg-card">
+              <div className="flex items-center gap-2 mb-2">
+                <Skeleton className="h-6 w-32 rounded" />
+                <Skeleton className="h-5 w-16 rounded" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-40 rounded" />
+                <Skeleton className="h-4 w-32 rounded" />
+                <Skeleton className="h-4 w-48 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -336,7 +353,7 @@ export default function Settings() {
                           body: JSON.stringify({ storage_credential: submitData }),
                         });
                         if (response.ok) {
-                          await fetchBuckets();
+                          await fetchBuckets(true);
                           resetForm();
                           if (!editingBucket) {
                             const data = await response.json();
@@ -400,8 +417,20 @@ export default function Settings() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8">
-                <LoadingSpinner message="Loading buckets..." />
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="p-4 border rounded-lg border-border bg-card">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Skeleton className="h-6 w-32 rounded" />
+                      <Skeleton className="h-5 w-16 rounded" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-40 rounded" />
+                      <Skeleton className="h-4 w-32 rounded" />
+                      <Skeleton className="h-4 w-48 rounded" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : buckets.length === 0 ? (
               <div className="text-center py-8">
