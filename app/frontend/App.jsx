@@ -11,6 +11,8 @@ import { AuthCallback } from './components/AuthCallback';
 import { AuthError } from './components/AuthError';
 import { Toaster } from './components/ui/sonner';
 import { BucketsProvider } from './components/BucketsContext';
+import LandingV2 from './pages/LandingV2';
+import Landing from './pages/Landing';
 
 // Protected Route component
 function ProtectedRoute({ children }) {
@@ -83,6 +85,8 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path="/landing-v2" element={<LandingV2 />} />
+        <Route path="/landing" element={<Landing />} />
       </Routes>
     </Router>
   );
