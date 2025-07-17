@@ -110,6 +110,15 @@ class Api::StorageController < ApplicationController
         }
       end
 
+      # Filter by extension if filter_category is present
+      if params[:filter_category].present?
+        exts = params[:filter_category].split(",").map { |e| e.strip.downcase }
+        files.select! do |file|
+          ext = File.extname(file[:key]).delete(".").downcase
+          exts.include?(ext)
+        end
+      end
+
       render json: { files: files }
     rescue Aws::S3::Errors::ServiceError => e
       render json: { error: "Failed to list files: #{e.message}" }, status: :unprocessable_entity

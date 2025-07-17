@@ -64,7 +64,7 @@ export default function ConnectBucket() {
 
       updateActiveBucket(bucketInfo);
       navigate('/');
-    } catch (err) {
+    } catch {
       setError('Network error');
     }
     setLoading(false);

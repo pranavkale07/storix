@@ -57,7 +57,17 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  # --- Added for testing ---
+  gem "rspec-rails", "~> 6.1"
+  gem "factory_bot_rails"
+  gem "shoulda-matchers"
+  gem "faker"
+  gem "webmock"
+  gem "database_cleaner-active_record"
 end
 
 # Vite integration for Rails
 gem "vite_rails"
+
+gem "pagy", "~> 9.3", ">= 9.3.5"

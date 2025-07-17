@@ -1,6 +1,7 @@
 class Api::Storage::StorageController < Api::BaseController
   before_action :authenticate_user!
   before_action :set_storage_credential, except: [ :create_credential, :validate_credential, :list_credentials, :show_credential, :update_credential, :destroy_credential ]
+  include Pagy::Backend
 
   # POST /api/storage_credentials
   def create_credential
@@ -136,8 +137,14 @@ class Api::Storage::StorageController < Api::BaseController
         }
       end
 
-      # Filtering by file extension
-      if params[:filter_type].present?
+      # Filtering by file extension (single or multiple)
+      if params[:filter_category].present?
+        exts = params[:filter_category].split(",").map { |e| e.strip.downcase }
+        files = files.select do |f|
+          ext = File.extname(f[:key]).delete(".").downcase
+          exts.include?(ext)
+        end
+      elsif params[:filter_type].present?
         ext = params[:filter_type].downcase
         files = files.select { |f| File.extname(f[:key]).downcase == ".#{ext}" }
       end
@@ -316,7 +323,11 @@ class Api::Storage::StorageController < Api::BaseController
 
   # GET /api/storage/share_links
   def share_links
-    links = ShareLink.where(user: current_user, storage_credential: @storage_credential).order(created_at: :desc)
+    Rails.logger.debug "Pagy version: #{Pagy::VERSION} - share_links method called"
+    page  = params[:page].to_i > 0 ? params[:page].to_i : 1
+    items = params[:items].to_i > 0 ? params[:items].to_i : Pagy::DEFAULT[:items]
+    relation = ShareLink.where(user: current_user, storage_credential: @storage_credential).order(created_at: :desc)
+    pagy, links = pagy(relation, page: page, items: items)
     render json: {
       share_links: links.map { |l| {
         id: l.id,
@@ -326,7 +337,8 @@ class Api::Storage::StorageController < Api::BaseController
         expires_at: l.expires_at,
         revoked: l.revoked,
         expired: l.expired?
-      } }
+      } },
+      pagy: pagy_metadata(pagy)
     }
   end
 
@@ -621,6 +633,12 @@ class Api::Storage::StorageController < Api::BaseController
         dst_client = S3ClientBuilder.new(dst_cred).client
         src_bucket = src_cred.bucket
         dst_bucket = dst_cred.bucket
+        # Check if destination folder already exists
+        existing = dst_client.list_objects_v2(bucket: dst_bucket, prefix: dst_prefix, max_keys: 1)
+        if existing.common_prefixes.any? || existing.contents.any? { |obj| obj.key.start_with?(dst_prefix) }
+          results << { source_prefix: src_prefix, destination_prefix: dst_prefix, status: "error", error: "A folder with this name already exists." }
+          next
+        end
         # List all objects under the source prefix
         continuation_token = nil
         loop do

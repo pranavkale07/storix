@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BucketService } from '../lib/bucketService';
 import { StorageManager } from '../lib/storage';
+import { showToast } from './utils/toast';
+import { apiFetch } from '../lib/api';
 
 const AuthContext = createContext();
 
@@ -15,19 +17,47 @@ export function AuthProvider({ children }) {
     // Load from localStorage on mount
     const session = StorageManager.getSession();
 
+    async function fetchProfileAndSetUser(token) {
+      try {
+        const response = await apiFetch('/api/auth/profile');
+        if (response.ok) {
+          const profile = await response.json();
+          setUser(profile);
+          StorageManager.setUser(profile);
+        } else {
+          setUser(session.user); // fallback
+        }
+      } catch {
+        setUser(session.user); // fallback
+      }
+    }
+
     if (session.user && session.token) {
-      setUser(session.user);
       setToken(session.token);
       setActiveBucket(session.activeBucket);
+      fetchProfileAndSetUser(session.token);
     }
     setLoading(false);
   }, []);
 
   const login = async (user, token) => {
-    setUser(user);
     setToken(token);
-    StorageManager.setSession(user, token);
-
+    StorageManager.setToken(token);
+    // Fetch full profile after login
+    try {
+      const response = await apiFetch('/api/auth/profile');
+      if (response.ok) {
+        const profile = await response.json();
+        setUser(profile);
+        StorageManager.setUser(profile);
+      } else {
+        setUser(user);
+        StorageManager.setUser(user);
+      }
+    } catch {
+      setUser(user);
+      StorageManager.setUser(user);
+    }
     // Don't automatically load active bucket on login to prevent infinite loops
     // The bucket will be loaded when needed by the components
   };
@@ -40,6 +70,9 @@ export function AuthProvider({ children }) {
 
     // Clear all localStorage data
     StorageManager.clearSession();
+
+    // Show logout toast
+    showToast.success('Logged out successfully');
 
     // Clear any potential browser state
     // Note: We don't use sessionStorage, cookies, or IndexedDB in this app

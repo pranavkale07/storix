@@ -3,11 +3,16 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Home from './pages/Home';
 import Settings from './pages/Settings';
 import ShareLinks from './pages/ShareLinks';
+import Account from './pages/Account';
+import Buckets from './pages/Buckets';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import { DebugStorage } from './components/DebugStorage';
-import { OAuthLogin } from './components/OAuthLogin';
 import { AuthCallback } from './components/AuthCallback';
 import { AuthError } from './components/AuthError';
+import { Toaster } from './components/ui/sonner';
+import { BucketsProvider } from './components/BucketsContext';
+import LandingV2 from './pages/LandingV2';
+import Landing from './pages/Landing';
 
 // Protected Route component
 function ProtectedRoute({ children }) {
@@ -25,28 +30,6 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-}
-
-// Public Route component (redirects authenticated users away)
-function PublicRoute({ children }) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (user) {
     return <Navigate to="/" replace />;
   }
 
@@ -79,13 +62,31 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/share-links"
+          path="/shared-links"
           element={
             <ProtectedRoute>
               <ShareLinks />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <Account />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/buckets"
+          element={
+            <ProtectedRoute>
+              <Buckets />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/landing-v2" element={<LandingV2 />} />
+        <Route path="/landing" element={<Landing />} />
       </Routes>
     </Router>
   );
@@ -94,8 +95,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
-      <DebugStorage />
+      <BucketsProvider>
+        <AppRoutes />
+        <DebugStorage />
+        <Toaster />
+      </BucketsProvider>
     </AuthProvider>
   );
 }

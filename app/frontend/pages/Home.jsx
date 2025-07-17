@@ -2,28 +2,27 @@ import React from 'react';
 import { useAuth } from '../components/AuthContext';
 import FileManager from '../components/FileManager';
 import AuthLanding from '../components/AuthLanding';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import ConnectBucketForm from '../components/ConnectBucketForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { BucketService } from '../lib/bucketService';
 import Header from '../components/Header';
-import LoadingSpinner from '../components/LoadingSpinner';
 import useBuckets from '../hooks/useBuckets';
+import { showToast } from '../components/utils/toast';
+import { Skeleton } from '../components/ui/skeleton';
 
 export default function Home() {
   const { user, loading, activeBucket, bucketLoading, refreshActiveBucket } = useAuth();
 
   const {
     refreshBuckets,
-    switchBucket,
   } = useBuckets(refreshActiveBucket);
   const [showConnectDialog, setShowConnectDialog] = React.useState(false);
   const [connectLoading, setConnectLoading] = React.useState(false);
   const [connectErrors, setConnectErrors] = React.useState({});
-  const [connectInitialValues, setConnectInitialValues] = React.useState({});
-  const [editing, setEditing] = React.useState(false);
+  const [connectInitialValues] = React.useState({});
+  const [editing] = React.useState(false);
 
   const handleDialogOpenChange = (open) => {
     if (!open) {
@@ -37,7 +36,21 @@ export default function Home() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <LoadingSpinner message="Loading..." />
+        <div className="space-y-4 w-full max-w-2xl">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="p-4 border rounded-lg border-border bg-card">
+              <div className="flex items-center gap-2 mb-2">
+                <Skeleton className="h-6 w-32 rounded" />
+                <Skeleton className="h-5 w-16 rounded" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-40 rounded" />
+                <Skeleton className="h-4 w-32 rounded" />
+                <Skeleton className="h-4 w-48 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -53,7 +66,21 @@ export default function Home() {
       <div className="min-h-screen bg-background">
         <Header showShareLinks showSettings />
         <main className="flex justify-center items-center min-h-[80vh]">
-          <LoadingSpinner message="Loading your storage..." />
+          <div className="space-y-4 w-full max-w-2xl">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="p-4 border rounded-lg border-border bg-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <Skeleton className="h-6 w-32 rounded" />
+                  <Skeleton className="h-5 w-16 rounded" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-40 rounded" />
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <Skeleton className="h-4 w-48 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
         </main>
       </div>
     );
@@ -66,7 +93,9 @@ export default function Home() {
       {/* Main content */}
       <main className="flex justify-center items-start min-h-[80vh] py-12">
         {activeBucket ? (
-          <FileManager activeBucket={activeBucket} />
+          <div className="w-full max-w-7xl px-4">
+            <FileManager activeBucket={activeBucket} />
+          </div>
         ) : (
           <Card className="w-full max-w-md">
             <CardHeader>
@@ -107,7 +136,35 @@ export default function Home() {
                 });
                 const result = await res.json();
                 if (!res.ok) {
-                  setConnectErrors(result.errors || { error: result.error || 'Failed to connect bucket' });
+                  // Handle specific error cases
+                  let errorMessage = 'Failed to connect bucket';
+
+                  // Backend returns errors in an array, not a single error field
+                  const errorText = result.errors ? result.errors.join(', ') : result.error || '';
+
+                  if (errorText) {
+                    const errorLower = errorText.toLowerCase();
+                    if (errorLower.includes('credentials') || errorLower.includes('access') ||
+                        errorLower.includes('invalid') || errorLower.includes('auth') ||
+                        errorLower.includes('unauthorized') || errorLower.includes('forbidden') ||
+                        errorLower.includes('signature') || errorLower.includes('key') ||
+                        errorLower.includes('credential validation failed')) {
+                      errorMessage = 'Invalid credentials. Please check your access key and secret key.';
+                    } else if (errorLower.includes('bucket') || errorLower.includes('not found') ||
+                               errorLower.includes('no such bucket') || errorLower.includes('does not exist') ||
+                               errorLower.includes('specified bucket does not exist')) {
+                      errorMessage = 'Bucket not found. Please check the bucket name and region.';
+                    } else if (errorLower.includes('permission') || errorLower.includes('denied') ||
+                               errorLower.includes('forbidden') || errorLower.includes('unauthorized')) {
+                      errorMessage = 'Permission denied. Please check your credentials and bucket permissions.';
+                    } else if (errorLower.includes('region') || errorLower.includes('endpoint')) {
+                      errorMessage = 'Invalid region or endpoint. Please check your configuration.';
+                    } else {
+                      errorMessage = errorText;
+                    }
+                  }
+                  setConnectErrors({ error: errorMessage });
+                  showToast.error('Failed to connect bucket', errorMessage);
                   return;
                 }
                 const newBucketId = result.credential?.id || result.id;
@@ -120,8 +177,11 @@ export default function Home() {
                 refreshBuckets();
                 setShowConnectDialog(false);
                 setConnectErrors({}); // clear errors on success
-              } catch (err) {
-                setConnectErrors({ error: 'Network error' });
+                showToast.success('Bucket connected successfully');
+              } catch {
+                const errorMessage = 'Network error. Please check your connection.';
+                setConnectErrors({ error: errorMessage });
+                showToast.error('Failed to connect bucket', errorMessage);
               } finally {
                 setConnectLoading(false);
               }

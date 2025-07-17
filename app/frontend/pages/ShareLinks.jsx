@@ -11,6 +11,9 @@ import {
   Calendar,
   Clock,
   ExternalLink,
+  Edit,
+  Folder,
+  Link2,
 } from 'lucide-react';
 import ConnectBucketForm from '../components/ConnectBucketForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
@@ -20,6 +23,18 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { Badge } from '../components/ui/badge';
 import useBuckets from '../hooks/useBuckets';
+import { showToast } from '../components/utils/toast';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
+import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
+import { Skeleton } from '../components/ui/skeleton';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from '../components/ui/pagination';
 
 export default function ShareLinks() {
   const { activeBucket, refreshActiveBucket } = useAuth();
@@ -39,19 +54,44 @@ export default function ShareLinks() {
   const [pendingRevokeId, setPendingRevokeId] = useState(null);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
+  // Edit modal state
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingLink, setEditingLink] = useState(null);
+  const [editDuration, setEditDuration] = useState(1);
+  const [editUnit, setEditUnit] = useState('hour');
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20); // Changed from 5 to 20 for default
+  const [pages, setPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   // Fetch share links on component mount and whenever activeBucket changes
   useEffect(() => {
     if (activeBucket) {
-      fetchShareLinks();
+      fetchShareLinks(page, perPage);
     }
-  }, [activeBucket]);
+  }, [activeBucket, page, perPage]);
 
-  const fetchShareLinks = async () => {
+  const fetchShareLinks = async (page = 1, perPage = 20) => { // Default perPage to 20
+    setLoading(true);
     try {
-      const response = await apiFetch('/api/storage/share_links');
+      const response = await apiFetch(`/api/storage/share_links?page=${page}&items=${perPage}`);
       if (response.ok) {
         const data = await response.json();
         setShareLinks(data.share_links || []);
+        if (data.pagy) {
+          setTotalCount(data.pagy.count || 0);
+          setPages(data.pagy.pages || 1);
+          setPage(data.pagy.page || 1);
+          setPerPage(data.pagy.items || 20);
+        } else {
+          setTotalCount(data.total_count || 0);
+          setPages(data.pages || 1);
+          setPage(data.page || 1);
+        }
       } else {
         console.error('Failed to fetch share links');
       }
@@ -89,14 +129,15 @@ export default function ShareLinks() {
         body: JSON.stringify({ id: pendingRevokeId }),
       });
       if (response.ok) {
-        await fetchShareLinks();
+        await fetchShareLinks(page, perPage);
+        showToast.success('Share link revoked successfully');
       } else {
         const errorData = await response.json();
-        alert(errorData.error || 'Failed to revoke share link');
+        showToast.error('Failed to revoke share link', errorData.error);
       }
     } catch (error) {
       console.error('Error revoking share link:', error);
-      alert('Failed to revoke share link');
+      showToast.error('Failed to revoke share link', 'Network error');
     } finally {
       setLoading(false);
       setPendingRevokeId(null);
@@ -115,14 +156,15 @@ export default function ShareLinks() {
         method: 'DELETE',
       });
       if (response.ok) {
-        await fetchShareLinks();
+        await fetchShareLinks(page, perPage);
+        showToast.success('Share link deleted successfully');
       } else {
         const errorData = await response.json();
-        alert(errorData.error || 'Failed to delete share link');
+        showToast.error('Failed to delete share link', errorData.error);
       }
     } catch (error) {
       console.error('Error deleting share link:', error);
-      alert('Failed to delete share link');
+      showToast.error('Failed to delete share link', 'Network error');
     } finally {
       setLoading(false);
       setPendingDeleteId(null);
@@ -133,9 +175,58 @@ export default function ShareLinks() {
     const url = `${window.location.origin}/share_links/${token}`;
     navigator.clipboard.writeText(url);
     setCopiedLink(token);
+    showToast.success('Link copied to clipboard');
     setTimeout(() => setCopiedLink(null), 1500);
   };
 
+  const handleEditLink = (link) => {
+    setEditingLink(link);
+    setEditDuration(1);
+    setEditUnit('hour');
+    setEditError('');
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateLink = async () => {
+    if (!editingLink) return;
+
+    setEditLoading(true);
+    setEditError('');
+
+    try {
+      // Convert duration/unit to seconds
+      let expiresInSeconds = 0;
+      if (editUnit === 'minute') expiresInSeconds = editDuration * 60;
+      else if (editUnit === 'hour') expiresInSeconds = editDuration * 3600;
+
+      const newExpiresAt = new Date();
+      newExpiresAt.setSeconds(newExpiresAt.getSeconds() + expiresInSeconds);
+
+      const response = await apiFetch(`/api/storage/share_links/${editingLink.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ expires_at: newExpiresAt.toISOString() }),
+      });
+
+      if (response.ok) {
+        await fetchShareLinks(page, perPage);
+        showToast.success('Share link updated successfully');
+        setShowEditDialog(false);
+      } else {
+        const errorData = await response.json();
+        setEditError(errorData.error || 'Failed to update share link');
+        showToast.error('Failed to update share link', errorData.error);
+      }
+    } catch (error) {
+      console.error('Error updating share link:', error);
+      setEditError('Network error');
+      showToast.error('Failed to update share link', 'Network error');
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   const getStatusBadge = (link) => {
     if (link.revoked) {
@@ -180,7 +271,7 @@ export default function ShareLinks() {
     } else if (['zip', 'rar', '7z'].includes(extension)) {
       return '📦';
     } else {
-      return '📁';
+      return <Folder className="inline w-4 h-4 align-text-bottom" />;
     }
   };
 
@@ -237,7 +328,7 @@ export default function ShareLinks() {
                 setShowConnectDialog(false);
                 setConnectErrors({}); // clear errors on success
                 refreshBuckets();
-              } catch (err) {
+              } catch {
                 setConnectErrors({ error: 'Network error' });
               } finally {
                 setConnectLoading(false);
@@ -256,111 +347,197 @@ export default function ShareLinks() {
       </Dialog>
 
       {/* Main content */}
-      <main className="max-w-6xl mx-auto py-8 px-6">
+      <main className="max-w-6xl mx-auto py-8 px-6 min-w-0 w-full">
         <div className="flex items-center gap-3 mb-8">
           <Share2 className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">Manage Share Links</h1>
+          <h1 className="text-2xl font-bold">Manage Shared Links</h1>
         </div>
 
         {/* Share Links List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Share Links</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              View and manage all your file sharing links. To create new share links, go to your files and use the share button (🔗) on any file.
-            </p>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center items-center min-h-[40vh]">
-                <LoadingSpinner message="Loading share links..." />
-              </div>
-            ) : shareLinks.length === 0 ? (
-              <div className="text-center text-muted-foreground py-12">No share links found for this bucket.</div>
-            ) : (
-              <div className="grid gap-6">
-                {shareLinks.map((link) => (
-                  <div
-                    key={link.id}
-                    className="p-4 border rounded-lg border-border hover:border-primary/50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-lg">{getFileIcon(link.key)}</span>
-                          <h3 className="font-semibold truncate">{link.key.split('/').pop()}</h3>
-                          {getStatusBadge(link)}
-                        </div>
-
-                        <div className="text-sm text-muted-foreground space-y-1 mb-3">
-                          <p className="truncate">Path: {link.key}</p>
-                          <div className="flex items-center gap-4">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              Created: {new Date(link.created_at).toLocaleDateString()}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {formatExpiration(link.expires_at)}
-                            </span>
+        <div className="overflow-x-auto box-border w-full max-w-full min-w-0">
+          <Card className="overflow-x-hidden w-full max-w-[calc(100vw-48px)] min-w-0 box-border">
+            <CardHeader>
+              <CardTitle>Your Share Links</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                View and manage all your file sharing links. To create new share links, go to your files and use the share button (<Link2 className="inline w-4 h-4 align-text-bottom" />) on any file.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex flex-col gap-4 min-h-[40vh]">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="p-4 border rounded-lg border-border bg-card w-full">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Skeleton className="h-6 w-32 rounded" />
+                        <Skeleton className="h-5 w-16 rounded" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-40 rounded" />
+                        <Skeleton className="h-4 w-32 rounded" />
+                        <Skeleton className="h-4 w-48 rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : shareLinks.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">No share links found for this bucket.</div>
+              ) : (
+                <div className="grid gap-6 min-w-0 w-full box-border max-w-full">
+                  {shareLinks.map((link) => (
+                    <div
+                      key={link.id}
+                      className="p-4 border rounded-lg border-border hover:border-primary/50 transition-colors w-full box-border max-w-full min-w-0"
+                    >
+                      <div className="flex items-start justify-between w-full min-w-0">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2 min-w-0">
+                            <span className="text-lg flex-shrink-0">{getFileIcon(link.key)}</span>
+                            <div className="flex-1 min-w-0 max-w-full">
+                              <h3 className="font-semibold truncate overflow-hidden whitespace-nowrap max-w-full">{link.key.split('/').pop()}</h3>
+                            </div>
+                            <div className="flex-shrink-0">{getStatusBadge(link)}</div>
                           </div>
-                        </div>
 
-                        <div className="flex items-center gap-2">
-                          <div className="relative flex-1 max-w-md">
-                            <Input
-                              type="text"
-                              value={link.token ? `${window.location.origin}/share_links/${link.token}` : 'Link unavailable'}
-                              readOnly
-                              className={`pr-20 font-mono text-sm truncate border-border ${(!link.token || link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())) ? 'bg-muted-foreground/10 text-muted-foreground' : 'bg-muted'}`}
-                            />
+                          <div className="text-sm text-muted-foreground space-y-1 mb-3">
+                            <p className="truncate">Path: {link.key}</p>
+                            <div className="flex items-center gap-4">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Created: {new Date(link.created_at).toLocaleDateString()}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {formatExpiration(link.expires_at)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <div className="relative flex-1 max-w-md">
+                              <Input
+                                type="text"
+                                value={link.token ? `${window.location.origin}/share_links/${link.token}` : 'Link unavailable'}
+                                readOnly
+                                className={`pr-20 font-mono text-sm truncate border-border ${(!link.token || link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())) ? 'bg-muted-foreground/10 text-muted-foreground' : 'bg-muted'}`}
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => link.token && handleCopyLink(link.token)}
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                                title={link.token ? 'Copy link' : 'Link unavailable'}
+                                disabled={!link.token || link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())}
+                              >
+                                {copiedLink === link.token ? (
+                                  <span className="text-xs text-green-600">Copied!</span>
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+
                             <Button
                               size="sm"
-                              variant="ghost"
-                              onClick={() => link.token && handleCopyLink(link.token)}
-                              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
-                              title={link.token ? 'Copy link' : 'Link unavailable'}
+                              variant="outline"
+                              onClick={() => link.token && window.open(`/share_links/${link.token}`, '_blank')}
+                              title={link.token ? 'Open link' : 'Link unavailable'}
                               disabled={!link.token || link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())}
                             >
-                              {copiedLink === link.token ? (
-                                <span className="text-xs text-green-600">Copied!</span>
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
+                              <ExternalLink className="h-3 w-3" />
                             </Button>
                           </div>
+                        </div>
 
+                        <div className="flex items-center gap-2 ml-2 flex-shrink-0 max-w-xs">
+                          {/* Edit button: only show if not revoked or expired */}
+                          {!(link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditLink(link)}
+                              title="Edit link"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {/* Revoke button: only show if not revoked or expired, and place before Delete */}
+                          {!(link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleRevokeLink(link.id)}
+                              title="Revoke link"
+                            >
+                              Revoke
+                            </Button>
+                          )}
                           <Button
+                            variant="ghost"
                             size="sm"
-                            variant="outline"
-                            onClick={() => link.token && window.open(`/share_links/${link.token}`, '_blank')}
-                            title={link.token ? 'Open link' : 'Link unavailable'}
-                            disabled={!link.token || link.revoked || (link.expires_at && new Date(link.expires_at) < new Date())}
+                            onClick={() => handleDeleteLink(link.id)}
+                            className="text-destructive hover:text-destructive"
+                            title="Delete link"
                           >
-                            <ExternalLink className="h-3 w-3" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2 ml-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteLink(link.id)}
-                          className="text-destructive hover:text-destructive"
-                          title="Delete link"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </main>
+      {/* Pagination Controls */}
+      {pages > 1 && (
+        <div className="flex flex-col items-center mt-8 gap-2 pb-8"> {/* Added pb-8 for bottom padding */}
+          {/* <div className="flex items-center gap-2 mb-2">
+            <span>Rows per page:</span>
+            <Select value={String(perPage)} onValueChange={val => setPerPage(Number(val))}>
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 10, 20, 50, 100].map(n => (
+                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="ml-4 text-muted-foreground text-sm">Total: {totalCount}</span>
+          </div> */}
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setPage(page > 1 ? page - 1 : 1)}
+                  disabled={page === 1}
+                  className="cursor-pointer"
+                />
+              </PaginationItem>
+              {Array.from({ length: pages }).map((_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    isActive={page === i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className="cursor-pointer"
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setPage(page < pages ? page + 1 : pages)}
+                  disabled={page === pages}
+                  className="cursor-pointer"
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
       {/* ConfirmDialog for Revoke */}
       <ConfirmDialog
         open={!!pendingRevokeId}
@@ -381,6 +558,68 @@ export default function ShareLinks() {
         onConfirm={confirmDeleteLink}
         loading={loading}
       />
+
+      {/* Edit Share Link Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-lg w-full p-6">
+          <DialogHeader>
+            <DialogTitle>Edit Share Link</DialogTitle>
+          </DialogHeader>
+          {editingLink && (
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                <p><strong>File:</strong> {editingLink.key.split('/').pop()}</p>
+                <p><strong>Path:</strong> {editingLink.key}</p>
+                <p><strong>Current expiration:</strong> {editingLink.expires_at ? new Date(editingLink.expires_at).toLocaleString() : 'Never'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1">New expiration (from now)</label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="number"
+                    min={1}
+                    value={editDuration}
+                    onChange={e => setEditDuration(Number(e.target.value))}
+                    className="w-20"
+                  />
+                  <Select value={editUnit} onValueChange={setEditUnit}>
+                    <SelectTrigger className="w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="minute">Minutes</SelectItem>
+                      <SelectItem value="hour">Hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setEditDuration(30); setEditUnit('minute'); }}>30 mins</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setEditDuration(1); setEditUnit('hour'); }}>1 hour</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setEditDuration(24); setEditUnit('hour'); }}>1 day</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setEditDuration(168); setEditUnit('hour'); }}>1 week</Button>
+                </div>
+              </div>
+
+              {editError && (
+                <Alert variant="destructive">
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{editError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowEditDialog(false)} disabled={editLoading}>
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateLink} disabled={editLoading || !editDuration}>
+                  {editLoading ? 'Updating...' : 'Update Link'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,19 +1,28 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export default function useBuckets(refreshActiveBucket) {
   const [buckets, setBuckets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [switching, setSwitching] = useState(false);
+  const cacheRef = useRef(null);
 
-  const fetchBuckets = useCallback(() => {
+  const fetchBuckets = useCallback((force = false) => {
+    if (cacheRef.current && !force) {
+      setBuckets(cacheRef.current);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     fetch('/api/storage/credentials', {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
     })
       .then(res => res.json())
-      .then(data => setBuckets(data.credentials || []))
+      .then(data => {
+        setBuckets(data.credentials || []);
+        cacheRef.current = data.credentials || [];
+      })
       .catch(() => setError('Failed to fetch buckets'))
       .finally(() => setLoading(false));
   }, []);
@@ -21,6 +30,8 @@ export default function useBuckets(refreshActiveBucket) {
   useEffect(() => {
     fetchBuckets();
   }, [fetchBuckets]);
+
+  // Invalidate cache after add/edit/delete by calling fetchBuckets(true)
 
   const switchBucket = async (bucketId) => {
     setSwitching(true);
