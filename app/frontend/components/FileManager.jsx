@@ -56,6 +56,7 @@ export default function FileManager({ activeBucket }) {
   } = useFileManagerState(activeBucket);
 
   const handleRefresh = () => {
+    clearCache();
     fetchFiles();
   };
 
@@ -137,7 +138,7 @@ export default function FileManager({ activeBucket }) {
 
   useEffect(() => {
     fetchFiles();
-  }, [category, fileType, minSize, maxSize, search, sortBy, sortOrder, prefix]);
+  }, [category, fileType, minSize, maxSize, sortBy, sortOrder, prefix]);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -294,16 +295,16 @@ export default function FileManager({ activeBucket }) {
     return null;
   }, [singleSelectedFile, singleSelectedFolder]);
 
-  // Auto-apply filters with debounce
+  // Auto-apply filters with debounce (search is now client-side, so no API call needed)
   useEffect(() => {
-    if (!showFilterBar && !search) return;
+    if (!showFilterBar) return;
     if (filterDebounceRef.current) clearTimeout(filterDebounceRef.current);
     filterDebounceRef.current = setTimeout(() => {
       fetchFiles();
     }, 300);
     return () => clearTimeout(filterDebounceRef.current);
     // eslint-disable-next-line
-  }, [filterType, minSize, maxSize, search, showFilterBar]);
+  }, [filterType, minSize, maxSize, showFilterBar]);
 
   const onSort = useCallback((column) => {
     if (sortBy === column) {
@@ -427,16 +428,93 @@ export default function FileManager({ activeBucket }) {
                   </button>
                 )}
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="ml-2 bg-muted text-muted-foreground hover:text-foreground rounded-md flex items-center gap-2 px-4 h-9"
-                onClick={() => setShowFilterBar(true)}
-              >
-                <FilterIcon className="w-4 h-4" />
-                Filter
-              </Button>
+              <div className="flex items-center gap-2">
+                {search && (
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {folders.length + files.length} result{(folders.length + files.length) !== 1 ? 's' : ''}
+                  </span>
+                )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={`rounded-md flex items-center gap-2 px-4 h-9 ${
+                    category !== 'all' || fileType !== 'all' || minSize || maxSize
+                      ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                      : 'bg-muted text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setShowFilterBar(true)}
+                >
+                  <FilterIcon className="w-4 h-4" />
+                  Filter
+                </Button>
+              </div>
             </div>
+            {/* Active filters indicator - below search bar */}
+            {(category !== 'all' || fileType !== 'all' || minSize || maxSize) && (
+              <div className="flex items-center gap-2 mb-2 text-xs">
+                <span className="text-muted-foreground font-medium">Active filters:</span>
+                {category !== 'all' && (
+                  <span className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs flex items-center gap-1">
+                    {CATEGORY_OPTIONS.find(opt => opt.value === category)?.label || category}
+                    <button
+                      onClick={() => setCategory('all')}
+                      className="text-primary hover:text-primary/70 ml-1"
+                      title="Remove category filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {fileType !== 'all' && (
+                  <span className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs flex items-center gap-1">
+                    {FILE_TYPE_OPTIONS.find(opt => opt.value === fileType)?.label || fileType}
+                    <button
+                      onClick={() => setFileType('all')}
+                      className="text-primary hover:text-primary/70 ml-1"
+                      title="Remove file type filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {minSize && (
+                  <span className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs flex items-center gap-1">
+                    ≥{minSize}MB
+                    <button
+                      onClick={() => setMinSize('')}
+                      className="text-primary hover:text-primary/70 ml-1"
+                      title="Remove minimum size filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {maxSize && (
+                  <span className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs flex items-center gap-1">
+                    ≤{maxSize}MB
+                    <button
+                      onClick={() => setMaxSize('')}
+                      className="text-primary hover:text-primary/70 ml-1"
+                      title="Remove maximum size filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                <button
+                  onClick={() => {
+                    setCategory('all');
+                    setFileType('all');
+                    setMinSize('');
+                    setMaxSize('');
+                  }}
+                  className="text-muted-foreground hover:text-foreground text-xs underline"
+                  title="Clear all filters"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
             {/* Filter Bar (only visible when toggled) */}
             {showFilterBar && (
               <div className="flex flex-col sm:flex-row sm:items-end gap-4 bg-muted/80 border border-border rounded-lg px-6 py-4 mb-4 shadow-sm w-full">

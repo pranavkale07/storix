@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 
 const BucketsContext = createContext();
 
@@ -14,9 +15,7 @@ export function BucketsProvider({ children }) {
       return;
     }
     setLoading(true);
-    fetch('/api/storage/credentials', {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-    })
+    apiFetch('/api/storage/credentials')
       .then(res => res.json())
       .then(data => {
         setBuckets(data.credentials || []);

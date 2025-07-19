@@ -305,11 +305,10 @@ export default function ShareLinks() {
                 }
               }
               try {
-                const res = await fetch('/api/storage/credentials', {
+                const res = await apiFetch('/api/storage/credentials', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                   },
                   body: JSON.stringify({ storage_credential: submitData }),
                 });

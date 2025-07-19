@@ -7,6 +7,7 @@ import Header from '../components/Header';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
+import { apiFetch } from '../lib/api';
 
 function formatMemberSince(dateStr) {
   if (!dateStr) return '';
@@ -50,9 +51,8 @@ export default function Account() {
     setDeleting(true);
     setDeleteError('');
     try {
-      const res = await fetch('/api/auth/me', {
+      const res = await apiFetch('/api/auth/me', {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
       });
       if (res.ok) {
         setShowDeleteDialog(false);

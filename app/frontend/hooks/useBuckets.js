@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { apiFetch } from '@/lib/api';
 
 export default function useBuckets(refreshActiveBucket) {
   const [buckets, setBuckets] = useState([]);
@@ -15,9 +16,7 @@ export default function useBuckets(refreshActiveBucket) {
     }
     setLoading(true);
     setError(null);
-    fetch('/api/storage/credentials', {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-    })
+    apiFetch('/api/storage/credentials')
       .then(res => res.json())
       .then(data => {
         setBuckets(data.credentials || []);
@@ -36,11 +35,10 @@ export default function useBuckets(refreshActiveBucket) {
   const switchBucket = async (bucketId) => {
     setSwitching(true);
     try {
-      const res = await fetch('/api/auth/active_credential', {
+      const res = await apiFetch('/api/auth/active_credential', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({ credential_id: bucketId }),
       });

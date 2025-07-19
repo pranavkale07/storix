@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { apiFetch } from '@/lib/api';
 
 export function useFileManagerState(activeBucket) {
-  const [folders, setFolders] = useState([]);
-  const [files, setFiles] = useState([]);
+  const [rawFolders, setRawFolders] = useState([]);
+  const [rawFiles, setRawFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [prefix, setPrefix] = useState(''); // current folder path
@@ -30,7 +30,7 @@ export function useFileManagerState(activeBucket) {
     presentations: ['ppt', 'pptx', 'odp'],
   };
 
-  // Helper to build a cache key based on prefix and filters
+  // Helper to build a cache key based on prefix and backend filters only
   const getCacheKey = () => {
     return JSON.stringify({
       prefix,
@@ -39,7 +39,7 @@ export function useFileManagerState(activeBucket) {
       category,
       minSize,
       maxSize,
-      search,
+      // Note: search is excluded from cache key since we do frontend search
       sortBy,
       sortOrder,
     });
@@ -50,21 +50,128 @@ export function useFileManagerState(activeBucket) {
     folderCache.current = {};
   }, []);
 
+  // Client-side filtering and search
+  const filteredFolders = useMemo(() => {
+    let filtered = [...rawFolders];
+    
+    // Apply search filter
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(folder => 
+        folder.name.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return filtered;
+  }, [rawFolders, search]);
+
+  const filteredFiles = useMemo(() => {
+    let filtered = [...rawFiles];
+    
+    // Apply search filter
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(file => 
+        file.key.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply category filter
+    if (category && category !== 'all') {
+      const exts = CATEGORY_EXTENSION_MAP[category];
+      if (exts && exts.length) {
+        filtered = filtered.filter(file => {
+          const ext = file.key.split('.').pop()?.toLowerCase();
+          return exts.includes(ext);
+        });
+      }
+    }
+    
+    // Apply file type filter
+    if (fileType && fileType !== 'all') {
+      filtered = filtered.filter(file => {
+        const ext = file.key.split('.').pop()?.toLowerCase();
+        return ext === fileType.toLowerCase();
+      });
+    }
+    
+    // Apply size filters
+    if (minSize) {
+      const minSizeBytes = parseInt(minSize * 1024 * 1024);
+      filtered = filtered.filter(file => file.size >= minSizeBytes);
+    }
+    
+    if (maxSize) {
+      const maxSizeBytes = parseInt(maxSize * 1024 * 1024);
+      filtered = filtered.filter(file => file.size <= maxSizeBytes);
+    }
+    
+    return filtered;
+  }, [rawFiles, search, category, fileType, minSize, maxSize]);
+
+  // Sort the filtered results
+  const sortedFolders = useMemo(() => {
+    const sortFn = (a, b) => {
+      let aVal, bVal;
+      if (sortBy === 'name') {
+        aVal = (a.name || a.prefix || '').toLowerCase();
+        bVal = (b.name || b.prefix || '').toLowerCase();
+      } else if (sortBy === 'size') {
+        aVal = a.size || 0;
+        bVal = b.size || 0;
+      } else if (sortBy === 'last_modified') {
+        aVal = new Date(a.last_modified || 0).getTime();
+        bVal = new Date(b.last_modified || 0).getTime();
+      }
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    };
+    
+    return [...filteredFolders].sort(sortFn);
+  }, [filteredFolders, sortBy, sortOrder]);
+
+  const sortedFiles = useMemo(() => {
+    const sortFn = (a, b) => {
+      let aVal, bVal;
+      if (sortBy === 'name') {
+        aVal = (a.key || '').toLowerCase();
+        bVal = (b.key || '').toLowerCase();
+      } else if (sortBy === 'size') {
+        aVal = a.size || 0;
+        bVal = b.size || 0;
+      } else if (sortBy === 'last_modified') {
+        aVal = new Date(a.last_modified || 0).getTime();
+        bVal = new Date(b.last_modified || 0).getTime();
+      }
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    };
+    
+    return [...filteredFiles].sort(sortFn);
+  }, [filteredFiles, sortBy, sortOrder]);
+
   const fetchFiles = useCallback(async () => {
     setLoading(true);
     setError('');
+    
     const cacheKey = getCacheKey();
+    
     // Check cache first
     if (folderCache.current[cacheKey]) {
       const { folders: cachedFolders, files: cachedFiles } = folderCache.current[cacheKey];
-      setFolders(cachedFolders);
-      setFiles(cachedFiles);
+      setRawFolders(cachedFolders);
+      setRawFiles(cachedFiles);
       setLoading(false);
       return;
     }
+    
     try {
       let url = prefix ? `/api/storage/files?prefix=${encodeURIComponent(prefix)}` : '/api/storage/files';
       const params = [];
+      
+      // Only send backend filters, not search
       if (filterType && filterType !== 'all' && category === 'all') params.push(`filter_type=${encodeURIComponent(fileType)}`);
       if (category && category !== 'all' && fileType === 'all') {
         const exts = CATEGORY_EXTENSION_MAP[category];
@@ -72,55 +179,41 @@ export function useFileManagerState(activeBucket) {
       }
       if (minSize) params.push(`min_size=${parseInt(minSize * 1024 * 1024)}`);
       if (maxSize) params.push(`max_size=${parseInt(maxSize * 1024 * 1024)}`);
-      if (search) params.push(`search=${encodeURIComponent(search)}`);
       if (sortBy) params.push(`sort_by=${encodeURIComponent(sortBy)}`);
       if (sortOrder) params.push(`sort_order=${encodeURIComponent(sortOrder)}`);
+      
       if (params.length) url += (url.includes('?') ? '&' : '?') + params.join('&');
       const res = await apiFetch(url);
       const data = await res.json();
+      
       if (!res.ok) {
         setError(data.error || 'Failed to fetch files');
-        setFolders([]);
-        setFiles([]);
+        setRawFolders([]);
+        setRawFiles([]);
         setLoading(false);
         return;
       }
-      const sortFn = (a, b) => {
-        let aVal, bVal;
-        if (sortBy === 'name') {
-          aVal = (a.name || a.key || a.prefix || '').toLowerCase();
-          bVal = (b.name || b.key || b.prefix || '').toLowerCase();
-        } else if (sortBy === 'size') {
-          aVal = a.size || 0;
-          bVal = b.size || 0;
-        } else if (sortBy === 'last_modified') {
-          aVal = new Date(a.last_modified || 0).getTime();
-          bVal = new Date(b.last_modified || 0).getTime();
-        }
-        if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-        return 0;
-      };
-      const sortedFolders = (data.folders || []).slice().sort(sortFn);
-      const sortedFiles = (data.files || []).slice().sort(sortFn);
-      setFolders(sortedFolders);
-      setFiles(sortedFiles);
+      
+      // Store raw data (without search filtering)
+      setRawFolders(data.folders || []);
+      setRawFiles(data.files || []);
+      
       // Store in cache
       folderCache.current[cacheKey] = {
-        folders: sortedFolders,
-        files: sortedFiles,
+        folders: data.folders || [],
+        files: data.files || [],
       };
     } catch {
       setError('Network error');
-      setFolders([]);
-      setFiles([]);
+      setRawFolders([]);
+      setRawFiles([]);
     }
     setLoading(false);
-  }, [prefix, filterType, fileType, category, minSize, maxSize, search, sortBy, sortOrder]);
+  }, [prefix, filterType, fileType, category, minSize, maxSize, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchFiles();
-  }, [category, fileType, minSize, maxSize, search, sortBy, sortOrder, prefix]);
+  }, [fetchFiles]);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -147,8 +240,8 @@ export function useFileManagerState(activeBucket) {
   };
 
   return {
-    folders,
-    files,
+    folders: sortedFolders,
+    files: sortedFiles,
     loading,
     error,
     prefix,

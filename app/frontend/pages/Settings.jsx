@@ -52,9 +52,8 @@ export default function Settings() {
     setDeleting(true);
     setDeleteError('');
     try {
-      const res = await fetch('/api/auth/me', {
+      const res = await apiFetch('/api/auth/me', {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
       });
       if (res.ok) {
         setShowDeleteDialog(false);

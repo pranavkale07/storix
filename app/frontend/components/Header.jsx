@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './AuthContext';
 import { Button } from './ui/button';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { ArrowLeft, FolderCog, Link2, User2, LogOut } from 'lucide-react';
 import ConnectBucketForm from './ConnectBucketForm';
-import { BucketService } from '../lib/bucketService';
-import { ArrowLeft, User2, FolderCog, Link2, LogOut } from 'lucide-react';
 import useBuckets from '../hooks/useBuckets';
+import { BucketService } from '../lib/bucketService';
 import { showToast } from './utils/toast';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from './ui/dropdown-menu';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
+import { apiFetch } from '../lib/api';
 
 export default function Header({ showBackToFiles }) {
   const { user, logout, activeBucket, refreshActiveBucket } = useAuth();
@@ -150,11 +150,10 @@ export default function Header({ showBackToFiles }) {
                 }
               }
               try {
-                const res = await fetch('/api/storage/credentials', {
+                const res = await apiFetch('/api/storage/credentials', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                   },
                   body: JSON.stringify({ storage_credential: submitData }),
                 });

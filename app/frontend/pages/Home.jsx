@@ -11,6 +11,7 @@ import Header from '../components/Header';
 import useBuckets from '../hooks/useBuckets';
 import { showToast } from '../components/utils/toast';
 import { Skeleton } from '../components/ui/skeleton';
+import { apiFetch } from '../lib/api';
 
 export default function Home() {
   const { user, loading, activeBucket, bucketLoading, refreshActiveBucket } = useAuth();
@@ -126,11 +127,10 @@ export default function Home() {
                 }
               }
               try {
-                const res = await fetch('/api/storage/credentials', {
+                const res = await apiFetch('/api/storage/credentials', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                   },
                   body: JSON.stringify({ storage_credential: submitData }),
                 });
