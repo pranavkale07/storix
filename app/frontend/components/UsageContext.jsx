@@ -17,7 +17,7 @@ export function UsageProvider({ children }) {
     const cacheKey = `credential_${credentialId}`;
     const now = Date.now();
     const cached = cacheRef.current[cacheKey];
-    
+
     // Return cached data if it's still valid and not forced refresh
     if (!force && cached && (now - cached.timestamp) < CACHE_DURATION) {
       return cached.data;
@@ -26,15 +26,15 @@ export function UsageProvider({ children }) {
     try {
       setLoading(true);
       setError(null);
-      
+
       const data = await UsageApi.getBucketUsageStats(credentialId);
-      
+
       // Cache the result
       cacheRef.current[cacheKey] = {
         data,
-        timestamp: now
+        timestamp: now,
       };
-      
+
       // Set timeout to clear cache
       if (cacheTimeoutRef.current[cacheKey]) {
         clearTimeout(cacheTimeoutRef.current[cacheKey]);
@@ -46,7 +46,7 @@ export function UsageProvider({ children }) {
 
       setUsageData(prev => ({
         ...prev,
-        [credentialId]: data
+        [credentialId]: data,
       }));
 
       return data;
@@ -62,16 +62,16 @@ export function UsageProvider({ children }) {
     try {
       setLoading(true);
       setError(null);
-      
+
       const data = await UsageApi.getAllBucketsUsage();
-      
+
       // Cache each bucket's data
       data.forEach(bucket => {
         if (bucket.usage) {
           const cacheKey = `bucket_${bucket.bucket}`;
           cacheRef.current[cacheKey] = {
             data: { stats: bucket.usage },
-            timestamp: Date.now()
+            timestamp: Date.now(),
           };
         }
       });
@@ -98,9 +98,9 @@ export function UsageProvider({ children }) {
     try {
       setLoading(true);
       setError(null);
-      
+
       const data = await UsageApi.updateBucketLimits(credentialId, limits);
-      
+
       // Invalidate cache for this credential
       const cacheKey = `credential_${credentialId}`;
       delete cacheRef.current[cacheKey];
@@ -108,10 +108,10 @@ export function UsageProvider({ children }) {
         clearTimeout(cacheTimeoutRef.current[cacheKey]);
         delete cacheTimeoutRef.current[cacheKey];
       }
-      
+
       // Refresh usage data for this credential
       await fetchUsageForBucket(credentialId, true);
-      
+
       return data;
     } catch (err) {
       setError(err.message);
@@ -163,7 +163,7 @@ export function UsageProvider({ children }) {
       updateBucketLimits,
       getUsageForBucket,
       invalidateCache,
-      clearError
+      clearError,
     }}>
       {children}
     </UsageContext.Provider>
@@ -176,4 +176,4 @@ export function useUsage() {
     throw new Error('useUsage must be used within a UsageProvider');
   }
   return context;
-} 
+}

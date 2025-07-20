@@ -8,26 +8,26 @@ import { Button } from '../components/ui/button';
 import { Progress } from '../components/ui/progress';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Skeleton } from '../components/ui/skeleton';
-import { 
-  BarChart3, 
-  RefreshCw, 
-  AlertTriangle, 
-  Info, 
+import {
+  BarChart3,
+  RefreshCw,
+  AlertTriangle,
+  Info,
   TrendingUp,
   Calendar,
-  CheckCircle
+  CheckCircle,
 } from 'lucide-react';
 import { showToast } from '../components/utils/toast';
 import { useNavigate } from 'react-router-dom';
 
 export default function Usage() {
   const { activeBucket } = useAuth();
-  const { 
-    loading, 
-    error, 
-    fetchUsageForBucket, 
+  const {
+    loading,
+    error,
+    fetchUsageForBucket,
     getUsageForBucket,
-    clearError 
+    clearError,
   } = useUsage();
   const navigate = useNavigate();
 
@@ -59,16 +59,16 @@ export default function Usage() {
 
   const getUsageStatus = (usage) => {
     if (!usage || !usage.stats) return { status: 'no-data', icon: Info, color: 'muted' };
-    
+
     const { write, read } = usage.stats;
     const writePercentage = write.percentage_used;
     const readPercentage = read.percentage_used;
-    
+
     // If both limits are unlimited, show good status
     if (!write.limit && !read.limit) {
       return { status: 'unlimited', icon: CheckCircle, color: 'success' };
     }
-    
+
     // Check if any limited tier is critical
     if ((write.limit && writePercentage >= 90) || (read.limit && readPercentage >= 90)) {
       return { status: 'critical', icon: AlertTriangle, color: 'destructive' };
@@ -108,7 +108,7 @@ export default function Usage() {
   return (
     <div className="min-h-screen bg-background" key={activeBucket?.id}>
       <Header />
-      
+
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -122,8 +122,8 @@ export default function Usage() {
               </p>
             )}
           </div>
-          <Button 
-            onClick={handleRefresh} 
+          <Button
+            onClick={handleRefresh}
             disabled={loading}
             className="flex items-center gap-2"
           >
@@ -138,9 +138,9 @@ export default function Usage() {
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               {error}
-              <Button 
-                variant="link" 
-                size="sm" 
+              <Button
+                variant="link"
+                size="sm"
                 onClick={clearError}
                 className="p-0 h-auto ml-2"
               >
@@ -157,7 +157,7 @@ export default function Usage() {
               <Alert variant="warning" className="mb-6">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Usage Limit Warning:</strong> You are approaching your monthly usage limits. 
+                  <strong>Usage Limit Warning:</strong> You are approaching your monthly usage limits.
                   {usage.stats.write.percentage_used >= 90 && (
                     <span className="block mt-1">Write requests: {usage.stats.write.percentage_used.toFixed(1)}% used</span>
                   )}
@@ -172,7 +172,6 @@ export default function Usage() {
             )}
           </>
         )}
-
 
 
         {/* Usage Overview */}
@@ -195,14 +194,14 @@ export default function Usage() {
                     {usage.stats.write.used.toLocaleString()}
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">
-                    {usage.stats.write.limit 
+                    {usage.stats.write.limit
                       ? `of ${usage.stats.write.limit.toLocaleString()} limit (${usage.stats.write.percentage_used.toFixed(1)}%)`
                       : 'Unlimited usage'
                     }
                   </p>
                   {usage.stats.write.limit ? (
-                    <Progress 
-                      value={usage.stats.write.percentage_used} 
+                    <Progress
+                      value={usage.stats.write.percentage_used}
                       className={`h-2 ${usage.stats.write.percentage_used >= 90 ? 'bg-destructive/20' : usage.stats.write.percentage_used >= 75 ? 'bg-warning/20' : ''}`}
                     />
                   ) : (
@@ -238,14 +237,14 @@ export default function Usage() {
                     {usage.stats.read.used.toLocaleString()}
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">
-                    {usage.stats.read.limit 
+                    {usage.stats.read.limit
                       ? `of ${usage.stats.read.limit.toLocaleString()} limit (${usage.stats.read.percentage_used.toFixed(1)}%)`
                       : 'Unlimited usage'
                     }
                   </p>
                   {usage.stats.read.limit ? (
-                    <Progress 
-                      value={usage.stats.read.percentage_used} 
+                    <Progress
+                      value={usage.stats.read.percentage_used}
                       className={`h-2 ${usage.stats.read.percentage_used >= 90 ? 'bg-destructive/20' : usage.stats.read.percentage_used >= 75 ? 'bg-warning/20' : ''}`}
                     />
                   ) : (
@@ -281,16 +280,16 @@ export default function Usage() {
               ) : (
                 <>
                   <div className="text-2xl font-bold">
-                    {statusInfo.status === 'critical' ? 'Critical' : 
-                     statusInfo.status === 'warning' ? 'Warning' : 
-                     statusInfo.status === 'good' ? 'Good' : 
-                     statusInfo.status === 'unlimited' ? 'Unlimited' : 'No Data'}
+                    {statusInfo.status === 'critical' ? 'Critical' :
+                      statusInfo.status === 'warning' ? 'Warning' :
+                        statusInfo.status === 'good' ? 'Good' :
+                          statusInfo.status === 'unlimited' ? 'Unlimited' : 'No Data'}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {statusInfo.status === 'critical' ? 'Usage is very high' :
-                     statusInfo.status === 'warning' ? 'Usage is elevated' :
-                     statusInfo.status === 'good' ? 'Usage is normal' :
-                     statusInfo.status === 'unlimited' ? 'No limits set' : 'No usage data'}
+                      statusInfo.status === 'warning' ? 'Usage is elevated' :
+                        statusInfo.status === 'good' ? 'Usage is normal' :
+                          statusInfo.status === 'unlimited' ? 'No limits set' : 'No usage data'}
                   </p>
                 </>
               )}
@@ -307,7 +306,7 @@ export default function Usage() {
               Monthly limits
             </div>
           </div>
-          
+
           <UsageLimitsEditor
             credentialId={activeBucket?.id}
             onSave={handleLimitsSave}
@@ -340,7 +339,7 @@ export default function Usage() {
               </div>
               <div className="pt-4 border-t">
                 <p className="text-sm text-muted-foreground">
-                  <strong>Note:</strong> Usage is tracked in real-time. 
+                  <strong>Note:</strong> Usage is tracked in real-time.
                   Limits reset at the beginning of each month.
                 </p>
               </div>
@@ -350,4 +349,4 @@ export default function Usage() {
       </div>
     </div>
   );
-} 
+}

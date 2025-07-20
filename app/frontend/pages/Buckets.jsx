@@ -20,7 +20,7 @@ export default function Buckets() {
   const { activeBucket, refreshActiveBucket } = useAuth();
   const { buckets, loading: bucketsLoading, fetchBuckets } = useBuckets();
   const navigate = useNavigate();
-  
+
   const [editingBucket, setEditingBucket] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -113,7 +113,6 @@ export default function Buckets() {
   };
 
 
-
   const resetForm = () => {
     setFormData({
       access_key_id: '',
@@ -131,7 +130,6 @@ export default function Buckets() {
   const isActiveBucket = (bucket) => {
     return activeBucket && activeBucket.id === bucket.id;
   };
-
 
 
   if (bucketsLoading) {
@@ -313,14 +311,14 @@ export default function Buckets() {
                             </Badge>
                           )}
                         </div>
-                        
+
                         <div className="text-sm text-muted-foreground space-y-1">
                           <p>Provider: {bucket.provider}</p>
                           <p>Region: {bucket.region}</p>
                           {bucket.endpoint && <p>Endpoint: {bucket.endpoint}</p>}
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 ml-4">
                         <Button
                           variant="ghost"
@@ -358,7 +356,6 @@ export default function Buckets() {
             )}
           </CardContent>
         </Card>
-
 
 
         {/* Disconnect Confirmation Dialog */}

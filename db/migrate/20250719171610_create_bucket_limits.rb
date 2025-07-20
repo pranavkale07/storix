@@ -9,8 +9,8 @@ class CreateBucketLimits < ActiveRecord::Migration[8.0]
     end
 
     # Add unique index to prevent duplicate limits per user per bucket
-    add_index :bucket_limits, [:user_id, :bucket_name], unique: true
-    
+    add_index :bucket_limits, [ :user_id, :bucket_name ], unique: true
+
     # Add index on bucket_name for queries
     add_index :bucket_limits, :bucket_name
   end

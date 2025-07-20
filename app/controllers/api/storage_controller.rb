@@ -1,6 +1,6 @@
 class Api::StorageController < ApplicationController
   include BucketUsageTrackable
-  
+
   before_action :authenticate_user!
   before_action :set_storage_credential, except: [ :create_credential ]
   before_action :track_request, except: [ :create_credential, :usage ]
@@ -148,7 +148,7 @@ class Api::StorageController < ApplicationController
   def usage
     bucket_name = extract_bucket_name_from_credential
     stats = get_bucket_usage_stats(bucket_name)
-    
+
     if stats
       render json: {
         bucket_name: bucket_name,
@@ -156,7 +156,7 @@ class Api::StorageController < ApplicationController
         timestamp: Time.current.iso8601
       }
     else
-      render json: { error: 'No usage data available' }, status: :not_found
+      render json: { error: "No usage data available" }, status: :not_found
     end
   end
 

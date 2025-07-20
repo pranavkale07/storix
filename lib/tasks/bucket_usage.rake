@@ -18,4 +18,4 @@ namespace :bucket_usage do
   task stats: :environment do
     BucketUsageStatsJob.perform_now
   end
-end 
+end

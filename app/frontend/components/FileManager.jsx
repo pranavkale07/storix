@@ -164,13 +164,13 @@ export default function FileManager({ activeBucket }) {
       if (!response.ok) {
         const errorData = await response.json();
         let errorMessage = errorData.error || 'Failed to generate download link';
-        
+
         // Handle bucket usage limit errors
         if (errorData.type === 'bucket_usage_limit_exceeded') {
           errorMessage = errorData.message || 'Download limit exceeded for this bucket.';
           showToast.warning(errorMessage, 'You have reached your monthly download limit for this bucket.');
         }
-        
+
         throw new Error(errorMessage);
       }
       const { presigned_url } = await response.json();
@@ -214,13 +214,13 @@ export default function FileManager({ activeBucket }) {
       if (!response.ok) {
         const errorData = await response.json();
         let errorMessage = errorData.error || 'Failed to delete file';
-        
+
         // Handle bucket usage limit errors
         if (errorData.type === 'bucket_usage_limit_exceeded') {
           errorMessage = errorData.message || 'Operation limit exceeded for this bucket.';
           showToast.warning(errorMessage, 'You have reached your monthly operation limit for this bucket.');
         }
-        
+
         throw new Error(errorMessage);
       }
       clearCache();
@@ -262,13 +262,13 @@ export default function FileManager({ activeBucket }) {
       if (!response.ok) {
         const errorData = await response.json();
         let errorMessage = errorData.error || 'Failed to delete folder';
-        
+
         // Handle bucket usage limit errors
         if (errorData.type === 'bucket_usage_limit_exceeded') {
           errorMessage = errorData.message || 'Operation limit exceeded for this bucket.';
           showToast.warning(errorMessage, 'You have reached your monthly operation limit for this bucket.');
         }
-        
+
         throw new Error(errorMessage);
       }
       clearCache();

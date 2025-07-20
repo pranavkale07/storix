@@ -2,19 +2,19 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Play, 
-  Upload, 
-  Share, 
-  BarChart3, 
-  Folder, 
+import {
+  Play,
+  Upload,
+  Share,
+  BarChart3,
+  Folder,
   Download,
   MoreVertical,
   Search,
   Grid,
   List,
   Star,
-  Clock
+  Clock,
 } from 'lucide-react';
 
 const DemoSection = () => {
@@ -42,7 +42,7 @@ const DemoSection = () => {
               See Storix in Action
             </h2>
             <p className="text-xl text-neutral-400 max-w-2xl mx-auto">
-              A preview of the clean, modern interface you'll use to manage your files.
+              A preview of the clean, modern interface you&apos;ll use to manage your files.
             </p>
           </div>
 
@@ -92,9 +92,9 @@ const DemoSection = () => {
                   <div className="flex items-center space-x-4 mb-6">
                     <div className="flex-1 max-w-md relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500" />
-                      <input 
-                        type="text" 
-                        placeholder="Search files..." 
+                      <input
+                        type="text"
+                        placeholder="Search files..."
                         className="w-full bg-neutral-800 border border-neutral-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
@@ -138,8 +138,8 @@ const DemoSection = () => {
                         {stat.max && (
                           <div className="mt-2">
                             <div className="h-1 bg-neutral-700 rounded-full">
-                              <div 
-                                className="h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" 
+                              <div
+                                className="h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
                                 style={{ width: `${stat.percentage}%` }}
                               ></div>
                             </div>

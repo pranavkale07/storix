@@ -94,7 +94,7 @@ export default function ConnectBucketForm({
           id="access_key_id"
           value={formData.access_key_id}
           onChange={e => handleInputChange('access_key_id', e.target.value)}
-          placeholder={editing ? "Leave empty to keep existing" : "AKIA..."}
+          placeholder={editing ? 'Leave empty to keep existing' : 'AKIA...'}
           className={formErrors.access_key_id ? 'border-destructive' : ''}
         />
         {formErrors.access_key_id && (
@@ -113,7 +113,7 @@ export default function ConnectBucketForm({
           type="password"
           value={formData.secret_access_key}
           onChange={e => handleInputChange('secret_access_key', e.target.value)}
-          placeholder={editing ? "Leave empty to keep existing" : "••••••••"}
+          placeholder={editing ? 'Leave empty to keep existing' : '••••••••'}
           className={formErrors.secret_access_key ? 'border-destructive' : ''}
         />
         {formErrors.secret_access_key && (
@@ -149,7 +149,7 @@ export default function ConnectBucketForm({
           />
         </div>
       )}
-      
+
       {/* Usage Limits Section */}
       <div className="space-y-4 border-t pt-4">
         <div className="text-sm font-medium text-muted-foreground">

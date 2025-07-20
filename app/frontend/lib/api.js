@@ -16,7 +16,7 @@ function apiFetchWithAuthCheck(url, options = {}) {
     ...(options.headers || {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
-  
+
   return fetch(url, { ...options, headers }).then(response => {
     // Only check for 401 errors if we actually have a token
     // This prevents logout when user is not logged in
@@ -61,10 +61,10 @@ export async function apiFetchWithToast(url, options = {}) {
         handleTokenExpiration();
         throw new Error('Session expired. Please log in again.');
       }
-      
+
       // Handle specific error types
       let errorMessage = data.error || data.message || 'An error occurred';
-      
+
       // Handle rate limit errors specifically
       if (response.status === 429) {
         const retryAfter = response.headers.get('Retry-After');
@@ -74,14 +74,14 @@ export async function apiFetchWithToast(url, options = {}) {
           errorMessage = 'Rate limit exceeded. Please slow down your requests and try again.';
         }
       }
-      
+
       // Handle bucket usage limit errors
       if (data.type === 'bucket_usage_limit_exceeded') {
         errorMessage = data.message || 'Usage limit exceeded for this bucket.';
         // Use warning toast for usage limit errors
         showToast.warning(errorMessage, 'You have reached your monthly usage limit for this bucket.');
       }
-      
+
       handleApiError(errorMessage, response.status);
       throw new Error(errorMessage);
     }
@@ -102,10 +102,10 @@ export async function apiFetchWithToast(url, options = {}) {
 // Handle token expiration
 function handleTokenExpiration() {
   debugLog('Token expired, triggering automatic logout'); // Debug - commented for production
-  
+
   // Show user-friendly message
   showToast.error('Session expired', 'Please log in again to continue.');
-  
+
   // Trigger global logout if available
   if (globalLogout) {
     // Use setTimeout to ensure the toast is shown before logout
@@ -121,13 +121,13 @@ function handleTokenExpiration() {
 
 /**
  * Automatic Logout on Token Expiration
- * 
+ *
  * This module automatically handles JWT token expiration by:
  * 1. Detecting 401 (Unauthorized) responses from the API
  * 2. Showing a user-friendly "Session expired" message
  * 3. Automatically logging out the user and redirecting to login
  * 4. Clearing all stored session data
- * 
+ *
  * This prevents users from getting stuck with expired tokens and
  * provides a smooth authentication experience.
  */

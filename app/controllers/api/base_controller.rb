@@ -31,10 +31,10 @@ class Api::BaseController < ApplicationController
   def get_allowed_origin
     # In production, only allow your specific frontend domain
     if Rails.env.production?
-      ENV['FRONTEND_URL'] || 'https://yourdomain.com'
+      ENV["FRONTEND_URL"] || "https://yourdomain.com"
     else
       # In development, allow localhost
-      request.headers['Origin'] || 'http://localhost:3000'
+      request.headers["Origin"] || "http://localhost:3000"
     end
   end
 end

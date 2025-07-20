@@ -51,26 +51,26 @@ class ApplicationController < ActionController::Base
   def get_allowed_origin
     # In production, only allow your specific frontend domain
     if Rails.env.production?
-      ENV['FRONTEND_URL'] || 'https://yourdomain.com'
+      ENV["FRONTEND_URL"] || "https://yourdomain.com"
     else
       # In development, allow localhost
-      request.headers['Origin'] || 'http://localhost:3000'
+      request.headers["Origin"] || "http://localhost:3000"
     end
   end
 
   def set_security_headers
     # Prevent XSS attacks
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-    
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+
     # Prevent clickjacking
-    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
-    
+    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+
     # Prevent MIME type sniffing
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    
+    response.headers["X-Content-Type-Options"] = "nosniff"
+
     # Referrer policy
-    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
   end
 end

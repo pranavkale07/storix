@@ -54,29 +54,29 @@ export function useFileManagerState(activeBucket) {
   // Client-side filtering and search
   const filteredFolders = useMemo(() => {
     let filtered = [...rawFolders];
-    
+
     // Apply search filter
     if (search) {
       const searchLower = search.toLowerCase();
-      filtered = filtered.filter(folder => 
-        folder.name.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(folder =>
+        folder.name.toLowerCase().includes(searchLower),
       );
     }
-    
+
     return filtered;
   }, [rawFolders, search]);
 
   const filteredFiles = useMemo(() => {
     let filtered = [...rawFiles];
-    
+
     // Apply search filter
     if (search) {
       const searchLower = search.toLowerCase();
-      filtered = filtered.filter(file => 
-        file.key.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(file =>
+        file.key.toLowerCase().includes(searchLower),
       );
     }
-    
+
     // Apply category filter
     if (category && category !== 'all') {
       const exts = CATEGORY_EXTENSION_MAP[category];
@@ -87,7 +87,7 @@ export function useFileManagerState(activeBucket) {
         });
       }
     }
-    
+
     // Apply file type filter
     if (fileType && fileType !== 'all') {
       filtered = filtered.filter(file => {
@@ -95,18 +95,18 @@ export function useFileManagerState(activeBucket) {
         return ext === fileType.toLowerCase();
       });
     }
-    
+
     // Apply size filters
     if (minSize) {
       const minSizeBytes = parseInt(minSize * 1024 * 1024);
       filtered = filtered.filter(file => file.size >= minSizeBytes);
     }
-    
+
     if (maxSize) {
       const maxSizeBytes = parseInt(maxSize * 1024 * 1024);
       filtered = filtered.filter(file => file.size <= maxSizeBytes);
     }
-    
+
     return filtered;
   }, [rawFiles, search, category, fileType, minSize, maxSize]);
 
@@ -128,7 +128,7 @@ export function useFileManagerState(activeBucket) {
       if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     };
-    
+
     return [...filteredFolders].sort(sortFn);
   }, [filteredFolders, sortBy, sortOrder]);
 
@@ -149,16 +149,16 @@ export function useFileManagerState(activeBucket) {
       if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     };
-    
+
     return [...filteredFiles].sort(sortFn);
   }, [filteredFiles, sortBy, sortOrder]);
 
   const fetchFiles = useCallback(async () => {
     setLoading(true);
     setError('');
-    
+
     const cacheKey = getCacheKey();
-    
+
     // Check cache first
     if (folderCache.current[cacheKey]) {
       const { folders: cachedFolders, files: cachedFiles } = folderCache.current[cacheKey];
@@ -167,11 +167,11 @@ export function useFileManagerState(activeBucket) {
       setLoading(false);
       return;
     }
-    
+
     try {
       let url = prefix ? `/api/storage/files?prefix=${encodeURIComponent(prefix)}` : '/api/storage/files';
       const params = [];
-      
+
       // Only send backend filters, not search
       if (filterType && filterType !== 'all' && category === 'all') params.push(`filter_type=${encodeURIComponent(fileType)}`);
       if (category && category !== 'all' && fileType === 'all') {
@@ -182,31 +182,31 @@ export function useFileManagerState(activeBucket) {
       if (maxSize) params.push(`max_size=${parseInt(maxSize * 1024 * 1024)}`);
       if (sortBy) params.push(`sort_by=${encodeURIComponent(sortBy)}`);
       if (sortOrder) params.push(`sort_order=${encodeURIComponent(sortOrder)}`);
-      
+
       if (params.length) url += (url.includes('?') ? '&' : '?') + params.join('&');
       const res = await apiFetch(url);
       const data = await res.json();
-      
+
       if (!res.ok) {
         let errorMessage = data.error || 'Failed to fetch files';
-        
+
         // Handle bucket usage limit errors
         if (data.type === 'bucket_usage_limit_exceeded') {
           errorMessage = data.message || 'Operation limit exceeded for this bucket.';
           showToast.warning(errorMessage, 'You have reached your monthly operation limit for this bucket.');
         }
-        
+
         setError(errorMessage);
         setRawFolders([]);
         setRawFiles([]);
         setLoading(false);
         return;
       }
-      
+
       // Store raw data (without search filtering)
       setRawFolders(data.folders || []);
       setRawFiles(data.files || []);
-      
+
       // Store in cache
       folderCache.current[cacheKey] = {
         folders: data.folders || [],

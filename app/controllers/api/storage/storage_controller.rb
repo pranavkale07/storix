@@ -1,6 +1,6 @@
 class Api::Storage::StorageController < Api::BaseController
   include BucketUsageTrackable
-  
+
   before_action :authenticate_user!
   before_action :set_storage_credential, except: [ :create_credential, :validate_credential, :list_credentials, :show_credential, :update_credential, :destroy_credential ]
   before_action :track_request, except: [ :create_credential, :validate_credential, :list_credentials, :show_credential, :update_credential, :destroy_credential, :usage ]
@@ -23,29 +23,29 @@ class Api::Storage::StorageController < Api::BaseController
       render json: { errors: [ "Credential validation failed: Unable to connect to the storage provider." ] }, status: :unprocessable_entity
       return
     end
-    
+
     # Extract usage limits from params (they're not part of storage_credential model)
     write_limit = params.dig(:storage_credential, :write_requests_per_month)&.to_s
     read_limit = params.dig(:storage_credential, :read_requests_per_month)&.to_s
-    
+
     # Convert empty strings to nil for unlimited
     write_limit = nil if write_limit.blank?
     read_limit = nil if read_limit.blank?
-    
+
     if @storage_credential.save
       # Create bucket limits if provided
       if write_limit.present? || read_limit.present?
         bucket_limit = BucketLimit.find_or_create_for_user_and_bucket(current_user, @storage_credential.bucket)
-        
+
         # Update limits if provided
         bucket_limit.write_requests_per_month = write_limit.to_i if write_limit.present?
         bucket_limit.read_requests_per_month = read_limit.to_i if read_limit.present?
         bucket_limit.save!
-        
+
         # Invalidate Redis cache for this user and bucket
         BucketUsageService.invalidate_limit_cache(current_user, @storage_credential.bucket)
       end
-      
+
       # Generate a new token with this credential as active
       token = JwtService.encode(current_user, active_credential_id: @storage_credential.id)
       render json: {
@@ -396,7 +396,7 @@ class Api::Storage::StorageController < Api::BaseController
     # Use bucket_name from params if provided, otherwise use active credential
     bucket_name = params[:bucket_name] || extract_bucket_name_from_credential
     stats = get_bucket_usage_stats(bucket_name)
-    
+
     if stats
       render json: {
         bucket_name: bucket_name,
@@ -404,7 +404,7 @@ class Api::Storage::StorageController < Api::BaseController
         timestamp: Time.current.iso8601
       }
     else
-      render json: { error: 'No usage data available' }, status: :not_found
+      render json: { error: "No usage data available" }, status: :not_found
     end
   end
 
@@ -436,18 +436,18 @@ class Api::Storage::StorageController < Api::BaseController
   def list_credentials
     active_id = current_active_credential_id
     credentials = current_user.storage_credentials.select(:id, :provider, :bucket, :region, :endpoint, :created_at, :updated_at)
-    
+
     credentials_with_limits = credentials.map do |cred|
       # Get bucket limits for this credential
       bucket_limit = BucketLimit.find_by(user: current_user, bucket_name: cred.bucket)
-      
+
       cred.as_json.merge(
         active: cred.id == active_id,
         write_requests_per_month: bucket_limit&.write_requests_per_month,
         read_requests_per_month: bucket_limit&.read_requests_per_month
       )
     end
-    
+
     render json: {
       credentials: credentials_with_limits
     }
@@ -459,7 +459,7 @@ class Api::Storage::StorageController < Api::BaseController
     if credential
       # Get bucket limits for this credential
       bucket_limit = BucketLimit.find_by(user: current_user, bucket_name: credential.bucket)
-      
+
       render json: credential.slice(:id, :provider, :bucket, :region, :endpoint, :created_at, :updated_at).merge(
         write_requests_per_month: bucket_limit&.write_requests_per_month,
         read_requests_per_month: bucket_limit&.read_requests_per_month
@@ -501,32 +501,32 @@ class Api::Storage::StorageController < Api::BaseController
       return
     end
     # Filter out empty sensitive fields to preserve existing values
-    filtered_attrs = new_attrs.reject { |key, value| 
-      (key == 'access_key_id' || key == 'secret_access_key') && value.blank?
+    filtered_attrs = new_attrs.reject { |key, value|
+      (key == "access_key_id" || key == "secret_access_key") && value.blank?
     }
-    
+
     if credential.update(filtered_attrs)
       # Extract usage limits from params (they're not part of storage_credential model)
       write_limit = params.dig(:storage_credential, :write_requests_per_month)&.to_s
       read_limit = params.dig(:storage_credential, :read_requests_per_month)&.to_s
-      
+
       # Convert empty strings to nil for unlimited
       write_limit = nil if write_limit.blank?
       read_limit = nil if read_limit.blank?
-      
+
       # Update bucket limits if provided
       if write_limit.present? || read_limit.present?
         bucket_limit = BucketLimit.find_or_create_for_user_and_bucket(current_user, credential.bucket)
-        
+
         # Update limits if provided
         bucket_limit.write_requests_per_month = write_limit.to_i if write_limit.present?
         bucket_limit.read_requests_per_month = read_limit.to_i if read_limit.present?
         bucket_limit.save!
-        
+
         # Invalidate Redis cache for this user and bucket
         BucketUsageService.invalidate_limit_cache(current_user, credential.bucket)
       end
-      
+
       # Set as active and return new JWT
       token = JwtService.encode(current_user, active_credential_id: credential.id)
       render json: credential.slice(:id, :provider, :bucket, :region, :endpoint, :created_at, :updated_at).merge(token: token, active_credential_id: credential.id)

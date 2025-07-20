@@ -13,7 +13,7 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
   const { updateBucketLimits, loading, error } = useUsage();
   const [formData, setFormData] = useState({
     write_requests_per_month: '',
-    read_requests_per_month: ''
+    read_requests_per_month: '',
   });
   const [validationErrors, setValidationErrors] = useState({});
   const [isEditing, setIsEditing] = useState(false);
@@ -31,13 +31,13 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
             const data = await response.json();
             setFormData({
               write_requests_per_month: data.limits?.write_requests_per_month?.toString() || '',
-              read_requests_per_month: data.limits?.read_requests_per_month?.toString() || ''
+              read_requests_per_month: data.limits?.read_requests_per_month?.toString() || '',
             });
           } else {
             // Fallback to empty values if API fails
             setFormData({
               write_requests_per_month: '',
-              read_requests_per_month: ''
+              read_requests_per_month: '',
             });
           }
         } catch (error) {
@@ -45,20 +45,20 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
           // Fallback to empty values
           setFormData({
             write_requests_per_month: '',
-            read_requests_per_month: ''
+            read_requests_per_month: '',
           });
         } finally {
           setLoadingLimits(false);
         }
       };
-      
+
       fetchLimits();
     }
   }, [credentialId]);
 
   const validateForm = () => {
     const errors = {};
-    
+
     // Validate write requests limit (optional - can be empty for unlimited)
     if (formData.write_requests_per_month.trim()) {
       const writeLimit = parseInt(formData.write_requests_per_month);
@@ -85,7 +85,7 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -93,14 +93,14 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
     try {
       const limits = {
         write_requests_per_month: formData.write_requests_per_month.trim() || null,
-        read_requests_per_month: formData.read_requests_per_month.trim() || null
+        read_requests_per_month: formData.read_requests_per_month.trim() || null,
       };
 
       await updateBucketLimits(credentialId, limits);
-      
+
       showToast.success('Bucket limits updated successfully');
       setIsEditing(false);
-      
+
       if (onSave) {
         onSave(limits);
       }
@@ -115,21 +115,21 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
     // Reset form to empty values (unlimited)
     setFormData({
       write_requests_per_month: '',
-      read_requests_per_month: ''
+      read_requests_per_month: '',
     });
   };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     // Clear validation error for this field
     if (validationErrors[field]) {
       setValidationErrors(prev => ({
         ...prev,
-        [field]: undefined
+        [field]: undefined,
       }));
     }
   };
@@ -155,8 +155,8 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
         <CardTitle className="flex items-center justify-between">
           <span>Usage Limits</span>
           {!isEditing && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => setIsEditing(true)}
               className="flex items-center gap-2"
@@ -196,7 +196,7 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
                     </div>
                     <p className="text-xs text-muted-foreground">PUT, COPY, POST, LIST operations</p>
                   </div>
-                  
+
                   <div className="p-4 border rounded-lg bg-card">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium">Read Requests</span>
@@ -208,11 +208,11 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
                     <p className="text-xs text-muted-foreground">GET and other operations</p>
                   </div>
                 </div>
-                
+
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-sm text-muted-foreground">
                     <strong>Total Monthly Limit:</strong> {
-                      (formData.write_requests_per_month && formData.read_requests_per_month) 
+                      (formData.write_requests_per_month && formData.read_requests_per_month)
                         ? (parseInt(formData.write_requests_per_month) + parseInt(formData.read_requests_per_month)).toLocaleString() + ' requests'
                         : 'Unlimited'
                     }
@@ -273,8 +273,8 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
             </div>
 
             <div className="flex gap-2 pt-4">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={loading}
                 className="flex items-center gap-2"
               >
@@ -285,9 +285,9 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
                 )}
                 Save Changes
               </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={handleCancel}
                 disabled={loading}
               >
@@ -299,4 +299,4 @@ export function UsageLimitsEditor({ credentialId, onSave }) {
       </CardContent>
     </Card>
   );
-} 
+}

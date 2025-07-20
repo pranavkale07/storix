@@ -11,11 +11,11 @@ class CreateBucketUsages < ActiveRecord::Migration[8.0]
     end
 
     # Add unique index to prevent duplicate usage records per user per bucket per period
-    add_index :bucket_usages, [:user_id, :bucket_name, :period_start, :period_type], 
+    add_index :bucket_usages, [ :user_id, :bucket_name, :period_start, :period_type ],
               unique: true, name: 'index_bucket_usages_on_user_bucket_period'
-    
+
     # Add indexes for common queries
-    add_index :bucket_usages, [:user_id, :bucket_name]
+    add_index :bucket_usages, [ :user_id, :bucket_name ]
     add_index :bucket_usages, :period_start
     add_index :bucket_usages, :period_type
   end

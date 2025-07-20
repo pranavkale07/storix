@@ -1,14 +1,14 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Shield, 
-  Share, 
-  FileText, 
-  Users, 
-  Settings, 
-  Upload, 
-  Download, 
+import {
+  Shield,
+  Share,
+  FileText,
+  Users,
+  Settings,
+  Upload,
+  Download,
   Lock,
   Zap,
   Database,
@@ -17,74 +17,74 @@ import {
   BarChart3,
   Key,
   Globe,
-  Smartphone
+  Smartphone,
 } from 'lucide-react';
 
 const FeaturesGrid = () => {
   const features = [
     {
       icon: Shield,
-      title: "OAuth Authentication",
-      description: "Secure login with Google, GitHub, and other providers",
-      badge: "Security",
-      color: "from-green-500 to-emerald-500"
+      title: 'OAuth Authentication',
+      description: 'Secure login with Google, GitHub, and other providers',
+      badge: 'Security',
+      color: 'from-green-500 to-emerald-500',
     },
     {
       icon: FileText,
-      title: "File Management",
-      description: "Upload, download, organize, rename, and delete files and folders",
-      badge: "Core",
-      color: "from-blue-500 to-cyan-500"
+      title: 'File Management',
+      description: 'Upload, download, organize, rename, and delete files and folders',
+      badge: 'Core',
+      color: 'from-blue-500 to-cyan-500',
     },
     {
       icon: Users,
-      title: "Bulk Operations",
-      description: "Move, copy, and manage multiple files or folders at once",
-      badge: "Productivity",
-      color: "from-purple-500 to-pink-500"
+      title: 'Bulk Operations',
+      description: 'Move, copy, and manage multiple files or folders at once',
+      badge: 'Productivity',
+      color: 'from-purple-500 to-pink-500',
     },
     {
       icon: Share,
-      title: "Secure Sharing",
-      description: "Generate, revoke, and track secure sharing links with expiration",
-      badge: "Sharing",
-      color: "from-orange-500 to-red-500"
+      title: 'Secure Sharing',
+      description: 'Generate, revoke, and track secure sharing links with expiration',
+      badge: 'Sharing',
+      color: 'from-orange-500 to-red-500',
     },
     {
       icon: Database,
-      title: "Multi-Provider Support",
-      description: "AWS S3, DigitalOcean Spaces, and any S3-compatible storage",
-      badge: "Integration",
-      color: "from-teal-500 to-green-500"
+      title: 'Multi-Provider Support',
+      description: 'AWS S3, DigitalOcean Spaces, and any S3-compatible storage',
+      badge: 'Integration',
+      color: 'from-teal-500 to-green-500',
     },
     {
       icon: BarChart3,
-      title: "Usage Dashboard",
-      description: "Monitor storage usage, activity, and sharing analytics",
-      badge: "Analytics",
-      color: "from-indigo-500 to-blue-500"
+      title: 'Usage Dashboard',
+      description: 'Monitor storage usage, activity, and sharing analytics',
+      badge: 'Analytics',
+      color: 'from-indigo-500 to-blue-500',
     },
     {
       icon: Zap,
-      title: "Direct Transfers",
-      description: "Files transfer directly between your browser and storage",
-      badge: "Performance",
-      color: "from-yellow-500 to-orange-500"
+      title: 'Direct Transfers',
+      description: 'Files transfer directly between your browser and storage',
+      badge: 'Performance',
+      color: 'from-yellow-500 to-orange-500',
     },
     {
       icon: Lock,
-      title: "End-to-End Encryption",
-      description: "Your credentials are encrypted, files never touch our servers",
-      badge: "Privacy",
-      color: "from-red-500 to-pink-500"
+      title: 'End-to-End Encryption',
+      description: 'Your credentials are encrypted, files never touch our servers',
+      badge: 'Privacy',
+      color: 'from-red-500 to-pink-500',
     },
     {
       icon: Smartphone,
-      title: "Responsive Design",
-      description: "Works perfectly on desktop, tablet, and mobile devices",
-      badge: "UX",
-      color: "from-violet-500 to-purple-500"
-    }
+      title: 'Responsive Design',
+      description: 'Works perfectly on desktop, tablet, and mobile devices',
+      badge: 'UX',
+      color: 'from-violet-500 to-purple-500',
+    },
   ];
 
   return (

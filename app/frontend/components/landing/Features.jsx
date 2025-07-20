@@ -1,66 +1,66 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Shield, 
-  Globe, 
-  Upload, 
-  Users, 
-  BarChart3, 
+import {
+  Shield,
+  Globe,
+  Upload,
+  Users,
+  BarChart3,
   Smartphone,
   Copy,
   Trash2,
-  Link
+  Link,
 } from 'lucide-react';
 
 const features = [
   {
     icon: Shield,
-    title: "Secure OAuth Login",
-    description: "Login with Google or GitHub. Your credentials are encrypted and secure.",
-    color: "from-blue-500 to-blue-600"
+    title: 'Secure OAuth Login',
+    description: 'Login with Google or GitHub. Your credentials are encrypted and secure.',
+    color: 'from-blue-500 to-blue-600',
   },
   {
     icon: Upload,
-    title: "File Management",
-    description: "Upload, download, organize, rename, and delete files and folders with ease.",
-    color: "from-green-500 to-green-600"
+    title: 'File Management',
+    description: 'Upload, download, organize, rename, and delete files and folders with ease.',
+    color: 'from-green-500 to-green-600',
   },
   {
     icon: Copy,
-    title: "Bulk Operations",
-    description: "Move or copy multiple files and folders at once. Efficient batch operations.",
-    color: "from-purple-500 to-purple-600"
+    title: 'Bulk Operations',
+    description: 'Move or copy multiple files and folders at once. Efficient batch operations.',
+    color: 'from-purple-500 to-purple-600',
   },
   {
     icon: Link,
-    title: "Share Links",
-    description: "Generate secure sharing links with expiration dates. Track and revoke access anytime.",
-    color: "from-orange-500 to-orange-600"
+    title: 'Share Links',
+    description: 'Generate secure sharing links with expiration dates. Track and revoke access anytime.',
+    color: 'from-orange-500 to-orange-600',
   },
   {
     icon: Globe,
-    title: "Multi-Provider Support",
-    description: "Works with AWS S3, DigitalOcean Spaces, and any S3-compatible storage provider.",
-    color: "from-teal-500 to-teal-600"
+    title: 'Multi-Provider Support',
+    description: 'Works with AWS S3, DigitalOcean Spaces, and any S3-compatible storage provider.',
+    color: 'from-teal-500 to-teal-600',
   },
   {
     icon: BarChart3,
-    title: "Usage Dashboard",
-    description: "Monitor your storage usage, track activity, and manage your files efficiently.",
-    color: "from-indigo-500 to-indigo-600"
+    title: 'Usage Dashboard',
+    description: 'Monitor your storage usage, track activity, and manage your files efficiently.',
+    color: 'from-indigo-500 to-indigo-600',
   },
   {
     icon: Smartphone,
-    title: "Modern UI",
-    description: "Built with React 19, Tailwind CSS, and shadcn/ui. Beautiful and responsive design.",
-    color: "from-pink-500 to-pink-600"
+    title: 'Modern UI',
+    description: 'Built with React 19, Tailwind CSS, and shadcn/ui. Beautiful and responsive design.',
+    color: 'from-pink-500 to-pink-600',
   },
   {
     icon: Trash2,
-    title: "Complete Control",
-    description: "Your files, your rules. Full control over access, sharing, and data management.",
-    color: "from-red-500 to-red-600"
-  }
+    title: 'Complete Control',
+    description: 'Your files, your rules. Full control over access, sharing, and data management.',
+    color: 'from-red-500 to-red-600',
+  },
 ];
 
 export function Features() {

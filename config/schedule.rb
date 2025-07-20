@@ -26,11 +26,11 @@ set :output, "log/cron.log"
 set :environment, Rails.env
 
 # Daily bucket usage sync (every day at 2:00 AM)
-every 1.day, at: '2:00 am' do
+every 1.day, at: "2:00 am" do
   rake "bucket_usage:sync"
 end
 
 # Monthly reset (1st of every month at 3:00 AM)
-every '0 3 1 * *' do
+every "0 3 1 * *" do
   rake "bucket_usage:reset_monthly"
-end 
+end

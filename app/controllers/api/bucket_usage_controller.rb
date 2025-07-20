@@ -5,16 +5,16 @@ class Api::BucketUsageController < Api::BaseController
   def stats
     credential_id = params[:credential_id]
     user = current_user
-    
+
     # Find the credential and verify ownership
     credential = user.storage_credentials.find_by(id: credential_id)
     unless credential
-      render json: { error: 'Credential not found' }, status: :not_found
+      render json: { error: "Credential not found" }, status: :not_found
       return
     end
-    
+
     stats = get_bucket_usage_stats(credential.bucket)
-    
+
     if stats
       render json: {
         credential_id: credential_id,
@@ -23,7 +23,7 @@ class Api::BucketUsageController < Api::BaseController
         timestamp: Time.current.iso8601
       }
     else
-      render json: { error: 'Bucket not found or no limits set' }, status: :not_found
+      render json: { error: "Bucket not found or no limits set" }, status: :not_found
     end
   end
 
@@ -31,17 +31,17 @@ class Api::BucketUsageController < Api::BaseController
   def get_limits
     credential_id = params[:credential_id]
     user = current_user
-    
+
     # Find the credential and verify ownership
     credential = user.storage_credentials.find_by(id: credential_id)
     unless credential
-      render json: { error: 'Credential not found' }, status: :not_found
+      render json: { error: "Credential not found" }, status: :not_found
       return
     end
-    
+
     # Find bucket limit for this user and bucket
     bucket_limit = BucketLimit.find_by(user: user, bucket_name: credential.bucket)
-    
+
     if bucket_limit
       render json: {
         credential_id: credential_id,
@@ -68,52 +68,52 @@ class Api::BucketUsageController < Api::BaseController
   def update_limits
     credential_id = params[:credential_id]
     user = current_user
-    
+
     # Find the credential and verify ownership
     credential = user.storage_credentials.find_by(id: credential_id)
     unless credential
-      render json: { error: 'Credential not found' }, status: :not_found
+      render json: { error: "Credential not found" }, status: :not_found
       return
     end
-    
+
     # Validate input parameters
     validation_errors = validate_limit_params(params)
     if validation_errors.any?
-      render json: { 
-        error: 'Invalid limit values',
-        errors: validation_errors 
+      render json: {
+        error: "Invalid limit values",
+        errors: validation_errors
       }, status: :unprocessable_entity
       return
     end
-    
+
     # Find or create bucket limit
     bucket_limit = BucketLimit.find_or_create_for_user_and_bucket(user, credential.bucket)
-    
+
     # Update limits if provided
     if params[:write_requests_per_month].present?
       # Handle unlimited (empty string or "unlimited")
-      if params[:write_requests_per_month].to_s.strip.empty? || 
-         params[:write_requests_per_month].to_s.downcase == 'unlimited'
+      if params[:write_requests_per_month].to_s.strip.empty? ||
+         params[:write_requests_per_month].to_s.downcase == "unlimited"
         bucket_limit.write_requests_per_month = nil
       else
         bucket_limit.write_requests_per_month = params[:write_requests_per_month].to_i
       end
     end
-    
+
     if params[:read_requests_per_month].present?
       # Handle unlimited (empty string or "unlimited")
-      if params[:read_requests_per_month].to_s.strip.empty? || 
-         params[:read_requests_per_month].to_s.downcase == 'unlimited'
+      if params[:read_requests_per_month].to_s.strip.empty? ||
+         params[:read_requests_per_month].to_s.downcase == "unlimited"
         bucket_limit.read_requests_per_month = nil
       else
         bucket_limit.read_requests_per_month = params[:read_requests_per_month].to_i
       end
     end
-    
+
     if bucket_limit.save
       # Invalidate Redis cache for this user and bucket
       BucketUsageService.invalidate_limit_cache(user, credential.bucket)
-      
+
       render json: {
         credential_id: credential_id,
         bucket_name: credential.bucket,
@@ -121,12 +121,12 @@ class Api::BucketUsageController < Api::BaseController
           write_requests_per_month: bucket_limit.write_requests_per_month,
           read_requests_per_month: bucket_limit.read_requests_per_month
         },
-        message: 'Limits updated successfully'
+        message: "Limits updated successfully"
       }
     else
-      render json: { 
-        error: 'Failed to update limits',
-        errors: bucket_limit.errors.full_messages 
+      render json: {
+        error: "Failed to update limits",
+        errors: bucket_limit.errors.full_messages
       }, status: :unprocessable_entity
     end
   end
@@ -134,26 +134,26 @@ class Api::BucketUsageController < Api::BaseController
   # Example of how to track requests in your existing controllers
   def example_file_upload
     bucket_name = extract_bucket_name(request)
-    
+
     # Track the write request before processing
     track_write_request(bucket_name)
-    
+
     # Your existing file upload logic here
     # ...
-    
-    render json: { message: 'File uploaded successfully' }
+
+    render json: { message: "File uploaded successfully" }
   end
 
   def example_file_download
     bucket_name = extract_bucket_name(request)
-    
+
     # Track the read request before processing
     track_read_request(bucket_name)
-    
+
     # Your existing file download logic here
     # ...
-    
-    render json: { message: 'File download initiated' }
+
+    render json: { message: "File download initiated" }
   end
 
   private
@@ -161,11 +161,11 @@ class Api::BucketUsageController < Api::BaseController
   # Validate limit parameters
   def validate_limit_params(params)
     errors = []
-    
+
     # Validate write requests limit
     if params[:write_requests_per_month].present?
       write_limit = params[:write_requests_per_month].to_s.strip
-      unless write_limit.empty? || write_limit.downcase == 'unlimited'
+      unless write_limit.empty? || write_limit.downcase == "unlimited"
         begin
           value = write_limit.to_i
           if value <= 0
@@ -178,11 +178,11 @@ class Api::BucketUsageController < Api::BaseController
         end
       end
     end
-    
+
     # Validate read requests limit
     if params[:read_requests_per_month].present?
       read_limit = params[:read_requests_per_month].to_s.strip
-      unless read_limit.empty? || read_limit.downcase == 'unlimited'
+      unless read_limit.empty? || read_limit.downcase == "unlimited"
         begin
           value = read_limit.to_i
           if value <= 0
@@ -195,7 +195,7 @@ class Api::BucketUsageController < Api::BaseController
         end
       end
     end
-    
+
     errors
   end
 
@@ -203,4 +203,4 @@ class Api::BucketUsageController < Api::BaseController
   def extract_bucket_name(request)
     params[:bucket_name]
   end
-end 
+end

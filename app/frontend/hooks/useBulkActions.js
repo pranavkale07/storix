@@ -89,13 +89,13 @@ export function useBulkActions({ selectedFiles, selectedFolders, setSelectedFile
         if (!response.ok) {
           const errorData = await response.json();
           let errorMessage = errorData.error || 'Failed to get download link';
-          
+
           // Handle bucket usage limit errors
           if (errorData.type === 'bucket_usage_limit_exceeded') {
             errorMessage = errorData.message || 'Download limit exceeded for this bucket.';
             showToast.warning(errorMessage, 'You have reached your monthly download limit for this bucket.');
           }
-          
+
           setBulkActionError(prev => ({ ...prev, [key]: errorMessage }));
           continue;
         }

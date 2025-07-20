@@ -27,4 +27,4 @@ export const logError = (...args) => {
 // Always log warnings in production
 export const logWarn = (...args) => {
   console.warn(...args);
-}; 
+};

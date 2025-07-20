@@ -69,7 +69,7 @@ module BucketUsageTrackable
       user: user,
       bucket_name: bucket_name,
       period_start: current_month_start,
-      period_type: 'month'
+      period_type: "month"
     )
 
     limit = BucketLimit.find_by(user: user, bucket_name: bucket_name)
@@ -84,13 +84,13 @@ module BucketUsageTrackable
       write: {
         limit: write_limit,
         used: write_used,
-        remaining: write_limit ? [write_limit - write_used, 0].max : nil,
+        remaining: write_limit ? [ write_limit - write_used, 0 ].max : nil,
         percentage_used: write_limit ? ((write_used.to_f / write_limit) * 100).round(2) : 0.0
       },
       read: {
         limit: read_limit,
         used: read_used,
-        remaining: read_limit ? [read_limit - read_used, 0].max : nil,
+        remaining: read_limit ? [ read_limit - read_used, 0 ].max : nil,
         percentage_used: read_limit ? ((read_used.to_f / read_limit) * 100).round(2) : 0.0
       },
       total_used: write_used + read_used,
@@ -101,9 +101,9 @@ module BucketUsageTrackable
   # Handle limit exceeded errors
   def handle_limit_exceeded(exception)
     render json: {
-      error: 'Rate limit exceeded',
+      error: "Rate limit exceeded",
       message: exception.message,
-      type: 'bucket_usage_limit_exceeded'
+      type: "bucket_usage_limit_exceeded"
     }, status: :too_many_requests
   end
 
@@ -112,32 +112,32 @@ module BucketUsageTrackable
     Rails.logger.error "Redis connection error in controller: #{exception.message}"
     # Continue without tracking - don't block the request
     # You might want to return a warning in the response headers
-    response.headers['X-Bucket-Tracking'] = 'disabled'
+    response.headers["X-Bucket-Tracking"] = "disabled"
   end
 
   # Helper method to determine request type and count based on action
   def classify_request_type_and_count(action_name)
     case action_name
     # Direct S3 operations - count as 1
-    when 'list_files', 'create_folder', 'delete_folder', 'move_files', 'copy_files', 'move_folders', 'copy_folders', 'rename_file', 'start_upload', 'complete_upload', 'delete_file'
+    when "list_files", "create_folder", "delete_folder", "move_files", "copy_files", "move_folders", "copy_folders", "rename_file", "start_upload", "complete_upload", "delete_file"
       { type: classify_action_type(action_name), count: 1 }
     # Presigned URL operations - count as 2 (backend + assumed frontend usage)
-    when 'presign_upload', 'presign_download', 'presign_chunk'
+    when "presign_upload", "presign_download", "presign_chunk"
       { type: classify_action_type(action_name), count: 2 }
     else
-      { type: 'read', count: 1 } # Default to read with count 1
+      { type: "read", count: 1 } # Default to read with count 1
     end
   end
 
   # Helper method to classify action type (write vs read)
   def classify_action_type(action_name)
     case action_name
-    when 'start_upload', 'presign_chunk', 'complete_upload', 'delete_file', 'create_folder', 'delete_folder', 'move_files', 'copy_files', 'move_folders', 'copy_folders', 'rename_file', 'presign_upload'
-      'write'
-    when 'list_files', 'presign_download', 'share_links', 'list_credentials', 'show_credential'
-      'read'
+    when "start_upload", "presign_chunk", "complete_upload", "delete_file", "create_folder", "delete_folder", "move_files", "copy_files", "move_folders", "copy_folders", "rename_file", "presign_upload"
+      "write"
+    when "list_files", "presign_download", "share_links", "list_credentials", "show_credential"
+      "read"
     else
-      'read' # Default to read for unknown actions
+      "read" # Default to read for unknown actions
     end
   end
 
@@ -152,11 +152,11 @@ module BucketUsageTrackable
     return unless bucket_name
 
     classification = classify_request_type_and_count(action_name)
-    
-    if classification[:type] == 'write'
+
+    if classification[:type] == "write"
       track_write_request(bucket_name, classification[:count])
     else
       track_read_request(bucket_name, classification[:count])
     end
   end
-end 
+end

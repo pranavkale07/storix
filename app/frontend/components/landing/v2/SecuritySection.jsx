@@ -7,37 +7,37 @@ const SecuritySection = () => {
   const securityFeatures = [
     {
       icon: Shield,
-      title: "Zero-Knowledge Architecture",
-      description: "Your files never touch our servers. All transfers happen directly between your browser and your storage provider.",
-      highlight: true
+      title: 'Zero-Knowledge Architecture',
+      description: 'Your files never touch our servers. All transfers happen directly between your browser and your storage provider.',
+      highlight: true,
     },
     {
       icon: Lock,
-      title: "Encrypted Credentials",
-      description: "Storage credentials are encrypted using industry-standard encryption before being stored in our database.",
-      highlight: false
+      title: 'Encrypted Credentials',
+      description: 'Storage credentials are encrypted using industry-standard encryption before being stored in our database.',
+      highlight: false,
     },
     {
       icon: Eye,
-      title: "Open Source",
-      description: "Built with transparent, open-source technologies. You can audit our code and security practices.",
-      highlight: false
+      title: 'Open Source',
+      description: 'Built with transparent, open-source technologies. You can audit our code and security practices.',
+      highlight: false,
     },
     {
       icon: Key,
-      title: "OAuth Authentication",
-      description: "Secure login with Google, GitHub, and other trusted providers. No passwords to manage.",
-      highlight: false
-    }
+      title: 'OAuth Authentication',
+      description: 'Secure login with Google, GitHub, and other trusted providers. No passwords to manage.',
+      highlight: false,
+    },
   ];
 
   const privacyPoints = [
-    "Files are never stored on Storix servers",
-    "Direct browser-to-storage transfers using presigned URLs",
-    "Encrypted storage credentials in our database",
-    "Open-source codebase for full transparency",
-    "No third-party tracking or analytics on your files",
-    "You maintain full control over your data"
+    'Files are never stored on Storix servers',
+    'Direct browser-to-storage transfers using presigned URLs',
+    'Encrypted storage credentials in our database',
+    'Open-source codebase for full transparency',
+    'No third-party tracking or analytics on your files',
+    'You maintain full control over your data',
   ];
 
   return (
@@ -54,7 +54,7 @@ const SecuritySection = () => {
               Absolute Privacy & Security
             </h2>
             <p className="text-xl text-neutral-400 max-w-3xl mx-auto">
-              Your data stays in your control, always. We've built Storix with privacy and security as core principles.
+              Your data stays in your control, always. We&apos;ve built Storix with privacy and security as core principles.
             </p>
           </div>
 
@@ -71,7 +71,7 @@ const SecuritySection = () => {
                   Your Files Never Touch Our Servers
                 </h3>
                 <p className="text-lg text-neutral-300 max-w-2xl mx-auto">
-                  All file uploads and downloads happen directly between your browser and your own cloud storage provider 
+                  All file uploads and downloads happen directly between your browser and your own cloud storage provider
                   using secure, time-limited presigned URLs. Storix only manages metadata and access control.
                 </p>
               </CardContent>

@@ -16,7 +16,7 @@ export function Footer() {
               <span className="text-xl font-bold text-white">Storix</span>
             </div>
             <p className="text-gray-400 max-w-md">
-              Your files, your cloud, your control. The modern way to manage and share files 
+              Your files, your cloud, your control. The modern way to manage and share files
               with complete privacy and security.
             </p>
             <div className="mt-6 flex space-x-4">

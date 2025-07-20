@@ -3,7 +3,7 @@ class BucketUsageRecoveryJob < ApplicationJob
 
   def perform
     Rails.logger.info "Starting Redis recovery at #{Time.current}"
-    
+
     begin
       BucketUsageService.recover_from_redis_crash
       Rails.logger.info "✅ Redis recovery completed successfully"
@@ -13,4 +13,4 @@ class BucketUsageRecoveryJob < ApplicationJob
       raise e
     end
   end
-end 
+end

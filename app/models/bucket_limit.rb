@@ -2,17 +2,17 @@ class BucketLimit < ApplicationRecord
   belongs_to :user
 
   validates :bucket_name, presence: true
-  validates :write_requests_per_month, 
-            numericality: { 
-              greater_than: 0, 
+  validates :write_requests_per_month,
+            numericality: {
+              greater_than: 0,
               less_than: 2_147_483_647, # Max 32-bit integer
               only_integer: true,
               allow_nil: true,
               message: "must be between 1 and 2,147,483,647 or leave empty for unlimited"
             }
-  validates :read_requests_per_month, 
-            numericality: { 
-              greater_than: 0, 
+  validates :read_requests_per_month,
+            numericality: {
+              greater_than: 0,
               less_than: 2_147_483_647, # Max 32-bit integer
               only_integer: true,
               allow_nil: true,
@@ -60,4 +60,4 @@ class BucketLimit < ApplicationRecord
     return false if read_requests_per_month.nil? # Unlimited
     current_read_count >= read_requests_per_month
   end
-end 
+end

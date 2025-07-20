@@ -6,28 +6,28 @@ const HowItWorks = () => {
   const steps = [
     {
       icon: Key,
-      title: "One-time Setup",
-      description: "Generate access keys & configure CORS on your storage provider",
-      details: "Create API credentials in AWS IAM or DigitalOcean and set up CORS rules"
+      title: 'One-time Setup',
+      description: 'Generate access keys & configure CORS on your storage provider',
+      details: 'Create API credentials in AWS IAM or DigitalOcean and set up CORS rules',
     },
     {
       icon: Settings,
-      title: "Connect Storage",
-      description: "Add your S3-compatible storage provider to Storix",
-      details: "Support for AWS S3, DigitalOcean Spaces, and any S3-compatible service"
+      title: 'Connect Storage',
+      description: 'Add your S3-compatible storage provider to Storix',
+      details: 'Support for AWS S3, DigitalOcean Spaces, and any S3-compatible service',
     },
     {
       icon: Upload,
-      title: "Manage Files",
-      description: "Upload, organize, and manage your files with our modern interface",
-      details: "Drag & drop uploads, folder organization, bulk operations, and more"
+      title: 'Manage Files',
+      description: 'Upload, organize, and manage your files with our modern interface',
+      details: 'Drag & drop uploads, folder organization, bulk operations, and more',
     },
     {
       icon: Share,
-      title: "Share Securely",
-      description: "Generate secure links and track usage with detailed analytics",
-      details: "Time-limited links, access controls, and comprehensive sharing analytics"
-    }
+      title: 'Share Securely',
+      description: 'Generate secure links and track usage with detailed analytics',
+      details: 'Time-limited links, access controls, and comprehensive sharing analytics',
+    },
   ];
 
   return (
@@ -75,7 +75,7 @@ const HowItWorks = () => {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 {/* Connection arrow */}
                 {index < steps.length - 1 && (
                   <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">

@@ -17,20 +17,20 @@ export class UsageApi {
     try {
       const { response, data } = await apiFetchWithToast('/api/storage/credentials');
       if (!response.ok) throw new Error('Failed to fetch credentials');
-      
+
       const usagePromises = data.credentials.map(async (credential) => {
         try {
           const usageData = await this.getBucketUsageStats(credential.id);
           return {
             ...credential,
-            usage: usageData.stats
+            usage: usageData.stats,
           };
         } catch (error) {
           console.error(`Failed to fetch usage for credential ${credential.id}:`, error);
           return {
             ...credential,
             usage: null,
-            error: error.message
+            error: error.message,
           };
         }
       });
@@ -70,4 +70,4 @@ export class UsageApi {
       throw error;
     }
   }
-} 
+}

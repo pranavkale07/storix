@@ -4,17 +4,17 @@ class BucketUsageStatsJob < ApplicationJob
   def perform
     Rails.logger.info "Bucket Usage Statistics at #{Time.current}"
     Rails.logger.info "=" * 50
-    
+
     # Get all users with bucket limits
     users_with_limits = BucketLimit.includes(:user).distinct.pluck(:user_id)
-    
+
     users_with_limits.each do |user_id|
       user = User.find(user_id)
       Rails.logger.info "User: #{user.email}"
-      
+
       # Get all buckets for this user
       buckets = BucketLimit.where(user: user).pluck(:bucket_name)
-      
+
       buckets.each do |bucket_name|
         begin
           stats = BucketUsageService.get_combined_usage_stats(user, bucket_name)
@@ -27,7 +27,7 @@ class BucketUsageStatsJob < ApplicationJob
         end
       end
     end
-    
+
     Rails.logger.info "=" * 50
   end
-end 
+end

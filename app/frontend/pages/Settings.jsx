@@ -243,7 +243,7 @@ export default function Settings() {
   const handleEdit = async (bucket) => {
     setEditingBucket(bucket);
     setLoading(true);
-    
+
     try {
       // Fetch full credential data including sensitive fields
       const response = await apiFetch(`/api/storage/credentials/${bucket.id}`);

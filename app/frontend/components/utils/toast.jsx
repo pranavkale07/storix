@@ -127,13 +127,13 @@ export const getErrorMessage = (error, statusCode = null) => {
 // Enhanced API error handler
 export const handleApiError = (error, statusCode = null) => {
   const message = getErrorMessage(error, statusCode);
-  
+
   // Use special rate limit toast for rate limit errors
   if (statusCode === 429) {
     showToast.rateLimit(message);
   } else {
     showToast.error(message);
   }
-  
+
   console.error('API Error:', { error, statusCode });
 };
