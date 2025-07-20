@@ -1,5 +1,6 @@
 import { StorageManager } from './storage';
 import { handleApiError, showToast } from '../components/utils/toast';
+import { debugLog, logError } from './debug';
 
 // Global logout function - will be set by AuthContext
 let globalLogout = null;
@@ -100,7 +101,7 @@ export async function apiFetchWithToast(url, options = {}) {
 
 // Handle token expiration
 function handleTokenExpiration() {
-  console.log('Token expired, triggering automatic logout');
+  debugLog('Token expired, triggering automatic logout'); // Debug - commented for production
   
   // Show user-friendly message
   showToast.error('Session expired', 'Please log in again to continue.');

@@ -8,11 +8,11 @@ export class BucketService {
       // Check if we have a token before making API calls
       const token = StorageManager.getToken();
       if (!token) {
-        console.log('No token available, skipping bucket fetch');
+        // console.log('No token available, skipping bucket fetch'); // Debug - commented for production
         return [];
       }
 
-      console.log('Fetching buckets from /api/storage/credentials...');
+      // console.log('Fetching buckets from /api/storage/credentials...'); // Debug - commented for production
       const response = await apiFetch('/api/storage/credentials');
       if (!response.ok) {
         const errorText = await response.text();
@@ -38,7 +38,7 @@ export class BucketService {
       // Check if we have a token before making API calls
       const token = StorageManager.getToken();
       if (!token) {
-        console.log('No token available, skipping set active bucket');
+        // console.log('No token available, skipping set active bucket'); // Debug - commented for production
         return null;
       }
 
@@ -49,10 +49,12 @@ export class BucketService {
           credential_id: bucketId,
         }),
       });
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to set active bucket: ${response.status} - ${errorText}`);
       }
+
       const data = await response.json();
       if (data.token) {
         StorageManager.setToken(data.token);
@@ -70,7 +72,7 @@ export class BucketService {
       // Check if we have a token before making API calls
       const token = StorageManager.getToken();
       if (!token) {
-        console.log('No token available, skipping load active bucket');
+        // console.log('No token available, skipping load active bucket'); // Debug - commented for production
         return null;
       }
 
@@ -120,6 +122,6 @@ export class BucketService {
   // Clear stored bucket info
   static clearStoredBucket() {
     StorageManager.removeActiveBucket();
-    console.log('Cleared stored bucket');
+    // console.log('Cleared stored bucket'); // Debug - commented for production
   }
 }

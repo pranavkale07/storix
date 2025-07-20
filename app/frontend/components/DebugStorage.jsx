@@ -72,12 +72,20 @@ export function DebugStorage() {
       </button>
       <button
         onClick={() => {
-          console.log('localStorage Debug Data:', storageData);
-          console.log('Raw localStorage:', {
-            user: localStorage.getItem('user'),
+          const storageData = {
             token: localStorage.getItem('token'),
+            user: localStorage.getItem('user'),
             activeBucket: localStorage.getItem('activeBucket'),
-          });
+            session: localStorage.getItem('session'),
+          };
+
+          // console.log('localStorage Debug Data:', storageData); // Debug - commented for production
+          // console.log('Raw localStorage:', { // Debug - commented for production
+          //   token: localStorage.getItem('token'),
+          //   user: localStorage.getItem('user'),
+          //   activeBucket: localStorage.getItem('activeBucket'),
+          //   session: localStorage.getItem('session'),
+          // }); // Debug - commented for production
         }}
         style={{
           background: '#333',

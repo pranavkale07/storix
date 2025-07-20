@@ -111,7 +111,7 @@ export function AuthProvider({ children }) {
   const refreshActiveBucket = async () => {
     // Only make API calls if we have a valid token
     if (!token) {
-      console.log('No token available, skipping bucket refresh');
+      // console.log('No token available, skipping bucket refresh'); // Debug - commented for production
       return null;
     }
 
