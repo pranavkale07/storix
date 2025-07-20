@@ -44,7 +44,20 @@ Rails.application.configure do
   config.active_support.report_deprecations = false
 
   # Replace the default in-process memory cache store with a durable alternative.
-  config.cache_store = :solid_cache_store
+  # Use Redis for rate limiting in production
+  if ENV["REDIS_URL"].present?
+    redis_config = { url: ENV["REDIS_URL"] }
+
+    # Only add SSL config if REDIS_URL indicates SSL is needed
+    if ENV["REDIS_URL"].include?("rediss://")
+      redis_config[:ssl] = true
+      redis_config[:ssl_params] = { verify_mode: OpenSSL::SSL::VERIFY_NONE }
+    end
+
+    config.cache_store = :redis_cache_store, redis_config
+  else
+    config.cache_store = :solid_cache_store
+  end
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
   config.active_job.queue_adapter = :solid_queue

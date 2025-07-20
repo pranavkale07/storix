@@ -24,7 +24,7 @@ const HeroSection = () => {
 
           {/* Subheadline */}
           <p className="text-xl md:text-2xl text-neutral-400 mb-8 max-w-3xl mx-auto leading-relaxed">
-            A modern file storage and sharing platform for your own S3-compatible storage. 
+            A modern file storage and sharing platform for your own S3-compatible storage.
             Secure, private, and always under your control.
           </p>
 
@@ -86,7 +86,7 @@ const HeroSection = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Stats mockup */}
                   <div className="space-y-3">
                     <div className="text-xs text-neutral-500">Storage Usage</div>

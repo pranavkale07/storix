@@ -17,7 +17,7 @@ const Landing = () => {
       <div className="relative">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-black pointer-events-none" />
-        
+
         {/* Navigation */}
         <nav className="relative z-10 border-b border-neutral-800/50 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-4">
@@ -28,14 +28,14 @@ const Landing = () => {
                 </div>
                 <span className="text-xl font-bold">Storix</span>
               </div>
-              
+
               <div className="hidden md:flex items-center space-x-6">
                 <a href="#features" className="text-neutral-400 hover:text-white transition-colors">Features</a>
                 <a href="#security" className="text-neutral-400 hover:text-white transition-colors">Security</a>
                 <a href="#demo" className="text-neutral-400 hover:text-white transition-colors">Demo</a>
                 <a href="#faq" className="text-neutral-400 hover:text-white transition-colors">FAQ</a>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <Button variant="ghost" size="sm" className="text-neutral-400 hover:text-white">
                   <GitHub className="w-4 h-4 mr-2" />

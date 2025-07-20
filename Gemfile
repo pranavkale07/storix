@@ -48,6 +48,15 @@ gem "thruster", require: false
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
 
+# Rate limiting with Rack::Attack
+gem "rack-attack", "~> 6.7"
+
+# Redis for rate limiting storage
+gem "redis", "~> 5.0"
+
+# Cron jobs for Rails
+gem "whenever", require: false
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"

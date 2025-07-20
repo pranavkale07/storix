@@ -7,32 +7,32 @@ const Footer = () => {
       { name: 'Features', href: '#features' },
       { name: 'Security', href: '#security' },
       { name: 'Pricing', href: '#pricing' },
-      { name: 'Demo', href: '#demo' }
+      { name: 'Demo', href: '#demo' },
     ],
     Resources: [
       { name: 'Documentation', href: '#' },
       { name: 'API Reference', href: '#' },
       { name: 'Support', href: '#' },
-      { name: 'Status', href: '#' }
+      { name: 'Status', href: '#' },
     ],
     Company: [
       { name: 'About', href: '#' },
       { name: 'Blog', href: '#' },
       { name: 'Careers', href: '#' },
-      { name: 'Contact', href: '#' }
+      { name: 'Contact', href: '#' },
     ],
     Legal: [
       { name: 'Privacy Policy', href: '#' },
       { name: 'Terms of Service', href: '#' },
       { name: 'Cookie Policy', href: '#' },
-      { name: 'GDPR', href: '#' }
-    ]
+      { name: 'GDPR', href: '#' },
+    ],
   };
 
   const socialLinks = [
     { icon: GitHub, href: 'https://github.com/storix-app', label: 'GitHub' },
     { icon: Twitter, href: 'https://twitter.com/storix_app', label: 'Twitter' },
-    { icon: Mail, href: 'mailto:hello@storix.app', label: 'Email' }
+    { icon: Mail, href: 'mailto:hello@storix.app', label: 'Email' },
   ];
 
   return (
@@ -54,7 +54,7 @@ const Footer = () => {
               </p>
               <div className="flex items-center space-x-4">
                 {socialLinks.map((social, index) => (
-                  <a 
+                  <a
                     key={index}
                     href={social.href}
                     target="_blank"
@@ -75,7 +75,7 @@ const Footer = () => {
                 <ul className="space-y-3">
                   {links.map((link, index) => (
                     <li key={index}>
-                      <a 
+                      <a
                         href={link.href}
                         className="text-neutral-400 hover:text-white transition-colors"
                       >
@@ -99,7 +99,7 @@ const Footer = () => {
                 <span>for privacy</span>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2 text-neutral-400 text-sm">
               <Globe className="w-4 h-4" />
               <span>Built with React, Tailwind CSS, and shadcn/ui</span>

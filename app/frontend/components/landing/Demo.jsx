@@ -38,7 +38,7 @@ export function Demo() {
                           </Button>
                         </div>
                       </div>
-                      
+
                       {/* File list */}
                       <div className="flex-1 p-4 space-y-2">
                         <div className="flex items-center space-x-3 p-2 rounded hover:bg-gray-800/50">
@@ -56,11 +56,11 @@ export function Demo() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Play button overlay */}
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <Button 
-                      size="lg" 
+                    <Button
+                      size="lg"
                       className="bg-blue-600 hover:bg-blue-700 text-white rounded-full h-16 w-16 p-0"
                     >
                       <Play className="h-8 w-8 ml-1" />
@@ -82,7 +82,7 @@ export function Demo() {
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
               <CardContent className="p-6 text-center">
                 <Share className="h-8 w-8 mx-auto mb-3 text-green-400" />
@@ -92,7 +92,7 @@ export function Demo() {
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card className="border-gray-800 bg-gray-900/50 backdrop-blur-sm">
               <CardContent className="p-6 text-center">
                 <BarChart3 className="h-8 w-8 mx-auto mb-3 text-purple-400" />

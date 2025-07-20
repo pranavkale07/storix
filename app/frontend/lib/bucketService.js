@@ -5,7 +5,14 @@ export class BucketService {
   // Fetch all user's buckets
   static async fetchBuckets() {
     try {
-      console.log('Fetching buckets from /api/storage/credentials...');
+      // Check if we have a token before making API calls
+      const token = StorageManager.getToken();
+      if (!token) {
+        // console.log('No token available, skipping bucket fetch'); // Debug - commented for production
+        return [];
+      }
+
+      // console.log('Fetching buckets from /api/storage/credentials...'); // Debug - commented for production
       const response = await apiFetch('/api/storage/credentials');
       if (!response.ok) {
         const errorText = await response.text();
@@ -28,6 +35,13 @@ export class BucketService {
   // Set a bucket as active using the dedicated endpoint
   static async setActiveBucket(bucketId) {
     try {
+      // Check if we have a token before making API calls
+      const token = StorageManager.getToken();
+      if (!token) {
+        // console.log('No token available, skipping set active bucket'); // Debug - commented for production
+        return null;
+      }
+
       const response = await apiFetch('/api/auth/active_credential', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,10 +49,12 @@ export class BucketService {
           credential_id: bucketId,
         }),
       });
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to set active bucket: ${response.status} - ${errorText}`);
       }
+
       const data = await response.json();
       if (data.token) {
         StorageManager.setToken(data.token);
@@ -53,6 +69,13 @@ export class BucketService {
   // Load and set the active bucket automatically
   static async loadActiveBucket() {
     try {
+      // Check if we have a token before making API calls
+      const token = StorageManager.getToken();
+      if (!token) {
+        // console.log('No token available, skipping load active bucket'); // Debug - commented for production
+        return null;
+      }
+
       const buckets = await this.fetchBuckets();
 
       if (buckets.length === 0) {
@@ -99,6 +122,6 @@ export class BucketService {
   // Clear stored bucket info
   static clearStoredBucket() {
     StorageManager.removeActiveBucket();
-    console.log('Cleared stored bucket');
+    // console.log('Cleared stored bucket'); // Debug - commented for production
   }
 }

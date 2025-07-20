@@ -5,24 +5,24 @@ import { Shield, Lock, Server, Eye } from 'lucide-react';
 const securityFeatures = [
   {
     icon: Server,
-    title: "Direct Transfers",
-    description: "Your files are never stored or routed through Storix servers. All uploads and downloads happen directly between your browser and your cloud storage."
+    title: 'Direct Transfers',
+    description: 'Your files are never stored or routed through Storix servers. All uploads and downloads happen directly between your browser and your cloud storage.',
   },
   {
     icon: Lock,
-    title: "Encrypted Credentials",
-    description: "Your storage credentials are encrypted and stored securely. We never have access to your raw access keys."
+    title: 'Encrypted Credentials',
+    description: 'Your storage credentials are encrypted and stored securely. We never have access to your raw access keys.',
   },
   {
     icon: Shield,
-    title: "OAuth Authentication",
-    description: "Secure login with Google or GitHub. No passwords to remember, just industry-standard OAuth security."
+    title: 'OAuth Authentication',
+    description: 'Secure login with Google or GitHub. No passwords to remember, just industry-standard OAuth security.',
   },
   {
     icon: Eye,
-    title: "Complete Privacy",
-    description: "We only manage metadata and access control. Your actual files remain under your complete control at all times."
-  }
+    title: 'Complete Privacy',
+    description: 'We only manage metadata and access control. Your actual files remain under your complete control at all times.',
+  },
 ];
 
 export function Security() {
@@ -37,7 +37,7 @@ export function Security() {
             Absolute Privacy & Security
           </h2>
           <p className="mt-4 text-lg text-gray-300 max-w-3xl mx-auto">
-            Your data security is our top priority. We've built Storix with a privacy-first architecture 
+            Your data security is our top priority. We&apos;ve built Storix with a privacy-first architecture
             that ensures your files never leave your control.
           </p>
         </div>
@@ -66,8 +66,8 @@ export function Security() {
               Zero-Knowledge Architecture
             </h3>
             <p className="text-gray-300 text-lg">
-              Your files are never stored, cached, or routed through our servers. 
-              All file operations happen directly between your browser and your chosen cloud storage provider 
+              Your files are never stored, cached, or routed through our servers.
+              All file operations happen directly between your browser and your chosen cloud storage provider
               using secure, time-limited presigned URLs.
             </p>
           </div>

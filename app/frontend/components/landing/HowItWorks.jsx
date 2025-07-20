@@ -5,28 +5,28 @@ import { Key, Cloud, Upload, Share } from 'lucide-react';
 const steps = [
   {
     icon: Key,
-    title: "One-time Setup",
-    description: "Generate access keys and configure CORS rules on your storage provider (AWS S3, DigitalOcean Spaces, or any S3-compatible service).",
-    color: "from-blue-500 to-blue-600"
+    title: 'One-time Setup',
+    description: 'Generate access keys and configure CORS rules on your storage provider (AWS S3, DigitalOcean Spaces, or any S3-compatible service).',
+    color: 'from-blue-500 to-blue-600',
   },
   {
     icon: Cloud,
-    title: "Connect Storage",
-    description: "Securely connect your storage credentials to Storix. Your keys are encrypted and never leave your control.",
-    color: "from-purple-500 to-purple-600"
+    title: 'Connect Storage',
+    description: 'Securely connect your storage credentials to Storix. Your keys are encrypted and never leave your control.',
+    color: 'from-purple-500 to-purple-600',
   },
   {
     icon: Upload,
-    title: "Upload & Manage",
-    description: "Upload, organize, rename, and delete files directly from your browser. All transfers happen directly to your cloud storage.",
-    color: "from-green-500 to-green-600"
+    title: 'Upload & Manage',
+    description: 'Upload, organize, rename, and delete files directly from your browser. All transfers happen directly to your cloud storage.',
+    color: 'from-green-500 to-green-600',
   },
   {
     icon: Share,
-    title: "Share Securely",
-    description: "Generate secure share links with expiration dates. Track usage and revoke access anytime from your dashboard.",
-    color: "from-orange-500 to-orange-600"
-  }
+    title: 'Share Securely',
+    description: 'Generate secure share links with expiration dates. Track usage and revoke access anytime from your dashboard.',
+    color: 'from-orange-500 to-orange-600',
+  },
 ];
 
 export function HowItWorks() {

@@ -10,9 +10,37 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_14_110153) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_20_044258) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "bucket_limits", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "bucket_name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "write_requests_per_month"
+    t.integer "read_requests_per_month"
+    t.index ["bucket_name"], name: "index_bucket_limits_on_bucket_name"
+    t.index ["user_id", "bucket_name"], name: "index_bucket_limits_on_user_id_and_bucket_name", unique: true
+    t.index ["user_id"], name: "index_bucket_limits_on_user_id"
+  end
+
+  create_table "bucket_usages", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "bucket_name"
+    t.datetime "period_start"
+    t.string "period_type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "write_requests_count"
+    t.integer "read_requests_count"
+    t.index ["period_start"], name: "index_bucket_usages_on_period_start"
+    t.index ["period_type"], name: "index_bucket_usages_on_period_type"
+    t.index ["user_id", "bucket_name", "period_start", "period_type"], name: "index_bucket_usages_on_user_bucket_period", unique: true
+    t.index ["user_id", "bucket_name"], name: "index_bucket_usages_on_user_id_and_bucket_name"
+    t.index ["user_id"], name: "index_bucket_usages_on_user_id"
+  end
 
   create_table "share_links", force: :cascade do |t|
     t.bigint "user_id", null: false
@@ -54,6 +82,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_14_110153) do
     t.index ["provider", "uid"], name: "index_users_on_provider_and_uid", unique: true
   end
 
+  add_foreign_key "bucket_limits", "users"
+  add_foreign_key "bucket_usages", "users"
   add_foreign_key "share_links", "storage_credentials", on_delete: :cascade
   add_foreign_key "share_links", "users"
   add_foreign_key "storage_credentials", "users"

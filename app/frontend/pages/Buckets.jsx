@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
+import { useBuckets } from '../components/BucketsContext';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import { apiFetch } from '../lib/api';
-import { Trash2, Edit, Plus } from 'lucide-react';
+import { Trash2, Edit, Plus, BarChart3, CheckCircle } from 'lucide-react';
 import ConnectBucketForm from '../components/ConnectBucketForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { BucketService } from '../lib/bucketService';
 import { validateBucketFields } from '../lib/validateBucketFields';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { Badge } from '../components/ui/badge';
 import { showToast } from '../components/utils/toast';
 import Header from '../components/Header';
 import { Skeleton } from '../components/ui/skeleton';
-import { useBuckets } from '../components/BucketsContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function Buckets() {
   const { activeBucket, refreshActiveBucket } = useAuth();
   const { buckets, loading: bucketsLoading, fetchBuckets } = useBuckets();
+  const navigate = useNavigate();
+
   const [editingBucket, setEditingBucket] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -30,12 +33,20 @@ export default function Buckets() {
   });
   const [formErrors, setFormErrors] = useState({});
   const [pendingDisconnectId, setPendingDisconnectId] = useState(null);
-  const [loading, setLoading] = useState(false); // <-- Add this line
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // The useBuckets hook manages its own fetching, so we don't need to call fetchBuckets here.
-    // However, if we want to re-fetch or invalidate cache, we can call refreshBuckets(true).
+    loadBuckets();
   }, []);
+
+  const loadBuckets = async () => {
+    try {
+      await fetchBuckets(true);
+    } catch (error) {
+      console.error('Error fetching buckets:', error);
+      showToast.error('Failed to fetch buckets', error.message);
+    }
+  };
 
   const handleDisconnect = async (bucketId) => {
     setPendingDisconnectId(bucketId);
@@ -101,6 +112,7 @@ export default function Buckets() {
     setShowAddForm(true);
   };
 
+
   const resetForm = () => {
     setFormData({
       access_key_id: '',
@@ -118,6 +130,7 @@ export default function Buckets() {
   const isActiveBucket = (bucket) => {
     return activeBucket && activeBucket.id === bucket.id;
   };
+
 
   if (bucketsLoading) {
     return (
@@ -145,9 +158,10 @@ export default function Buckets() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="max-w-4xl mx-auto py-8 px-6">
-        <div className="flex items-center gap-3 mb-8">
-          <h1 className="text-2xl font-bold">Buckets</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-bold">Manage Buckets</h1>
         </div>
+
         <Card className="mb-8">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -287,22 +301,38 @@ export default function Buckets() {
                         : 'border-border'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-3">
                           <h3 className="font-semibold">{bucket.bucket}</h3>
                           {isActiveBucket(bucket) && (
-                            <Badge variant="default">Active</Badge>
+                            <Badge variant="default">
+                              Active
+                            </Badge>
                           )}
                         </div>
+
                         <div className="text-sm text-muted-foreground space-y-1">
                           <p>Provider: {bucket.provider}</p>
                           <p>Region: {bucket.region}</p>
                           {bucket.endpoint && <p>Endpoint: {bucket.endpoint}</p>}
-                          {/* <p>Access Key: {bucket.access_key_id}</p> */}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            // Set this bucket as active and navigate to usage
+                            await BucketService.setActiveBucket(bucket.id);
+                            await refreshActiveBucket(); // Ensure active bucket is refreshed
+                            navigate('/usage');
+                          }}
+                          title="View Usage Analytics"
+                        >
+                          <BarChart3 className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -326,16 +356,19 @@ export default function Buckets() {
             )}
           </CardContent>
         </Card>
+
+
+        {/* Disconnect Confirmation Dialog */}
+        <ConfirmDialog
+          open={!!pendingDisconnectId}
+          onOpenChange={(open) => !open && setPendingDisconnectId(null)}
+          title="Disconnect Bucket"
+          description="Are you sure you want to disconnect this bucket? This action cannot be undone."
+          onConfirm={confirmDisconnect}
+          confirmText="Disconnect"
+          variant="destructive"
+        />
       </main>
-      <ConfirmDialog
-        open={!!pendingDisconnectId}
-        onOpenChange={open => { if (!open) setPendingDisconnectId(null); }}
-        title="Disconnect Bucket"
-        description="Are you sure you want to disconnect this bucket? This action cannot be undone."
-        confirmLabel="Disconnect"
-        onConfirm={confirmDisconnect}
-        loading={loading}
-      />
     </div>
   );
 }

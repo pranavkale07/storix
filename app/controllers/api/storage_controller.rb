@@ -1,6 +1,9 @@
 class Api::StorageController < ApplicationController
+  include BucketUsageTrackable
+
   before_action :authenticate_user!
   before_action :set_storage_credential, except: [ :create_credential ]
+  before_action :track_request, except: [ :create_credential, :usage ]
 
   # POST /api/storage_credentials
   def create_credential
@@ -141,6 +144,22 @@ class Api::StorageController < ApplicationController
     end
   end
 
+  # GET /api/storage/usage - Add usage statistics endpoint
+  def usage
+    bucket_name = extract_bucket_name_from_credential
+    stats = get_bucket_usage_stats(bucket_name)
+
+    if stats
+      render json: {
+        bucket_name: bucket_name,
+        stats: stats,
+        timestamp: Time.current.iso8601
+      }
+    else
+      render json: { error: "No usage data available" }, status: :not_found
+    end
+  end
+
   private
 
   def set_storage_credential
@@ -151,5 +170,10 @@ class Api::StorageController < ApplicationController
 
   def storage_credential_params
     params.require(:storage_credential).permit(:access_key_id, :secret_access_key, :region, :endpoint, :bucket)
+  end
+
+  # Automatically track requests based on action type
+  def track_request
+    track_request_by_action(action_name)
   end
 end

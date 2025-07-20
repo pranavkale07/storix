@@ -8,11 +8,11 @@ export function useFileDrop({ uploadFiles, setShowUploadProgress, setAllUploadin
     const files = [];
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      console.log('Drag item:', item);
+      // console.log('Drag item:', item); // Debug - commented for production
       if (item.kind === 'file') {
         try {
           const entry = item.webkitGetAsEntry && item.webkitGetAsEntry();
-          console.log('  entry:', entry);
+          // console.log('  entry:', entry); // Debug - commented for production
           // Defensive: Only process if entry is a file or directory, but never push directories
           if (entry && entry.isFile) {
             await collectFilesFromEntry(entry, '', files);
@@ -20,13 +20,13 @@ export function useFileDrop({ uploadFiles, setShowUploadProgress, setAllUploadin
             // For directories, include the root folder name in the path
             await collectFilesFromEntry(entry, entry.name + '/', files);
           } else {
-            console.log('  Skipped: not a file or directory entry', entry);
+            // console.log('  Skipped: not a file or directory entry', entry); // Debug - commented for production
           }
         } catch (error) {
-          console.error('Error processing item:', error);
+          // console.error('Error processing item:', error); // Debug - commented for production
         }
       } else {
-        console.log('  Skipped: not a file kind', item);
+        // console.log('  Skipped: not a file kind', item); // Debug - commented for production
       }
     }
     return files;
@@ -74,9 +74,9 @@ export function useFileDrop({ uploadFiles, setShowUploadProgress, setAllUploadin
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    console.log('Drop event:');
-    console.log('  dataTransfer.items:', e.dataTransfer.items);
-    console.log('  dataTransfer.files:', e.dataTransfer.files);
+    // console.log('Drop event:'); // Debug - commented for production
+    // console.log('  dataTransfer.items:', e.dataTransfer.items); // Debug - commented for production
+    // console.log('  dataTransfer.files:', e.dataTransfer.files); // Debug - commented for production
     try {
       let filesToUpload = [];
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -104,7 +104,7 @@ export function useFileDrop({ uploadFiles, setShowUploadProgress, setAllUploadin
         if (onDropError) onDropError('No files found in dropped folder.');
       }
     } catch (err) {
-      console.error('Error during drag-and-drop upload:', err);
+      // console.error('Error during drag-and-drop upload:', err); // Debug - commented for production
       if (onDropError) onDropError('Failed to process dropped folder. Please try again or use the Upload button.');
     }
   }, [collectFilesFromItems, setShowUploadProgress, setAllUploadingFiles, uploadFiles, onDropError]);

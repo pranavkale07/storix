@@ -34,7 +34,15 @@ function FileRenameInput({ file, onRename, onCancel, clearCache }) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to rename file');
+        let errorMessage = errorData.error || 'Failed to rename file';
+
+        // Handle bucket usage limit errors
+        if (errorData.type === 'bucket_usage_limit_exceeded') {
+          errorMessage = errorData.message || 'Operation limit exceeded for this bucket.';
+          showToast.warning(errorMessage, 'You have reached your monthly operation limit for this bucket.');
+        }
+
+        throw new Error(errorMessage);
       }
 
       if (clearCache) clearCache();

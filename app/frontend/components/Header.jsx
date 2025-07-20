@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
-import { ArrowLeft, FolderCog, Link2, User2, LogOut } from 'lucide-react';
+import { ArrowLeft, FolderCog, Link2, User2, LogOut, BarChart3 } from 'lucide-react';
 import ConnectBucketForm from './ConnectBucketForm';
 import useBuckets from '../hooks/useBuckets';
 import { BucketService } from '../lib/bucketService';
@@ -112,6 +112,14 @@ export default function Header({ showBackToFiles }) {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Manage Shared Links</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" onClick={() => navigate('/usage')}>
+                <BarChart3 className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Usage Dashboard</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
