@@ -15,7 +15,7 @@ gem "puma", ">= 5.0"
 gem "aws-sdk-s3", "~> 1.0"
 
 # Environment variables management
-gem "dotenv-rails", "~> 2.8"
+gem "dotenv-rails", "~> 3.1"
 
 # JWT for API authentication
 gem "jwt", "~> 2.7"
