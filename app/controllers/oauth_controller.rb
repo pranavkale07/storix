@@ -1,6 +1,9 @@
 class OauthController < ApplicationController
   skip_before_action :authenticate_user!
 
+  # Whitelist of allowed error messages to prevent open redirect
+  ALLOWED_ERROR_MESSAGES = %w[oauth_failed user_creation_failed server_error access_denied].freeze
+
   def callback
     auth = request.env["omniauth.auth"]
 
@@ -25,6 +28,13 @@ class OauthController < ApplicationController
   end
 
   def failure
-    redirect_to "#{ENV['FRONTEND_URL'] || 'http://localhost:3000'}/auth/error?message=#{params[:message]}"
+    # Validate the message parameter to prevent open redirect
+    message = params[:message]
+    if message.present? && ALLOWED_ERROR_MESSAGES.include?(message)
+      redirect_to "#{ENV['FRONTEND_URL'] || 'http://localhost:3000'}/auth/error?message=#{message}"
+    else
+      # Default to a safe error message
+      redirect_to "#{ENV['FRONTEND_URL'] || 'http://localhost:3000'}/auth/error?message=access_denied"
+    end
   end
 end

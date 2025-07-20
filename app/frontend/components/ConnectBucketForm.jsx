@@ -21,6 +21,8 @@ export default function ConnectBucketForm({
     secret_access_key: '',
     region: '',
     endpoint: '',
+    write_requests_per_month: '',
+    read_requests_per_month: '',
     ...initialValues,
   });
   const [formErrors, setFormErrors] = useState(errors);
@@ -92,11 +94,16 @@ export default function ConnectBucketForm({
           id="access_key_id"
           value={formData.access_key_id}
           onChange={e => handleInputChange('access_key_id', e.target.value)}
-          placeholder="AKIA..."
+          placeholder={editing ? "Leave empty to keep existing" : "AKIA..."}
           className={formErrors.access_key_id ? 'border-destructive' : ''}
         />
         {formErrors.access_key_id && (
           <p className="text-sm text-destructive mt-1">{formErrors.access_key_id}</p>
+        )}
+        {editing && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Leave empty to keep existing credentials
+          </p>
         )}
       </div>
       <div className="w-full">
@@ -106,11 +113,16 @@ export default function ConnectBucketForm({
           type="password"
           value={formData.secret_access_key}
           onChange={e => handleInputChange('secret_access_key', e.target.value)}
-          placeholder="••••••••"
+          placeholder={editing ? "Leave empty to keep existing" : "••••••••"}
           className={formErrors.secret_access_key ? 'border-destructive' : ''}
         />
         {formErrors.secret_access_key && (
           <p className="text-sm text-destructive mt-1">{formErrors.secret_access_key}</p>
+        )}
+        {editing && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Leave empty to keep existing credentials
+          </p>
         )}
       </div>
       <div className="w-full">
@@ -137,6 +149,51 @@ export default function ConnectBucketForm({
           />
         </div>
       )}
+      
+      {/* Usage Limits Section */}
+      <div className="space-y-4 border-t pt-4">
+        <div className="text-sm font-medium text-muted-foreground">
+          Usage Limits (Optional)
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="w-full">
+            <Label htmlFor="write_requests_per_month">Write Requests per Month</Label>
+            <Input
+              id="write_requests_per_month"
+              type="number"
+              value={formData.write_requests_per_month}
+              onChange={e => handleInputChange('write_requests_per_month', e.target.value)}
+              placeholder="e.g., 1000 (leave empty for unlimited)"
+              min="1"
+              className={formErrors.write_requests_per_month ? 'border-destructive' : ''}
+            />
+            {formErrors.write_requests_per_month && (
+              <p className="text-sm text-destructive mt-1">{formErrors.write_requests_per_month}</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Uploads, creates, updates, deletes
+            </p>
+          </div>
+          <div className="w-full">
+            <Label htmlFor="read_requests_per_month">Read Requests per Month</Label>
+            <Input
+              id="read_requests_per_month"
+              type="number"
+              value={formData.read_requests_per_month}
+              onChange={e => handleInputChange('read_requests_per_month', e.target.value)}
+              placeholder="e.g., 5000 (leave empty for unlimited)"
+              min="1"
+              className={formErrors.read_requests_per_month ? 'border-destructive' : ''}
+            />
+            {formErrors.read_requests_per_month && (
+              <p className="text-sm text-destructive mt-1">{formErrors.read_requests_per_month}</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Downloads, lists, views
+            </p>
+          </div>
+        </div>
+      </div>
       {/* End of fields */}
       <div className="flex justify-end gap-2">
         {onCancel && (

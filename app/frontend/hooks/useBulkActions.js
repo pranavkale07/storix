@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import { showToast } from '@/components/utils/toast';
 
 export function useBulkActions({ selectedFiles, selectedFolders, setSelectedFiles, setSelectedFolders, fetchFiles, showToast, clearCache }) {
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
@@ -87,7 +88,15 @@ export function useBulkActions({ selectedFiles, selectedFolders, setSelectedFile
         });
         if (!response.ok) {
           const errorData = await response.json();
-          setBulkActionError(prev => ({ ...prev, [key]: errorData.error || 'Failed to get download link' }));
+          let errorMessage = errorData.error || 'Failed to get download link';
+          
+          // Handle bucket usage limit errors
+          if (errorData.type === 'bucket_usage_limit_exceeded') {
+            errorMessage = errorData.message || 'Download limit exceeded for this bucket.';
+            showToast.warning(errorMessage, 'You have reached your monthly download limit for this bucket.');
+          }
+          
+          setBulkActionError(prev => ({ ...prev, [key]: errorMessage }));
           continue;
         }
         const { presigned_url } = await response.json();

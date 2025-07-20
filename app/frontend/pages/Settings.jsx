@@ -78,6 +78,8 @@ export default function Settings() {
     endpoint: '',
     bucket: '',
     provider: 's3',
+    write_requests_per_month: '',
+    read_requests_per_month: '',
   });
   const [formErrors, setFormErrors] = useState({});
   const [pendingDisconnectId, setPendingDisconnectId] = useState(null);
@@ -238,17 +240,56 @@ export default function Settings() {
     }
   };
 
-  const handleEdit = (bucket) => {
+  const handleEdit = async (bucket) => {
     setEditingBucket(bucket);
-    setFormData({
-      access_key_id: bucket.access_key_id || '',
-      secret_access_key: bucket.secret_access_key || '',
-      region: bucket.region || '',
-      endpoint: bucket.endpoint || '',
-      bucket: bucket.bucket || '',
-      provider: bucket.provider || 's3',
-    });
-    setShowAddForm(true);
+    setLoading(true);
+    
+    try {
+      // Fetch full credential data including sensitive fields
+      const response = await apiFetch(`/api/storage/credentials/${bucket.id}`);
+      if (response.ok) {
+        const fullCredential = await response.json();
+        setFormData({
+          access_key_id: '', // Don't populate sensitive fields for security
+          secret_access_key: '', // Don't populate sensitive fields for security
+          region: fullCredential.region || '',
+          endpoint: fullCredential.endpoint || '',
+          bucket: fullCredential.bucket || '',
+          provider: fullCredential.provider || 's3',
+          write_requests_per_month: fullCredential.write_requests_per_month || '',
+          read_requests_per_month: fullCredential.read_requests_per_month || '',
+        });
+      } else {
+        console.error('Failed to fetch credential details');
+        // Fallback to basic data
+        setFormData({
+          access_key_id: '', // Don't populate sensitive fields for security
+          secret_access_key: '', // Don't populate sensitive fields for security
+          region: bucket.region || '',
+          endpoint: bucket.endpoint || '',
+          bucket: bucket.bucket || '',
+          provider: bucket.provider || 's3',
+          write_requests_per_month: bucket.write_requests_per_month || '',
+          read_requests_per_month: bucket.read_requests_per_month || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching credential details:', error);
+      // Fallback to basic data
+      setFormData({
+        access_key_id: '', // Don't populate sensitive fields for security
+        secret_access_key: '', // Don't populate sensitive fields for security
+        region: bucket.region || '',
+        endpoint: bucket.endpoint || '',
+        bucket: bucket.bucket || '',
+        provider: bucket.provider || 's3',
+        write_requests_per_month: bucket.write_requests_per_month || '',
+        read_requests_per_month: bucket.read_requests_per_month || '',
+      });
+    } finally {
+      setLoading(false);
+      setShowAddForm(true);
+    }
   };
 
   const resetForm = () => {
@@ -259,6 +300,8 @@ export default function Settings() {
       endpoint: '',
       bucket: '',
       provider: 's3',
+      write_requests_per_month: '',
+      read_requests_per_month: '',
     });
     setFormErrors({});
     setEditingBucket(null);
@@ -325,6 +368,7 @@ export default function Settings() {
                   </DialogHeader>
                   <ConnectBucketForm
                     initialValues={formData}
+                    editing={!!editingBucket}
                     onSubmit={async (data) => {
                       const submitData = { ...data };
                       if (submitData.provider === 'digitalocean') {
@@ -401,7 +445,6 @@ export default function Settings() {
                     onCancel={resetForm}
                     loading={loading}
                     errors={formErrors}
-                    editing={!!editingBucket}
                   />
                 </DialogContent>
               </Dialog>

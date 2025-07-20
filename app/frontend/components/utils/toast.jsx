@@ -67,6 +67,18 @@ export const showToast = {
     });
   },
 
+  // Rate limit toasts (special warning style)
+  rateLimit: (message, description = null) => {
+    showUniqueToast('warning', message, {
+      description,
+      duration: 6000,
+      icon: <AlertTriangle className="w-5 h-5 text-orange-400" />,
+      action: {
+        label: <X className="w-3 h-3 text-muted-foreground opacity-70 hover:opacity-100 transition-all" strokeWidth={1.5} />, onClick: () => toast.dismiss(),
+      },
+    });
+  },
+
   // Custom toast with action
   action: (message, action) => {
     showUniqueToast('default', message, {
@@ -84,6 +96,7 @@ export const getErrorType = (statusCode) => {
   if (statusCode === 403) return 'permission';
   if (statusCode === 404) return 'not_found';
   if (statusCode === 422) return 'validation';
+  if (statusCode === 429) return 'rate_limit';
   return 'unknown';
 };
 
@@ -95,13 +108,15 @@ export const getErrorMessage = (error, statusCode = null) => {
   case 'server':
     return 'Server error. Please try again later.';
   case 'auth':
-    return 'Authentication failed. Please log in again.';
+    return 'Your session has expired. Please log in again.';
   case 'permission':
     return 'You don\'t have permission to perform this action.';
   case 'not_found':
     return 'The requested resource was not found.';
   case 'validation':
     return error || 'Please check your input and try again.';
+  case 'rate_limit':
+    return 'Rate limit exceeded. Please slow down your requests and try again in a moment.';
   case 'network':
     return 'Network error. Please check your connection.';
   default:
@@ -112,6 +127,13 @@ export const getErrorMessage = (error, statusCode = null) => {
 // Enhanced API error handler
 export const handleApiError = (error, statusCode = null) => {
   const message = getErrorMessage(error, statusCode);
-  showToast.error(message);
+  
+  // Use special rate limit toast for rate limit errors
+  if (statusCode === 429) {
+    showToast.rateLimit(message);
+  } else {
+    showToast.error(message);
+  }
+  
   console.error('API Error:', { error, statusCode });
 };

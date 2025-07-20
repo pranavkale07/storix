@@ -33,6 +33,9 @@ module Storix
     config.middleware.use ActionDispatch::Session::CookieStore
     config.middleware.use ActionDispatch::Cookies
 
+    # Add Rack::Attack for rate limiting
+    config.middleware.use Rack::Attack
+
     # Load environment variables from .env file
     config.before_configuration do
       env_file = File.join(Rails.root, ".env")

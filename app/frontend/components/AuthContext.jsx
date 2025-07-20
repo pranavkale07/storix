@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BucketService } from '../lib/bucketService';
 import { StorageManager } from '../lib/storage';
 import { showToast } from './utils/toast';
-import { apiFetch } from '../lib/api';
+import { apiFetch, setGlobalLogout } from '../lib/api';
 
 const AuthContext = createContext();
 
@@ -18,6 +18,12 @@ export function AuthProvider({ children }) {
     const session = StorageManager.getSession();
 
     async function fetchProfileAndSetUser(token) {
+      // Only make API call if we have a valid token
+      if (!token) {
+        setUser(null);
+        return;
+      }
+
       try {
         const response = await apiFetch('/api/auth/profile');
         if (response.ok) {
@@ -25,10 +31,15 @@ export function AuthProvider({ children }) {
           setUser(profile);
           StorageManager.setUser(profile);
         } else {
-          setUser(session.user); // fallback
+          // If profile fetch fails, clear the invalid session
+          setUser(null);
+          StorageManager.clearSession();
         }
-      } catch {
-        setUser(session.user); // fallback
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+        // If there's an error, clear the invalid session
+        setUser(null);
+        StorageManager.clearSession();
       }
     }
 
@@ -36,6 +47,10 @@ export function AuthProvider({ children }) {
       setToken(session.token);
       setActiveBucket(session.activeBucket);
       fetchProfileAndSetUser(session.token);
+    } else {
+      // No session data, just set loading to false
+      setUser(null);
+      setToken(null);
     }
     setLoading(false);
   }, []);
@@ -83,12 +98,23 @@ export function AuthProvider({ children }) {
     window.location.href = '/';
   };
 
+  // Register logout function with API module for automatic logout on 401
+  useEffect(() => {
+    setGlobalLogout(logout);
+  }, []);
+
   const updateActiveBucket = (bucket) => {
     setActiveBucket(bucket);
     StorageManager.setActiveBucket(bucket);
   };
 
   const refreshActiveBucket = async () => {
+    // Only make API calls if we have a valid token
+    if (!token) {
+      console.log('No token available, skipping bucket refresh');
+      return null;
+    }
+
     setBucketLoading(true);
     try {
       const bucket = await BucketService.loadActiveBucket();

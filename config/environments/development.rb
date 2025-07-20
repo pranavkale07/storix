@@ -24,7 +24,20 @@ Rails.application.configure do
   end
 
   # Change to :null_store to avoid any caching.
-  config.cache_store = :memory_store
+  # Use Redis for rate limiting in development
+  if ENV['REDIS_URL'].present?
+    redis_config = { url: ENV['REDIS_URL'] }
+    
+    # Only add SSL config if REDIS_URL indicates SSL is needed
+    if ENV['REDIS_URL'].include?('rediss://')
+      redis_config[:ssl] = true
+      redis_config[:ssl_params] = { verify_mode: OpenSSL::SSL::VERIFY_NONE }
+    end
+    
+    config.cache_store = :redis_cache_store, redis_config
+  else
+    config.cache_store = :memory_store
+  end
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local

@@ -9,7 +9,9 @@ class Api::BaseController < ApplicationController
   private
 
   def cors_set_access_control_headers
-    headers["Access-Control-Allow-Origin"] = "*"
+    # Only allow specific origins instead of all origins
+    allowed_origin = get_allowed_origin
+    headers["Access-Control-Allow-Origin"] = allowed_origin
     headers["Access-Control-Allow-Methods"] = "POST, GET, PUT, DELETE, OPTIONS"
     headers["Access-Control-Allow-Headers"] = "Origin, Content-Type, Accept, Authorization, X-Requested-With"
     headers["Access-Control-Max-Age"] = "1728000"
@@ -17,11 +19,22 @@ class Api::BaseController < ApplicationController
 
   def cors_preflight_check
     if request.method == "OPTIONS"
-      headers["Access-Control-Allow-Origin"] = "*"
+      allowed_origin = get_allowed_origin
+      headers["Access-Control-Allow-Origin"] = allowed_origin
       headers["Access-Control-Allow-Methods"] = "POST, GET, PUT, DELETE, OPTIONS"
       headers["Access-Control-Allow-Headers"] = "Origin, Content-Type, Accept, Authorization, X-Requested-With"
       headers["Access-Control-Max-Age"] = "1728000"
       render plain: "", content_type: "text/plain"
+    end
+  end
+
+  def get_allowed_origin
+    # In production, only allow your specific frontend domain
+    if Rails.env.production?
+      ENV['FRONTEND_URL'] || 'https://yourdomain.com'
+    else
+      # In development, allow localhost
+      request.headers['Origin'] || 'http://localhost:3000'
     end
   end
 end

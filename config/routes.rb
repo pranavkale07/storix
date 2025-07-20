@@ -26,6 +26,11 @@ Rails.application.routes.draw do
       get "profile", to: "auth#profile"
     end
 
+    # Bucket usage routes
+    get "bucket_usage/:credential_id/stats", to: "bucket_usage#stats"
+    get "bucket_usage/:credential_id/limits", to: "bucket_usage#get_limits"
+    post "bucket_usage/:credential_id/limits", to: "bucket_usage#update_limits"
+
     # Storage routes
     namespace :storage do
       post "credentials", to: "storage#create_credential"

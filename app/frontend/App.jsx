@@ -5,12 +5,14 @@ import Settings from './pages/Settings';
 import ShareLinks from './pages/ShareLinks';
 import Account from './pages/Account';
 import Buckets from './pages/Buckets';
+import Usage from './pages/Usage';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import { DebugStorage } from './components/DebugStorage';
 import { AuthCallback } from './components/AuthCallback';
 import { AuthError } from './components/AuthError';
 import { Toaster } from './components/ui/sonner';
 import { BucketsProvider } from './components/BucketsContext';
+import { UsageProvider } from './components/UsageContext';
 import LandingV2 from './pages/LandingV2';
 import Landing from './pages/Landing';
 
@@ -85,6 +87,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/usage"
+          element={
+            <ProtectedRoute>
+              <Usage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/landing-v2" element={<LandingV2 />} />
         <Route path="/landing" element={<Landing />} />
       </Routes>
@@ -96,9 +106,11 @@ export default function App() {
   return (
     <AuthProvider>
       <BucketsProvider>
-        <AppRoutes />
-        <DebugStorage />
-        <Toaster />
+        <UsageProvider>
+          <AppRoutes />
+          <DebugStorage />
+          <Toaster />
+        </UsageProvider>
       </BucketsProvider>
     </AuthProvider>
   );

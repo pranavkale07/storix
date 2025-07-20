@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import { showToast } from '@/components/utils/toast';
 
 export function useFileUpload(prefix, fetchFiles, clearCache) {
   const [uploading, setUploading] = useState(false);
@@ -63,7 +64,18 @@ export function useFileUpload(prefix, fetchFiles, clearCache) {
         if (!res.ok) {
           const err = await res.json();
           let errorMessage = 'Failed to get upload URL';
-          if (err && err.error) errorMessage = err.error;
+          
+          // Handle specific error types
+          if (err && err.error) {
+            errorMessage = err.error;
+            
+            // Handle bucket usage limit errors
+            if (err.type === 'bucket_usage_limit_exceeded') {
+              errorMessage = err.message || 'Upload limit exceeded for this bucket.';
+              showToast.warning(errorMessage, 'You have reached your monthly upload limit for this bucket.');
+            }
+          }
+          
           setUploadErrors(prev => ({ ...prev, [relativePath]: errorMessage }));
           anyError = true;
           return;

@@ -5,6 +5,13 @@ export class BucketService {
   // Fetch all user's buckets
   static async fetchBuckets() {
     try {
+      // Check if we have a token before making API calls
+      const token = StorageManager.getToken();
+      if (!token) {
+        console.log('No token available, skipping bucket fetch');
+        return [];
+      }
+
       console.log('Fetching buckets from /api/storage/credentials...');
       const response = await apiFetch('/api/storage/credentials');
       if (!response.ok) {
@@ -28,6 +35,13 @@ export class BucketService {
   // Set a bucket as active using the dedicated endpoint
   static async setActiveBucket(bucketId) {
     try {
+      // Check if we have a token before making API calls
+      const token = StorageManager.getToken();
+      if (!token) {
+        console.log('No token available, skipping set active bucket');
+        return null;
+      }
+
       const response = await apiFetch('/api/auth/active_credential', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,6 +67,13 @@ export class BucketService {
   // Load and set the active bucket automatically
   static async loadActiveBucket() {
     try {
+      // Check if we have a token before making API calls
+      const token = StorageManager.getToken();
+      if (!token) {
+        console.log('No token available, skipping load active bucket');
+        return null;
+      }
+
       const buckets = await this.fetchBuckets();
 
       if (buckets.length === 0) {

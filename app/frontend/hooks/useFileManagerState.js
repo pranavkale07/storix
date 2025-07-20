@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { apiFetch } from '@/lib/api';
+import { showToast } from '@/components/utils/toast';
 
 export function useFileManagerState(activeBucket) {
   const [rawFolders, setRawFolders] = useState([]);
@@ -187,7 +188,15 @@ export function useFileManagerState(activeBucket) {
       const data = await res.json();
       
       if (!res.ok) {
-        setError(data.error || 'Failed to fetch files');
+        let errorMessage = data.error || 'Failed to fetch files';
+        
+        // Handle bucket usage limit errors
+        if (data.type === 'bucket_usage_limit_exceeded') {
+          errorMessage = data.message || 'Operation limit exceeded for this bucket.';
+          showToast.warning(errorMessage, 'You have reached your monthly operation limit for this bucket.');
+        }
+        
+        setError(errorMessage);
         setRawFolders([]);
         setRawFiles([]);
         setLoading(false);
