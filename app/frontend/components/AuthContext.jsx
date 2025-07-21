@@ -21,6 +21,7 @@ export function AuthProvider({ children }) {
       // Only make API call if we have a valid token
       if (!token) {
         setUser(null);
+        setLoading(false);
         return;
       }
 
@@ -41,6 +42,7 @@ export function AuthProvider({ children }) {
         setUser(null);
         StorageManager.clearSession();
       }
+      setLoading(false); // Only set loading to false after async work is done
     }
 
     if (session.user && session.token) {
@@ -51,8 +53,8 @@ export function AuthProvider({ children }) {
       // No session data, just set loading to false
       setUser(null);
       setToken(null);
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = async (user, token) => {

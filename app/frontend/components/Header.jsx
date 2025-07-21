@@ -67,7 +67,7 @@ export default function Header({ showBackToFiles }) {
   }
 
   return (
-    <header className="w-full flex items-center justify-between px-6 py-4 border-b border-border bg-card/80 backdrop-blur sticky top-0 z-10">
+    <header className="w-full flex items-center justify-between px-6 py-4 border-b border-border bg-card z-30 sticky top-0">
       <div className="text-xl font-bold tracking-tight cursor-pointer" onClick={() => navigate('/')}>Storix</div>
       <div className="flex items-center gap-4">
         {/* Bucket Switcher */}

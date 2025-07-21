@@ -19,8 +19,8 @@ class BucketUsageService
       current_month = Time.current.strftime("%Y%m")
       redis_key = "user:#{user.id}:bucket:#{bucket_name}:month:#{current_month}:write"
 
-      # Get user's write limit
-      limit = BucketLimit.get_write_limit_for_user_and_bucket(user, bucket_name)
+      # Get user's write limit (Redis-cached)
+      limit = get_user_write_limit(user, bucket_name)
 
       # Increment Redis counter
       current_count = $redis.incr(redis_key)
@@ -43,8 +43,8 @@ class BucketUsageService
       current_month = Time.current.strftime("%Y%m")
       redis_key = "user:#{user.id}:bucket:#{bucket_name}:month:#{current_month}:read"
 
-      # Get user's read limit
-      limit = BucketLimit.get_read_limit_for_user_and_bucket(user, bucket_name)
+      # Get user's read limit (Redis-cached)
+      limit = get_user_read_limit(user, bucket_name)
 
       # Increment Redis counter
       current_count = $redis.incr(redis_key)

@@ -357,7 +357,7 @@ export default function FileManager({ activeBucket }) {
               </div>
             </div>
           )}
-          <CardHeader className="flex flex-col gap-2">
+          <CardHeader className="flex flex-col gap-2 sticky top-16 z-20 bg-card border-b border-border pt-4 pb-6 px-6 mb-2 rounded-t-xl">
             {/* Top row: Back button (if not root), Breadcrumbs (left), New Folder and Upload (right) */}
             <div className="flex items-center gap-2 mb-4 w-full">
               {prefix && (
@@ -634,6 +634,27 @@ export default function FileManager({ activeBucket }) {
                 </div>
               </div>
             )}
+            {/* Selection/Action Bar - make sticky */}
+            {(selectedFiles.length > 0 || selectedFolders.length > 0) && (
+              <div className="flex items-center justify-between bg-muted border border-border rounded-lg px-4 py-2 mb-3 w-full animate-in fade-in-0 transition-all duration-200 sticky top-16 z-20">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">
+                    {selectedFiles.length + selectedFolders.length} item{selectedFiles.length + selectedFolders.length > 1 ? 's' : ''} selected
+                  </span>
+                  <button onClick={handleClearSelection} className="text-muted-foreground hover:text-foreground text-xs flex items-center gap-1">
+                    <X className="w-4 h-4" /> Clear
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-1" onClick={handleBulkDownload} disabled={bulkActionLoading || selectedFiles.length === 0}>
+                    <Download className="w-4 h-4" /> Download Selected
+                  </Button>
+                  <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-1" onClick={handleBulkDelete} disabled={bulkActionLoading}>
+                    <Trash2 className="w-4 h-4" /> Delete Selected
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {/* Upload progress indicator */}
@@ -689,26 +710,6 @@ export default function FileManager({ activeBucket }) {
               </div>
             )}
 
-            {(selectedFiles.length > 0 || selectedFolders.length > 0) && (
-              <div className="flex items-center justify-between bg-muted/80 border border-border rounded-lg px-4 py-2 mb-3 w-full animate-in fade-in-0 transition-all duration-200">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-foreground">
-                    {selectedFiles.length + selectedFolders.length} item{selectedFiles.length + selectedFolders.length > 1 ? 's' : ''} selected
-                  </span>
-                  <button onClick={handleClearSelection} className="text-muted-foreground hover:text-foreground text-xs flex items-center gap-1">
-                    <X className="w-4 h-4" /> Clear
-                  </button>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-1" onClick={handleBulkDownload} disabled={bulkActionLoading || selectedFiles.length === 0}>
-                    <Download className="w-4 h-4" /> Download Selected
-                  </Button>
-                  <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-1" onClick={handleBulkDelete} disabled={bulkActionLoading}>
-                    <Trash2 className="w-4 h-4" /> Delete Selected
-                  </Button>
-                </div>
-              </div>
-            )}
             {error && !loading && (
               <div className="mb-4 w-full flex items-center justify-center">
                 <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-2 rounded text-sm">
