@@ -73,8 +73,41 @@ export function AuthProvider({ children }) {
       setUser(user);
       StorageManager.setUser(user);
     }
-    // Don't automatically load active bucket on login to prevent infinite loops
-    // The bucket will be loaded when needed by the components
+    // Automatically load and set the first bucket as active after login
+    try {
+      const buckets = await BucketService.fetchBuckets();
+      if (buckets && buckets.length > 0) {
+        const firstBucket = buckets[0];
+        const bucketInfo = {
+          id: firstBucket.id,
+          bucket: firstBucket.bucket,
+          provider: firstBucket.provider,
+          region: firstBucket.region,
+          endpoint: firstBucket.endpoint,
+        };
+        // Set active bucket in frontend state/localStorage
+        updateActiveBucket(bucketInfo);
+        // Also set active credential in backend and get new token
+        try {
+          const res = await apiFetch('/api/auth/active_credential', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ credential_id: firstBucket.id }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.token) {
+              setToken(data.token);
+              StorageManager.setToken(data.token);
+            }
+          }
+        } catch (err) {
+          // Ignore backend errors for now
+        }
+      }
+    } catch (err) {
+      // Ignore bucket errors on login
+    }
   };
 
   const logout = () => {
