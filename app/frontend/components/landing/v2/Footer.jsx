@@ -30,7 +30,7 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { icon: GitHub, href: 'https://github.com/storix-app', label: 'GitHub' },
+    { icon: GitHub, href: 'https://github.com/pranavkale07/storix', label: 'GitHub' },
     { icon: Twitter, href: 'https://twitter.com/storix_app', label: 'Twitter' },
     { icon: Mail, href: 'mailto:hello@storix.app', label: 'Email' },
   ];

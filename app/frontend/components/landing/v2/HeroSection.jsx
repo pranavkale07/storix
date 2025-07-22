@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Cloud, Shield, Zap, ChevronRight, Play, Github, Database } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const HeroSection = () => {
   return (
@@ -30,12 +31,14 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button size="lg" className="bg-white text-black hover:bg-neutral-200 px-8 py-3 rounded-lg">
-              Get Started
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
+            <Link to="/auth" className="w-full sm:w-auto">
+              <Button size="lg" className="bg-white text-black hover:bg-neutral-200 px-8 py-3 rounded-lg w-full">
+                Get Started
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
             <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-black px-8 py-3 bg-transparent">
-              <a href="https://github.com/storix-app/storix" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/pranavkale07/storix" target="_blank" rel="noopener noreferrer">
                 <Github className="w-4 h-4 mr-2" />
                 Source Code
               </a>

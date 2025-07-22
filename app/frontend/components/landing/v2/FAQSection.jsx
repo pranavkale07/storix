@@ -90,7 +90,7 @@ const FAQSection = () => {
                 Storix is open source and just getting started. Please open an issue on GitHub!
               </p>
               <a
-                href="https://github.com/storix-app/storix/issues"
+                href="https://github.com/pranavkale07/storix/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center px-6 py-3 bg-white text-black hover:bg-neutral-200 rounded-lg font-medium transition-all"

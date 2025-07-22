@@ -11,6 +11,7 @@ import FAQSection from '@/components/landing/v2/FAQSection';
 import Footer from '@/components/landing/v2/Footer';
 import FeaturesGrid from '@/components/landing/v2/FeaturesGrid';
 import Logo from '@/components/landing/v2/Logo';
+import { Link } from 'react-router-dom';
 
 const Landing = () => {
   return (
@@ -41,9 +42,11 @@ const Landing = () => {
                 <GitHub className="w-4 h-4 mr-2" />
                 GitHub
               </Button> */}
-              <Button size="sm" className="bg-white text-black hover:bg-neutral-200">
-                Get Started
-              </Button>
+              <Link to="/auth">
+                <Button size="sm" className="bg-white text-black hover:bg-neutral-200">
+                  Get Started
+                </Button>
+              </Link>
             </div>
           </div>
         </nav>
