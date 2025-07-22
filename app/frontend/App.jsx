@@ -1,104 +1,56 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Home from './pages/Home';
-import Settings from './pages/Settings';
-import ShareLinks from './pages/ShareLinks';
-import Account from './pages/Account';
-import Buckets from './pages/Buckets';
-import Usage from './pages/Usage';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import { DebugStorage } from './components/DebugStorage';
 import { AuthCallback } from './components/AuthCallback';
-import { AuthError } from './components/AuthError';
 import { Toaster } from './components/ui/sonner';
 import { BucketsProvider } from './components/BucketsContext';
 import { UsageProvider } from './components/UsageContext';
 import LandingV2 from './pages/LandingV2';
-import Landing from './pages/Landing';
+import FileManager from './components/FileManager';
+import AuthPage from './pages/Auth';
+import Header from './components/Header';
+import Buckets from './pages/Buckets';
+import ShareLinks from './pages/ShareLinks';
+import Usage from './pages/Usage';
+import Account from './pages/Account';
+import Settings from './pages/Settings';
 
 // Protected Route component
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
-
+  const location = useLocation();
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
   }
-
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
-
   return children;
 }
 
-function AppRoutes() {
-  useEffect(() => {
-    document.body.classList.add('dark');
-  }, []);
+function AuthRedirect({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
+  }
+  if (user) {
+    return <Navigate to="/app" replace />;
+  }
+  return children;
+}
 
+function AppLayout() {
+  const { activeBucket } = useAuth();
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/auth/callback"
-          element={<AuthCallback />}
-        />
-        <Route
-          path="/auth/error"
-          element={<AuthError />}
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/shared-links"
-          element={
-            <ProtectedRoute>
-              <ShareLinks />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/account"
-          element={
-            <ProtectedRoute>
-              <Account />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/buckets"
-          element={
-            <ProtectedRoute>
-              <Buckets />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/usage"
-          element={
-            <ProtectedRoute>
-              <Usage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/landing-v2" element={<LandingV2 />} />
-        <Route path="/landing" element={<Landing />} />
-      </Routes>
-    </Router>
+    <div className="min-h-screen bg-background">
+      <Header showShareLinks showSettings />
+      <main className="flex justify-center items-start min-h-[80vh] py-12">
+        <div className="w-full max-w-7xl px-4">
+          <FileManager activeBucket={activeBucket} />
+        </div>
+      </main>
+    </div>
   );
 }
 
@@ -107,7 +59,26 @@ export default function App() {
     <AuthProvider>
       <BucketsProvider>
         <UsageProvider>
-          <AppRoutes />
+          <Router>
+            <Routes>
+              {/* Landing page: always public, but redirect if logged in */}
+              <Route path="/" element={<AuthRedirect><LandingV2 /></AuthRedirect>} />
+              {/* OAuth callback */}
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              {/* Auth page */}
+              <Route path="/auth" element={<AuthRedirect><AuthPage /></AuthRedirect>} />
+              {/* Main app: protected */}
+              <Route path="/app/*" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
+              {/* Top-level protected routes for header navigation */}
+              <Route path="/buckets" element={<ProtectedRoute><Buckets /></ProtectedRoute>} />
+              <Route path="/shared-links" element={<ProtectedRoute><ShareLinks /></ProtectedRoute>} />
+              <Route path="/usage" element={<ProtectedRoute><Usage /></ProtectedRoute>} />
+              <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              {/* Fallback: 404 or redirect */}
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </Router>
           <DebugStorage />
           <Toaster />
         </UsageProvider>
