@@ -10,12 +10,12 @@ default: &default
 
 development:
   <<: *default
-  database: development
+  database: primary
 
 test:
   <<: *default
-  database: test
+  database: primary
 
 production:
   <<: *default
-  database: production_queue
+  database: primary
