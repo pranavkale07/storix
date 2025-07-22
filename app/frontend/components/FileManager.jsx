@@ -140,6 +140,13 @@ export default function FileManager({ activeBucket }) {
     fetchFiles();
   }, [category, fileType, minSize, maxSize, sortBy, sortOrder, prefix]);
 
+  // Refresh file manager when activeBucket changes
+  useEffect(() => {
+    clearCache();
+    setPrefix('');
+    fetchFiles();
+  }, [activeBucket]);
+
   useEffect(() => {
     const handleRefresh = () => {
       fetchFiles();
@@ -748,7 +755,7 @@ export default function FileManager({ activeBucket }) {
           <CreateFolderModal
             isOpen={showCreateFolder}
             onClose={() => setShowCreateFolder(false)}
-            onSuccess={fetchFiles}
+            onSuccess={() => { clearCache(); fetchFiles(); }}
             currentPrefix={prefix}
           />
           <ShareModal open={showShareModal} onClose={() => { setShowShareModal(false); setSharingFile(null); }} item={sharingFile} />

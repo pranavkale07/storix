@@ -2,88 +2,52 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
+  Cloud,
   Shield,
-  Share,
   FileText,
-  Users,
-  Settings,
+  Share2,
   Upload,
-  Download,
   Lock,
-  Zap,
-  Database,
-  Eye,
-  Folder,
   BarChart3,
-  Key,
-  Globe,
-  Smartphone,
 } from 'lucide-react';
 
 const FeaturesGrid = () => {
   const features = [
     {
+      icon: Cloud,
+      title: 'Multiple Buckets & S3-Compatible Providers',
+      description: 'Connect and manage multiple AWS S3, DigitalOcean Spaces, or any S3-compatible storage accounts—all in one place.',
+      badge: 'Storage',
+    },
+    {
       icon: Shield,
-      title: 'OAuth Authentication',
-      description: 'Secure login with Google, GitHub, and other providers',
+      title: 'End-to-End Encryption',
+      description: 'Your credentials are encrypted. Your files never touch our servers.',
       badge: 'Security',
-      color: 'from-green-500 to-emerald-500',
     },
     {
       icon: FileText,
-      title: 'File Management',
-      description: 'Upload, download, organize, rename, and delete files and folders',
-      badge: 'Core',
-      color: 'from-blue-500 to-cyan-500',
+      title: 'Modern File Browser',
+      description: 'Upload, download, organize, rename, and delete files and folders with a clean, fast interface.',
+      badge: 'File Management',
     },
     {
-      icon: Users,
-      title: 'Bulk Operations',
-      description: 'Move, copy, and manage multiple files or folders at once',
-      badge: 'Productivity',
-      color: 'from-purple-500 to-pink-500',
+      icon: Upload,
+      title: 'Parallel & Fast Uploads',
+      description: 'Upload large files quickly and reliably with parallel chunked uploads.',
+      badge: 'Performance',
     },
     {
-      icon: Share,
-      title: 'Secure Sharing',
-      description: 'Generate, revoke, and track secure sharing links with expiration',
+      icon: Share2,
+      title: 'Secure Share Links',
+      description: 'Generate, revoke, and track expiring share links for any file or folder.',
       badge: 'Sharing',
-      color: 'from-orange-500 to-red-500',
-    },
-    {
-      icon: Database,
-      title: 'Multi-Provider Support',
-      description: 'AWS S3, DigitalOcean Spaces, and any S3-compatible storage',
-      badge: 'Integration',
-      color: 'from-teal-500 to-green-500',
     },
     {
       icon: BarChart3,
-      title: 'Usage Dashboard',
-      description: 'Monitor storage usage, activity, and sharing analytics',
-      badge: 'Analytics',
-      color: 'from-indigo-500 to-blue-500',
-    },
-    {
-      icon: Zap,
-      title: 'Direct Transfers',
-      description: 'Files transfer directly between your browser and storage',
-      badge: 'Performance',
-      color: 'from-yellow-500 to-orange-500',
-    },
-    {
-      icon: Lock,
-      title: 'End-to-End Encryption',
-      description: 'Your credentials are encrypted, files never touch our servers',
-      badge: 'Privacy',
-      color: 'from-red-500 to-pink-500',
-    },
-    {
-      icon: Smartphone,
-      title: 'Responsive Design',
-      description: 'Works perfectly on desktop, tablet, and mobile devices',
-      badge: 'UX',
-      color: 'from-violet-500 to-purple-500',
+      title: 'Usage Limits & Request Tracking',
+      description: 'Set monthly request limits and monitor your S3 usage in real time—never get hit with unexpected storage bills.',
+      badge: 'Control',
     },
   ];
 
@@ -93,7 +57,7 @@ const FeaturesGrid = () => {
         <div className="max-w-6xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               Everything You Need
             </h2>
             <p className="text-xl text-neutral-400 max-w-2xl mx-auto">
@@ -104,10 +68,10 @@ const FeaturesGrid = () => {
           {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="bg-neutral-900/50 border-neutral-800 hover:bg-neutral-900/70 transition-all duration-300 group hover:scale-105">
+              <Card key={index} className="bg-neutral-900/50 border border-neutral-800 hover:bg-neutral-900/70 transition-all duration-300 group hover:scale-105">
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <div className={`w-10 h-10 bg-gradient-to-r ${feature.color} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <div className="w-10 h-10 bg-neutral-900 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform border border-neutral-800">
                       <feature.icon className="w-5 h-5 text-white" />
                     </div>
                     <Badge variant="outline" className="border-neutral-700 text-neutral-400 text-xs">
@@ -130,8 +94,7 @@ const FeaturesGrid = () => {
           {/* Bottom highlight */}
           <div className="mt-16 text-center">
             <div className="inline-flex items-center space-x-2 text-neutral-400 bg-neutral-900/50 border border-neutral-800 rounded-full px-6 py-3">
-              <Globe className="w-4 h-4" />
-              <span className="text-sm">Built with React 19, Tailwind CSS, and shadcn/ui</span>
+              <span className="text-sm">Built for privacy, speed, and control</span>
             </div>
           </div>
         </div>
