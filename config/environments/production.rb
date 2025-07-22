@@ -54,7 +54,7 @@ Rails.application.configure do
       redis_config[:ssl_params] = { verify_mode: OpenSSL::SSL::VERIFY_NONE }
     end
 
-    config.cache_store = :redis_cache_store, redis_config
+    config.cache_store = :solid_cache_store
   else
     config.cache_store = :solid_cache_store
   end
