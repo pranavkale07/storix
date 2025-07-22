@@ -1,6 +1,6 @@
 import React from 'react';
 import { Database, Github as GitHub, Twitter, Mail, Heart, Globe } from 'lucide-react';
-
+import Logo from '@/components/landing/v2/Logo';
 const Footer = () => {
   const footerLinks = {
     Product: [
@@ -37,72 +37,45 @@ const Footer = () => {
 
   return (
     <footer className="bg-neutral-900 border-t border-neutral-800">
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-6xl mx-auto">
-          {/* Top Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
-            {/* Brand */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Database className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-white">Storix</span>
-              </div>
-              <p className="text-neutral-400 mb-6 max-w-sm">
-                Your files, your cloud, your control. Modern file storage and sharing for your own S3-compatible storage.
-              </p>
-              <div className="flex items-center space-x-4">
-                {socialLinks.map((social, index) => (
-                  <a
-                    key={index}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 bg-neutral-800 hover:bg-neutral-700 rounded-lg flex items-center justify-center transition-colors"
-                    aria-label={social.label}
-                  >
-                    <social.icon className="w-5 h-5 text-neutral-400 hover:text-white" />
-                  </a>
-                ))}
-              </div>
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+          {/* Brand and Social */}
+          <div>
+            {/* <div className="flex items-center space-x-2 mb-3"> */}
+            {/* <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
+                <Database className="w-5 h-5 text-white" />
+              </div> */}
+            <Logo />
+            {/* </div> */}
+            <p className="text-neutral-400 mb-4 max-w-xs text-sm">
+              Your files, your cloud, your control.
+            </p>
+            <div className="flex items-center space-x-3">
+              {socialLinks.map((social, index) => (
+                <a
+                  key={index}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 bg-neutral-800 hover:bg-neutral-700 rounded-lg flex items-center justify-center transition-colors"
+                  aria-label={social.label}
+                >
+                  <social.icon className="w-5 h-5 text-neutral-400 hover:text-white" />
+                </a>
+              ))}
             </div>
-
-            {/* Links */}
-            {Object.entries(footerLinks).map(([category, links]) => (
-              <div key={category}>
-                <h4 className="text-white font-semibold mb-4">{category}</h4>
-                <ul className="space-y-3">
-                  {links.map((link, index) => (
-                    <li key={index}>
-                      <a
-                        href={link.href}
-                        className="text-neutral-400 hover:text-white transition-colors"
-                      >
-                        {link.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
           </div>
 
-          {/* Bottom Section */}
-          <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-neutral-800">
-            <div className="flex items-center space-x-4 text-neutral-400 text-sm mb-4 md:mb-0">
-              <span>© 2024 Storix. All rights reserved.</span>
-              <span>•</span>
-              <div className="flex items-center space-x-1">
-                <span>Made with</span>
-                <Heart className="w-3 h-3 text-red-500 fill-current" />
-                <span>for privacy</span>
-              </div>
+          {/* Copyright */}
+          <div className="flex flex-col items-start md:items-end justify-end text-neutral-400 text-sm gap-2">
+            <div className="flex items-center space-x-2">
+              <span>© 2024 Storix.</span>
+              <span>All rights reserved.</span>
             </div>
-
-            <div className="flex items-center space-x-2 text-neutral-400 text-sm">
-              <Globe className="w-4 h-4" />
-              <span>Built with React, Tailwind CSS, and shadcn/ui</span>
+            <div className="flex items-center space-x-1">
+              <span>Made with</span>
+              <Heart className="w-3 h-3 text-red-500 fill-current" />
+              <span>for privacy</span>
             </div>
           </div>
         </div>

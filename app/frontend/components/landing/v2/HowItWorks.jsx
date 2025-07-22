@@ -25,43 +25,25 @@ const HowItWorks = () => {
     },
   ];
 
-  const fadeUp = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
-  };
-
   return (
     <section className="pt-5 pb-10 relative">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Section Header */}
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            className="text-center mb-16"
-          >
+          <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               How It Works
             </h2>
             <p className="text-lg text-neutral-400 max-w-2xl mx-auto">
               Get started with Storix in minutes. Three simple steps to secure file management.
             </p>
-          </motion.div>
+          </div>
 
           {/* Steps */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {steps.map((step, index) => (
-              <motion.div
-                key={index}
-                className="relative group h-full"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.3 }}
-                variants={fadeUp}
-              >
-                <Card className="flex h-full flex-col justify-between bg-neutral-900/50 backdrop-blur-sm border border-neutral-800 rounded-2xl shadow-md hover:shadow-lg hover:border-blue-500 transition-all duration-300 group">
+              <div key={index} className="relative group h-full">
+                <Card className="flex h-full flex-col justify-between bg-neutral-900/50 backdrop-blur-sm border border-neutral-800 rounded-2xl shadow-md hover:shadow-lg hover:border-white transition-all duration-300 group">
                   <CardContent className="p-6 flex flex-col h-full">
                     <div className="flex items-start space-x-4 mb-4">
                       <div className="flex-shrink-0">
@@ -95,23 +77,17 @@ const HowItWorks = () => {
                     <ChevronRight className="w-6 h-6 text-neutral-600 group-hover:text-neutral-400 transition-colors" />
                   </div>
                 )}
-              </motion.div>
+              </div>
             ))}
           </div>
 
           {/* Bottom CTA */}
-          <motion.div
-            className="text-center mt-16"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-          >
+          <div className="text-center mt-16">
             <div className="inline-flex items-center text-sm text-neutral-400 bg-neutral-900/50 border border-neutral-800 rounded-full px-4 py-2">
               <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
               Ready in under 5 minutes
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

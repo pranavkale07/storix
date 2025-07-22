@@ -11,57 +11,34 @@ import { HelpCircle, Shield, Database, Key, Share, DollarSign } from 'lucide-rea
 const FAQSection = () => {
   const faqs = [
     {
-      question: 'Do you store my files?',
-      answer: 'No, your files are never stored or routed through Storix servers. All file uploads and downloads happen directly between your browser and your storage provider using secure, time-limited presigned URLs. We only manage metadata and access control.',
+      question: 'Do you ever store my files?',
+      answer: 'No. Storix never stores or routes your files through our servers. All uploads and downloads happen directly between your browser and your storage provider using secure, time-limited links. We only manage metadata and access control.',
       icon: Shield,
-      popular: true,
     },
     {
-      question: 'What storage providers are supported?',
-      answer: 'Storix supports AWS S3, DigitalOcean Spaces, and any S3-compatible storage provider. You can connect multiple providers and switch between them seamlessly.',
+      question: 'Which storage providers can I use?',
+      answer: 'Storix works with AWS S3, DigitalOcean Spaces, and any S3-compatible provider. You can connect multiple accounts and switch between them anytime.',
       icon: Database,
-      popular: true,
     },
     {
-      question: 'How do I set up my storage?',
-      answer: "You'll need to generate Access Keys and Secret Keys for programmatic access (in AWS IAM or your provider's console) and configure CORS rules on your storage bucket. Storix provides step-by-step instructions for each provider.",
+      question: 'How do I connect my storage?',
+      answer: 'Just generate Access and Secret Keys in your provider’s dashboard, set up CORS rules, and follow our step-by-step guide. Storix walks you through the process for each provider.',
       icon: Key,
-      popular: true,
     },
     {
-      question: 'Are shared links secure?',
-      answer: "Yes, all shared links are generated with time-limited, secure presigned URLs. You can set expiration dates, revoke access anytime, and track who accessed your files. Links use your storage provider's built-in security.",
+      question: 'Are share links secure?',
+      answer: 'Yes! Share links use time-limited, secure URLs from your storage provider. You control expiration, can revoke access anytime, and see who accessed your files.',
       icon: Share,
-      popular: false,
     },
     {
-      question: 'How much does it cost?',
-      answer: 'Storix offers a free tier with generous limits. Paid plans start at $5/month for advanced features like unlimited storage providers, team collaboration, and extended analytics. You only pay for storage costs to your own provider.',
+      question: 'How much does Storix cost?',
+      answer: 'Storix is completely free. You only pay your storage provider for storage and bandwidth.',
       icon: DollarSign,
-      popular: false,
-    },
-    {
-      question: 'Can I use this for team collaboration?',
-      answer: 'Yes! Storix supports team workspaces where you can share files, manage permissions, and collaborate with team members. Each team member can connect their own storage or use shared team storage.',
-      icon: Database,
-      popular: false,
-    },
-    {
-      question: 'What happens to my data if I cancel?',
-      answer: "Since your files are stored in your own cloud storage, they remain completely accessible to you. You can export your Storix metadata, and your files will always be available through your storage provider's interface.",
-      icon: Shield,
-      popular: false,
-    },
-    {
-      question: 'Is there an API available?',
-      answer: 'Yes, Storix provides a RESTful API for developers who want to integrate file management into their applications. API access is available on paid plans with comprehensive documentation.',
-      icon: Key,
-      popular: false,
     },
   ];
 
   return (
-    <section id="faq" className="py-20 relative">
+    <section id="faq" className="pt-5 pb-10 relative">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           {/* Section Header */}
@@ -86,18 +63,13 @@ const FAQSection = () => {
                 value={`item-${index}`}
                 className="bg-neutral-900/50 border-neutral-800 rounded-lg px-6 hover:bg-neutral-900/70 transition-colors"
               >
-                <AccordionTrigger className="text-left hover:no-underline py-6">
+                <AccordionTrigger className="text-left hover:no-underline py-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 bg-neutral-800 rounded-xl flex items-center justify-center flex-shrink-0">
                       <faq.icon className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex items-center space-x-3 flex-1">
                       <span className="text-white font-medium">{faq.question}</span>
-                      {faq.popular && (
-                        <Badge variant="outline" className="border-green-500/30 text-green-400 text-xs">
-                          Popular
-                        </Badge>
-                      )}
                     </div>
                   </div>
                 </AccordionTrigger>
@@ -112,25 +84,20 @@ const FAQSection = () => {
           <div className="text-center mt-16">
             <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8">
               <h3 className="text-xl font-semibold text-white mb-2">
-                Still have questions?
+                Still have questions or feedback?
               </h3>
               <p className="text-neutral-400 mb-6">
-                Get in touch with our team for personalized support.
+                Storix is open source and just getting started. Please open an issue on GitHub!
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <a
-                  href="mailto:support@storix.app"
-                  className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg font-medium transition-all"
-                >
-                  Contact Support
-                </a>
-                <a
-                  href="#"
-                  className="inline-flex items-center justify-center px-6 py-3 border border-neutral-700 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg font-medium transition-all"
-                >
-                  View Documentation
-                </a>
-              </div>
+              <a
+                href="https://github.com/storix-app/storix/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-6 py-3 bg-white text-black hover:bg-neutral-200 rounded-lg font-medium transition-all"
+              >
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.78 2.73 1.27 3.4.97.11-.75.41-1.27.74-1.56-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 012.9-.39c.98.01 1.97.13 2.9.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.41-5.25 5.7.42.36.79 1.09.79 2.2 0 1.59-.01 2.87-.01 3.26 0 .31.21.68.8.56C20.71 21.39 24 17.08 24 12c0-6.27-5.23-11.5-12-11.5z"/></svg>
+                Open on GitHub
+              </a>
             </div>
           </div>
         </div>

@@ -9,6 +9,7 @@ import {
   Upload,
   Lock,
   BarChart3,
+  Zap,
 } from 'lucide-react';
 
 const FeaturesGrid = () => {
@@ -74,7 +75,7 @@ const FeaturesGrid = () => {
                     <div className="w-10 h-10 bg-neutral-900 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform border border-neutral-800">
                       <feature.icon className="w-5 h-5 text-white" />
                     </div>
-                    <Badge variant="outline" className="border-neutral-700 text-neutral-400 text-xs">
+                    <Badge className="mb-2 text-white text-xs px-3 py-1 rounded-full bg-gradient-to-r from-green-900/40 to-blue-900/40 inline-flex items-center justify-center border-0">
                       {feature.badge}
                     </Badge>
                   </div>
@@ -93,8 +94,9 @@ const FeaturesGrid = () => {
 
           {/* Bottom highlight */}
           <div className="mt-16 text-center">
-            <div className="inline-flex items-center space-x-2 text-neutral-400 bg-neutral-900/50 border border-neutral-800 rounded-full px-6 py-3">
-              <span className="text-sm">Built for privacy, speed, and control</span>
+            <div className="inline-flex items-center space-x-2 text-neutral-400 bg-neutral-900/60 border border-neutral-800 rounded-full px-6 py-3 text-sm">
+              <Zap className="w-4 h-4 text-green-500" />
+              <span>Built for privacy, speed, and control</span>
             </div>
           </div>
         </div>
