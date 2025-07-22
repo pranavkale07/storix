@@ -82,4 +82,5 @@ Rails.application.configure do
   # config.generators.apply_rubocop_autocorrect_after_generate!
   config.hosts << "quetzal-talented-scarcely.ngrok-free.app"
   config.hosts << "localhost"
+  config.hosts << "storix.pranav.dev"
 end
