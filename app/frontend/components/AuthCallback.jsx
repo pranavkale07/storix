@@ -5,8 +5,9 @@ import { useAuth } from './AuthContext';
 export function AuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { login, refreshActiveBucket } = useAuth();
+  const { login, refreshActiveBucket, user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [loginStarted, setLoginStarted] = useState(false);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -24,19 +25,12 @@ export function AuthCallback() {
 
       if (token && userId && !isProcessing) {
         setIsProcessing(true);
-
+        setLoginStarted(true);
         try {
           // Call login with proper user object structure
-          const user = { id: parseInt(userId) };
-          login(user, token);
-
-          // Load active bucket after successful login
+          const userObj = { id: parseInt(userId) };
+          await login(userObj, token);
           await refreshActiveBucket();
-
-          // Navigate to home after successful login
-          setTimeout(() => {
-            navigate('/', { replace: true });
-          }, 500); // Increased timeout to ensure login completes
         } catch (err) {
           console.error('Login error:', err);
           navigate('/auth/error');
@@ -46,9 +40,15 @@ export function AuthCallback() {
         navigate('/auth/error');
       }
     };
-
     handleCallback();
   }, [searchParams, login, navigate, isProcessing, refreshActiveBucket]);
+
+  // Redirect to / after login state is set
+  useEffect(() => {
+    if (loginStarted && user) {
+      navigate('/', { replace: true });
+    }
+  }, [loginStarted, user, navigate]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">

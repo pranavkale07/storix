@@ -29,11 +29,14 @@ export function useBulkActions({ selectedFiles, selectedFolders, setSelectedFile
         if (!res.ok) {
           const err = await res.json();
           setBulkActionError(prev => ({ ...prev, [key]: err.error || 'Failed to delete' }));
+          showToast.error('Failed to delete: ' + key.split('/').pop(), err.error || 'Failed to delete');
         } else {
           setBulkActionProgress(prev => ({ ...prev, [key]: 'deleted' }));
+          showToast.success('Deleted: ' + key.split('/').pop());
         }
       } catch (err) {
         setBulkActionError(prev => ({ ...prev, [key]: err.message || 'Error' }));
+        showToast.error('Failed to delete: ' + key.split('/').pop(), err.message || 'Error');
       }
     }
     // Delete folders
@@ -48,11 +51,14 @@ export function useBulkActions({ selectedFiles, selectedFolders, setSelectedFile
         if (!res.ok) {
           const err = await res.json();
           setBulkActionError(prev => ({ ...prev, [prefix]: err.error || 'Failed to delete' }));
+          showToast.error('Failed to delete folder: ' + prefix, err.error || 'Failed to delete');
         } else {
           setBulkActionProgress(prev => ({ ...prev, [prefix]: 'deleted' }));
+          showToast.success('Deleted folder: ' + prefix);
         }
       } catch (err) {
         setBulkActionError(prev => ({ ...prev, [prefix]: err.message || 'Error' }));
+        showToast.error('Failed to delete folder: ' + prefix, err.message || 'Error');
       }
     }
     setBulkActionLoading(false);
