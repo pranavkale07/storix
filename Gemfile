@@ -12,7 +12,7 @@ gem "puma", ">= 5.0"
 
 
 # AWS SDK for S3 operations
-gem "aws-sdk-s3", "~> 1.0"
+gem "aws-sdk-s3", "~> 1.196"
 
 # Environment variables management
 gem "dotenv-rails", "~> 2.8"
