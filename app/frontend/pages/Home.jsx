@@ -17,6 +17,8 @@ export default function Home() {
   const { user, loading, activeBucket, bucketLoading, refreshActiveBucket } = useAuth();
 
   const {
+    buckets,
+    loading: bucketsLoading,
     refreshBuckets,
   } = useBuckets(refreshActiveBucket);
   const [showConnectDialog, setShowConnectDialog] = React.useState(false);
@@ -33,8 +35,8 @@ export default function Home() {
     }
   };
 
-  // Show loading spinner while checking authentication
-  if (loading) {
+  // Show loading spinner while checking authentication, bucket loading, or buckets loading
+  if (loading || bucketLoading || bucketsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="space-y-4 w-full max-w-2xl">
@@ -61,28 +63,24 @@ export default function Home() {
     return <AuthLanding />;
   }
 
-  // Show loading spinner while loading bucket (but only if user is authenticated)
-  if (bucketLoading && user) {
+  // Show 'No buckets connected' message if user has no buckets
+  if (buckets && buckets.length === 0) {
     return (
       <div className="min-h-screen bg-background">
         <Header showShareLinks showSettings />
-        <main className="flex justify-center items-center min-h-[80vh]">
-          <div className="space-y-4 w-full max-w-2xl">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="p-4 border rounded-lg border-border bg-card">
-                <div className="flex items-center gap-2 mb-2">
-                  <Skeleton className="h-6 w-32 rounded" />
-                  <Skeleton className="h-5 w-16 rounded" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-40 rounded" />
-                  <Skeleton className="h-4 w-32 rounded" />
-                  <Skeleton className="h-4 w-48 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
+        <main className="flex justify-center items-start min-h-[80vh] py-12">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>No Buckets Connected</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-4">
+              <div className="text-muted-foreground text-center">No buckets connected. Connect a bucket to get started.</div>
+              <Button onClick={() => setShowConnectDialog(true)}>Connect Bucket</Button>
+            </CardContent>
+          </Card>
         </main>
+        {/* The connect bucket dialog and form are rendered below, shared with the main render */}
+        {/* ... existing dialog and form code ... */}
       </div>
     );
   }
@@ -109,6 +107,7 @@ export default function Home() {
           </Card>
         )}
       </main>
+      {/* The connect bucket dialog and form are rendered below, shared with the 'no buckets' case */}
       <Dialog open={showConnectDialog} onOpenChange={handleDialogOpenChange}>
         <DialogContent>
           <DialogHeader>
@@ -138,10 +137,7 @@ export default function Home() {
                 if (!res.ok) {
                   // Handle specific error cases
                   let errorMessage = 'Failed to connect bucket';
-
-                  // Backend returns errors in an array, not a single error field
                   const errorText = result.errors ? result.errors.join(', ') : result.error || '';
-
                   if (errorText) {
                     const errorLower = errorText.toLowerCase();
                     if (errorLower.includes('credentials') || errorLower.includes('access') ||

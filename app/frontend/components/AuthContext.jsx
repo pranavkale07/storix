@@ -44,11 +44,54 @@ export function AuthProvider({ children }) {
       }
       setLoading(false); // Only set loading to false after async work is done
     }
+    
+    async function ensureActiveBucket(token) {
+      try {
+        const buckets = await BucketService.fetchBuckets();
+        if (buckets && buckets.length > 0) {
+          const firstBucket = buckets[0];
+          const bucketInfo = {
+            id: firstBucket.id,
+            bucket: firstBucket.bucket,
+            provider: firstBucket.provider,
+            region: firstBucket.region,
+            endpoint: firstBucket.endpoint,
+          };
+          updateActiveBucket(bucketInfo);
+          // Also set active credential in backend and get new token
+          try {
+            const res = await apiFetch('/api/auth/active_credential', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ credential_id: firstBucket.id }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.token) {
+                setToken(data.token);
+                StorageManager.setToken(data.token);
+              }
+            }
+          } catch (err) {
+            // Ignore backend errors for now
+          }
+        } else {
+          setActiveBucket(null);
+          StorageManager.removeActiveBucket();
+        }
+      } catch (err) {
+        // Ignore bucket errors
+      }
+    }    
 
     if (session.user && session.token) {
       setToken(session.token);
       setActiveBucket(session.activeBucket);
       fetchProfileAndSetUser(session.token);
+      // If user is authenticated but no activeBucket, try to auto-select one
+      if (!session.activeBucket) {
+        ensureActiveBucket(session.token);
+      }
     } else {
       // No session data, just set loading to false
       setUser(null);
@@ -76,19 +119,11 @@ export function AuthProvider({ children }) {
       StorageManager.setUser(user);
     }
     // Automatically load and set the first bucket as active after login
+    setBucketLoading(true);
     try {
       const buckets = await BucketService.fetchBuckets();
       if (buckets && buckets.length > 0) {
         const firstBucket = buckets[0];
-        const bucketInfo = {
-          id: firstBucket.id,
-          bucket: firstBucket.bucket,
-          provider: firstBucket.provider,
-          region: firstBucket.region,
-          endpoint: firstBucket.endpoint,
-        };
-        // Set active bucket in frontend state/localStorage
-        updateActiveBucket(bucketInfo);
         // Also set active credential in backend and get new token
         try {
           const res = await apiFetch('/api/auth/active_credential', {
@@ -102,13 +137,31 @@ export function AuthProvider({ children }) {
               setToken(data.token);
               StorageManager.setToken(data.token);
             }
+            const bucketInfo = {
+              id: firstBucket.id,
+              bucket: firstBucket.bucket,
+              provider: firstBucket.provider,
+              region: firstBucket.region,
+              endpoint: firstBucket.endpoint,
+            };
+            setActiveBucket(bucketInfo);
+            StorageManager.setActiveBucket(bucketInfo);
+          } else {
+            setActiveBucket(null);
+            StorageManager.removeActiveBucket();
           }
         } catch (err) {
           // Ignore backend errors for now
+          setActiveBucket(null);
+          StorageManager.removeActiveBucket();
         }
       }
     } catch (err) {
       // Ignore bucket errors on login
+      setActiveBucket(null);
+      StorageManager.removeActiveBucket();
+    } finally {
+      setBucketLoading(false);
     }
   };
 

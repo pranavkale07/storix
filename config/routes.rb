@@ -10,8 +10,8 @@ Rails.application.routes.draw do
   root "home#index"
 
   # OAuth routes
-  get "/auth/:provider/callback", to: "oauth#callback", as: :oauth_callback
-  get "/auth/failure", to: "oauth#failure", as: :oauth_failure
+  #get "/auth/:provider/callback", to: "oauth#callback", as: :oauth_callback
+  #get "/auth/failure", to: "oauth#failure", as: :oauth_failure
 
   # Test route for session debugging
   get "/test/session", to: "test#session_test"
@@ -68,8 +68,17 @@ Rails.application.routes.draw do
 
   get "share_links/:token", to: "share_links#show", as: :share_link
 
-  # Serve React app for all unmatched routes (except for /api and /rails paths)
-  get "*path", to: "home#index", constraints: ->(req) do
-    !req.xhr? && req.format.html?
-  end
+  # Route OmniAuth callback to custom controller for known providers only (must come before dummy route)
+  match "/auth/:provider/callback", to: "oauth#callback", via: [:get, :post], constraints: { provider: /google_oauth2|github/ }
+  # Allow OmniAuth middleware to handle these provider paths only
+  match "/auth/:provider", to: proc { [404, {}, ['Not Found']] }, via: :all, constraints: { provider: /google_oauth2|github/ }
+
+  # Serve React app for all unmatched routes (except for /api and /rails paths) Serve React app for all unmatched routes (except for /api, /rails, and /auth paths)
+  get "*path", to: "home#index", constraints: lambda { |req|
+    !req.xhr? &&
+    req.format.html? &&
+    !req.path.start_with?("/rails/") &&
+    !req.path.start_with?("/api/") &&
+    !req.path.match?(/^\/auth\/(google_oauth2|github)/)
+  }
 end

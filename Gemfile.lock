@@ -455,6 +455,7 @@ DEPENDENCIES
   faker
   jwt (~> 2.7)
   kamal
+  omniauth (~> 2.1)
   omniauth-github (~> 2.0)
   omniauth-google-oauth2 (~> 1.2)
   omniauth-rails_csrf_protection (~> 1.0)

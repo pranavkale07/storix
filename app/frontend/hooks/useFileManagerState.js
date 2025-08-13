@@ -155,7 +155,7 @@ export function useFileManagerState(activeBucket) {
 
   const fetchFiles = useCallback(async () => {
     setLoading(true);
-    setError('');
+    // Don't clear error here, only clear on successful fetch
 
     const cacheKey = getCacheKey();
 
@@ -212,6 +212,8 @@ export function useFileManagerState(activeBucket) {
         folders: data.folders || [],
         files: data.files || [],
       };
+      // Clear error on successful fetch
+      setError('');
     } catch {
       setError('Network error');
       setRawFolders([]);

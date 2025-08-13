@@ -10,8 +10,9 @@ export function setGlobalLogout(logoutFunction) {
 }
 
 // Wrapper for apiFetch to handle 401 errors
-function apiFetchWithAuthCheck(url, options = {}) {
+async function apiFetchWithAuthCheck(url, options = {}) {
   const token = StorageManager.getToken();
+  console.log('apiFetchWithAuthCheck token:', token, 'url:', url);
   const headers = {
     ...(options.headers || {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
