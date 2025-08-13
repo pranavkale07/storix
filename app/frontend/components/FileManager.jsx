@@ -22,6 +22,9 @@ import Breadcrumbs from './filemanager/Breadcrumbs';
 import { Progress } from './ui/progress';
 import { CATEGORY_OPTIONS, FILE_TYPE_OPTIONS, CATEGORY_EXTENSION_MAP } from '@/lib/fileConstants';
 import { formatBytes } from '@/lib/fileUtils';
+import { useBuckets } from './BucketsContext';
+import ConnectBucketForm from './ConnectBucketForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 
 export default function FileManager({ activeBucket }) {
   // Use the custom hook for all core state and logic
@@ -54,6 +57,17 @@ export default function FileManager({ activeBucket }) {
     setPrefix,
     clearCache,
   } = useFileManagerState(activeBucket);
+
+  // Get buckets information to show "Connect your first bucket" message
+  const { buckets } = useBuckets();
+  
+  // Connect bucket modal state
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
+  
+  // Debug modal state changes
+  useEffect(() => {
+    console.log('FileManager modal state changed:', { showConnectDialog });
+  }, [showConnectDialog]);
 
   const handleRefresh = () => {
     clearCache();
@@ -135,17 +149,6 @@ export default function FileManager({ activeBucket }) {
   const [showUploadMenu, setShowUploadMenu] = useState(false);
   const [showFilterBar, setShowFilterBar] = useState(false);
   const filterDebounceRef = useRef();
-
-  useEffect(() => {
-    fetchFiles();
-  }, [category, fileType, minSize, maxSize, sortBy, sortOrder, prefix]);
-
-  // Refresh file manager when activeBucket changes
-  useEffect(() => {
-    clearCache();
-    setPrefix('');
-    fetchFiles();
-  }, [activeBucket]);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -724,33 +727,52 @@ export default function FileManager({ activeBucket }) {
                 </div>
               </div>
             )}
-            <FileList
-              folders={folders}
-              files={files}
-              onOpenFolder={handleOpenFolder}
-              onDownload={handleDownload}
-              onDelete={handleDelete}
-              downloading={deleting}
-              deleting={deleting}
-              onDeleteFolder={handleDeleteFolder}
-              deletingFolders={deletingFolders}
-              onRenameFolder={setRenamingFolder}
-              renamingFolder={renamingFolder}
-              onRenameFile={setRenamingFile}
-              renamingFile={renamingFile}
-              selectedFiles={selectedFiles}
-              selectedFolders={selectedFolders}
-              onSelectFile={handleSelectFile}
-              onSelectFolder={handleSelectFolder}
-              isAllSelected={isAllSelected}
-              onSelectAll={handleSelectAll}
-              onShareFile={handleShareFile}
-              onSort={onSort}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              loading={loading}
-              clearCache={clearCache}
-            />
+            
+            {/* Show "Connect your first bucket" message when no buckets */}
+            {!loading && buckets && buckets.length === 0 && (
+              <div className="mb-4 w-full flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                  <Folder className="w-12 h-12 mb-3 text-muted-foreground/60" />
+                  <div className="text-base font-semibold mb-1">Connect your first bucket</div>
+                  <div className="text-sm mb-4">Connect a storage bucket to start managing your files.</div>
+                  <Button onClick={() => {
+                    console.log('Connect Bucket button clicked');
+                    setShowConnectDialog(true);
+                  }}>Connect Bucket</Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Only show FileList when there are buckets */}
+            {buckets && buckets.length > 0 && (
+              <FileList
+                folders={folders}
+                files={files}
+                onOpenFolder={handleOpenFolder}
+                onDownload={handleDownload}
+                onDelete={handleDelete}
+                downloading={deleting}
+                deleting={deleting}
+                onDeleteFolder={handleDeleteFolder}
+                deletingFolders={deletingFolders}
+                onRenameFolder={setRenamingFolder}
+                renamingFolder={renamingFolder}
+                onRenameFile={setRenamingFile}
+                renamingFile={renamingFile}
+                selectedFiles={selectedFiles}
+                selectedFolders={selectedFolders}
+                onSelectFile={handleSelectFile}
+                onSelectFolder={handleSelectFolder}
+                isAllSelected={isAllSelected}
+                onSelectAll={handleSelectAll}
+                onShareFile={handleShareFile}
+                onSort={onSort}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                loading={loading}
+                clearCache={clearCache}
+              />
+            )}
           </CardContent>
           <CreateFolderModal
             isOpen={showCreateFolder}
@@ -791,6 +813,38 @@ export default function FileManager({ activeBucket }) {
         onConfirm={confirmBulkDelete}
         loading={bulkActionLoading}
       />
+      
+      {/* Connect Bucket Dialog */}
+      <Dialog 
+        open={showConnectDialog} 
+        onOpenChange={(open) => {
+          console.log('Dialog onOpenChange:', { open, showConnectDialog });
+          if (!open) {
+            setShowConnectDialog(false);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Connect a Bucket</DialogTitle>
+          </DialogHeader>
+          <ConnectBucketForm
+            key={showConnectDialog ? 'open' : 'closed'}
+            initialValues={{}}
+            onSubmit={async (data) => {
+              setShowConnectDialog(false);
+              showToast.success('Bucket connected successfully');
+              // Refresh buckets list
+              window.location.reload();
+            }}
+            onCancel={() => {
+              console.log('Connect Bucket Dialog onCancel clicked');
+              setShowConnectDialog(false);
+            }}
+            editing={false}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

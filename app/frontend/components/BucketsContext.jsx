@@ -11,15 +11,21 @@ export function BucketsProvider({ children }) {
   const { user } = useAuth();
 
   const fetchBuckets = useCallback((force = false) => {
+    console.log('BucketsContext: fetchBuckets called', { force, hasCache: !!cacheRef.current });
+    
     if (cacheRef.current && !force) {
+      console.log('BucketsContext: Using cached data');
       setBuckets(cacheRef.current);
       setLoading(false);
       return;
     }
+    
+    console.log('BucketsContext: Fetching from API');
     setLoading(true);
     apiFetch('/api/storage/credentials')
       .then(res => res.json())
       .then(data => {
+        console.log('BucketsContext: API response received', { count: data.credentials?.length || 0 });
         setBuckets(data.credentials || []);
         cacheRef.current = data.credentials || [];
       })
@@ -33,7 +39,7 @@ export function BucketsProvider({ children }) {
       setBuckets([]);
       setLoading(false);
     }
-  }, [user, fetchBuckets]);
+  }, [user]); // Remove fetchBuckets dependency since it's stable
 
   return (
     <BucketsContext.Provider value={{ buckets, loading, fetchBuckets }}>

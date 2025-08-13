@@ -19,6 +19,8 @@ export function useFileManagerState(activeBucket) {
 
   // In-memory cache for folder contents
   const folderCache = useRef({});
+  const previousBucketId = useRef(null);
+  const isFetchingRef = useRef(false);
 
   const CATEGORY_EXTENSION_MAP = {
     documents: ['pdf', 'doc', 'docx', 'txt', 'md', 'odt', 'rtf'],
@@ -154,6 +156,15 @@ export function useFileManagerState(activeBucket) {
   }, [filteredFiles, sortBy, sortOrder]);
 
   const fetchFiles = useCallback(async () => {
+    // Prevent duplicate calls
+    if (isFetchingRef.current) {
+      console.log('fetchFiles: Already fetching, skipping duplicate call');
+      return;
+    }
+    
+    console.log('fetchFiles: Starting API call for prefix:', prefix);
+    isFetchingRef.current = true;
+    
     setLoading(true);
     // Don't clear error here, only clear on successful fetch
 
@@ -165,6 +176,7 @@ export function useFileManagerState(activeBucket) {
       setRawFolders(cachedFolders);
       setRawFiles(cachedFiles);
       setLoading(false);
+      isFetchingRef.current = false;
       return;
     }
 
@@ -200,6 +212,7 @@ export function useFileManagerState(activeBucket) {
         setRawFolders([]);
         setRawFiles([]);
         setLoading(false);
+        isFetchingRef.current = false;
         return;
       }
 
@@ -220,11 +233,57 @@ export function useFileManagerState(activeBucket) {
       setRawFiles([]);
     }
     setLoading(false);
+    isFetchingRef.current = false;
   }, [prefix, filterType, fileType, category, minSize, maxSize, sortBy, sortOrder]);
 
+  // Handle initial state when no active bucket
   useEffect(() => {
-    fetchFiles();
-  }, [fetchFiles]);
+    if (!activeBucket?.id) {
+      console.log('useFileManagerState: Initial state - no active bucket, setting loading to false');
+      setLoading(false);
+      setRawFolders([]);
+      setRawFiles([]);
+    }
+  }, [activeBucket]);
+
+  // Single consolidated useEffect: handle all file fetching scenarios
+  useEffect(() => {
+    if (!activeBucket?.id) {
+      console.log('useFileManagerState: No active bucket, setting loading to false');
+      setLoading(false);
+      return;
+    }
+
+    const currentBucketId = activeBucket.id;
+    const isNewBucket = previousBucketId.current !== currentBucketId;
+    
+    console.log('useFileManagerState useEffect triggered:', {
+      currentBucketId,
+      previousBucketId: previousBucketId.current,
+      isNewBucket,
+      prefix,
+      reason: isNewBucket ? 'bucket_switch' : 'filter_change'
+    });
+    
+    if (isNewBucket) {
+      // Switching to a different bucket
+      clearCache();
+      setPrefix('');
+      previousBucketId.current = currentBucketId;
+      // Don't call fetchFiles here - wait for prefix to update
+    } else {
+      // Same bucket, but prefix or filters changed
+      fetchFiles();
+    }
+  }, [activeBucket, prefix, filterType, fileType, category, minSize, maxSize, sortBy, sortOrder, fetchFiles, clearCache]);
+
+  // Handle bucket switching - fetch files when prefix becomes empty after bucket switch
+  useEffect(() => {
+    if (activeBucket?.id && prefix === '' && previousBucketId.current === activeBucket.id) {
+      console.log('Bucket switch detected, fetching files with empty prefix');
+      fetchFiles();
+    }
+  }, [prefix, activeBucket, fetchFiles]);
 
   useEffect(() => {
     const handleRefresh = () => {

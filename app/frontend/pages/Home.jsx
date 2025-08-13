@@ -8,24 +8,32 @@ import ConnectBucketForm from '../components/ConnectBucketForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { BucketService } from '../lib/bucketService';
 import Header from '../components/Header';
-import useBuckets from '../hooks/useBuckets';
+import { useBuckets } from '../components/BucketsContext';
 import { showToast } from '../components/utils/toast';
 import { Skeleton } from '../components/ui/skeleton';
 import { apiFetch } from '../lib/api';
+import { useState } from 'react';
 
 export default function Home() {
   const { user, loading, activeBucket, bucketLoading, refreshActiveBucket } = useAuth();
 
-  const {
-    buckets,
-    loading: bucketsLoading,
-    refreshBuckets,
-  } = useBuckets(refreshActiveBucket);
-  const [showConnectDialog, setShowConnectDialog] = React.useState(false);
-  const [connectLoading, setConnectLoading] = React.useState(false);
-  const [connectErrors, setConnectErrors] = React.useState({});
+  // Use BucketsContext for bucket data
+  const { buckets, loading: bucketsLoading, fetchBuckets } = useBuckets();
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [connectErrors, setConnectErrors] = useState({});
   const [connectInitialValues] = React.useState({});
   const [editing] = React.useState(false);
+
+  // Debug logging
+  console.log('Home component state:', {
+    user: !!user,
+    loading,
+    bucketLoading,
+    bucketsLoading,
+    bucketsCount: buckets?.length || 0,
+    activeBucket: !!activeBucket
+  });
 
   const handleDialogOpenChange = (open) => {
     if (!open) {
@@ -36,7 +44,8 @@ export default function Home() {
   };
 
   // Show loading spinner while checking authentication, bucket loading, or buckets loading
-  if (loading || bucketLoading || bucketsLoading) {
+  // But only if we don't already know there are no buckets
+  if ((loading || bucketLoading || bucketsLoading) && (!buckets || buckets.length > 0)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="space-y-4 w-full max-w-2xl">
@@ -170,7 +179,7 @@ export default function Home() {
                 } else {
                   await refreshActiveBucket();
                 }
-                refreshBuckets();
+                fetchBuckets(); // Use fetchBuckets from context
                 setShowConnectDialog(false);
                 setConnectErrors({}); // clear errors on success
                 showToast.success('Bucket connected successfully');

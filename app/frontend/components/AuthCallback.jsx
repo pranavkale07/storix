@@ -30,7 +30,7 @@ export function AuthCallback() {
           // Call login with proper user object structure
           const userObj = { id: parseInt(userId) };
           await login(userObj, token);
-          await refreshActiveBucket();
+          // refreshActiveBucket() is not needed - login() already handles it
         } catch (err) {
           console.error('Login error:', err);
           navigate('/auth/error');

@@ -103,28 +103,30 @@ export function AuthProvider({ children }) {
   const login = async (user, token) => {
     setToken(token);
     StorageManager.setToken(token);
-    // Fetch full profile after login
-    try {
-      const response = await apiFetch('/api/auth/profile');
-      if (response.ok) {
-        const profile = await response.json();
-        setUser(profile);
-        StorageManager.setUser(profile);
-      } else {
-        setUser(user);
-        StorageManager.setUser(user);
-      }
-    } catch {
-      setUser(user);
-      StorageManager.setUser(user);
-    }
-    // Automatically load and set the first bucket as active after login
+    
+    // Set bucket loading state
     setBucketLoading(true);
+    
     try {
+      // Fetch buckets FIRST (this is fast)
       const buckets = await BucketService.fetchBuckets();
+      
+      // Set active bucket IMMEDIATELY if available (no waiting for backend)
       if (buckets && buckets.length > 0) {
         const firstBucket = buckets[0];
-        // Also set active credential in backend and get new token
+        const bucketInfo = {
+          id: firstBucket.id,
+          bucket: firstBucket.bucket,
+          provider: firstBucket.provider,
+          region: firstBucket.region,
+          endpoint: firstBucket.endpoint,
+        };
+        
+        // Set active bucket immediately (no waiting)
+        setActiveBucket(bucketInfo);
+        StorageManager.setActiveBucket(bucketInfo);
+        
+        // WAIT for backend to confirm active credential is set
         try {
           const res = await apiFetch('/api/auth/active_credential', {
             method: 'POST',
@@ -137,29 +139,39 @@ export function AuthProvider({ children }) {
               setToken(data.token);
               StorageManager.setToken(data.token);
             }
-            const bucketInfo = {
-              id: firstBucket.id,
-              bucket: firstBucket.bucket,
-              provider: firstBucket.provider,
-              region: firstBucket.region,
-              endpoint: firstBucket.endpoint,
-            };
-            setActiveBucket(bucketInfo);
-            StorageManager.setActiveBucket(bucketInfo);
+            // Backend has confirmed the active credential is set
+            console.log('Active credential set successfully in backend');
           } else {
+            console.error('Failed to set active credential in backend');
             setActiveBucket(null);
             StorageManager.removeActiveBucket();
           }
         } catch (err) {
-          // Ignore backend errors for now
+          console.error('Failed to set active credential:', err);
           setActiveBucket(null);
           StorageManager.removeActiveBucket();
         }
       }
+      
+      // Now fetch user profile (this can happen in parallel)
+      const profileResponse = await apiFetch('/api/auth/profile');
+      if (profileResponse.ok) {
+        const profile = await profileResponse.json();
+        setUser(profile);
+        StorageManager.setUser(profile);
+      } else {
+        setUser(user);
+        StorageManager.setUser(user);
+      }
+      
     } catch (err) {
-      // Ignore bucket errors on login
-      setActiveBucket(null);
-      StorageManager.removeActiveBucket();
+      // Handle errors gracefully
+      setUser(user);
+      StorageManager.setUser(user);
+      if (buckets?.length === 0) {
+        setActiveBucket(null);
+        StorageManager.removeActiveBucket();
+      }
     } finally {
       setBucketLoading(false);
     }

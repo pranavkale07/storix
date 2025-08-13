@@ -7,28 +7,45 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { ArrowLeft, FolderCog, Link2, User2, LogOut, BarChart3 } from 'lucide-react';
 import ConnectBucketForm from './ConnectBucketForm';
-import useBuckets from '../hooks/useBuckets';
 import { BucketService } from '../lib/bucketService';
 import { showToast } from './utils/toast';
 import { apiFetch } from '../lib/api';
+import { useBuckets } from './BucketsContext';
 
 export default function Header({ showBackToFiles }) {
   const { user, logout, activeBucket, refreshActiveBucket } = useAuth();
   const navigate = useNavigate();
 
-  const {
-    buckets,
-    loading: bucketsLoading,
-    error: bucketsError,
-    refreshBuckets,
-    switchBucket,
-    switching,
-  } = useBuckets(refreshActiveBucket);
+  // Use BucketsContext instead of local state
+  const { buckets, loading: bucketsLoading, error: bucketsError, fetchBuckets } = useBuckets();
+  const [switching, setSwitching] = useState(false);
   const [showConnectDialog, setShowConnectDialog] = useState(false);
   const [connectLoading, setConnectLoading] = useState(false);
   const [connectErrors, setConnectErrors] = useState({});
   const [connectInitialValues, setConnectInitialValues] = useState({});
   const [editing, setEditing] = useState(false);
+
+  const switchBucket = async (bucketId) => {
+    setSwitching(true);
+    try {
+      const res = await apiFetch('/api/auth/active_credential', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credential_id: bucketId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          await refreshActiveBucket();
+        }
+      }
+    } finally {
+      setSwitching(false);
+    }
+  };
 
   const handleSwitchBucket = (bucketId) => {
     if (bucketId === 'add_new') {
@@ -207,7 +224,7 @@ export default function Header({ showBackToFiles }) {
                   await refreshActiveBucket();
                 }
                 // Refresh buckets list
-                refreshBuckets();
+                fetchBuckets();
                 setShowConnectDialog(false);
                 showToast.success('Bucket connected successfully');
               } catch (err) {
