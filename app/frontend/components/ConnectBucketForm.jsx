@@ -71,7 +71,7 @@ export default function ConnectBucketForm({
           <SelectContent>
             <SelectItem value="s3">AWS S3</SelectItem>
             <SelectItem value="digitalocean">DigitalOcean Spaces</SelectItem>
-            <SelectItem value="custom">Custom S3-Compatible</SelectItem>
+            <SelectItem value="gcp">Google Cloud Storage (GCP)</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -138,14 +138,14 @@ export default function ConnectBucketForm({
           <p className="text-sm text-destructive mt-1">{formErrors.region}</p>
         )}
       </div>
-      {(formData.provider === 'digitalocean' || formData.provider === 'custom') && (
+      {(formData.provider === 'digitalocean' || formData.provider === 'gcp') && (
         <div className="w-full">
           <Label htmlFor="endpoint">Endpoint (Optional)</Label>
           <Input
             id="endpoint"
             value={formData.endpoint}
             onChange={e => handleInputChange('endpoint', e.target.value)}
-            placeholder="https://nyc3.digitaloceanspaces.com"
+            placeholder={formData.provider === 'gcp' ? 'https://storage.googleapis.com' : 'https://nyc3.digitaloceanspaces.com'}
           />
         </div>
       )}

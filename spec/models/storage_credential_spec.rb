@@ -10,7 +10,7 @@ describe StorageCredential, type: :model do
   it { should validate_presence_of(:region) }
   it { should validate_presence_of(:bucket) }
   it { should validate_presence_of(:provider) }
-  it { should validate_inclusion_of(:provider).in_array(%w[s3 do_spaces]) }
+  it { should validate_inclusion_of(:provider).in_array(%w[s3 do_spaces gcp]) }
 
   context 'endpoint format' do
     it 'accepts valid HTTP/HTTPS endpoints' do

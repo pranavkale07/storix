@@ -8,11 +8,29 @@ class Api::Storage::StorageController < Api::BaseController
 
   # POST /api/storage_credentials
   def create_credential
-    @storage_credential = current_user.storage_credentials.build(storage_credential_params)
+    # Explicitly extract only the fields that belong to StorageCredential
+    credential_attrs = {
+      provider: params.dig(:storage_credential, :provider),
+      bucket: params.dig(:storage_credential, :bucket),
+      access_key_id: params.dig(:storage_credential, :access_key_id),
+      secret_access_key: params.dig(:storage_credential, :secret_access_key),
+      region: params.dig(:storage_credential, :region),
+      endpoint: params.dig(:storage_credential, :endpoint)
+    }.compact
+    
+    @storage_credential = current_user.storage_credentials.build(credential_attrs)
     # Validate the credential before saving
     begin
       client = S3ClientBuilder.new(@storage_credential).client
-      client.list_objects_v2(bucket: @storage_credential.bucket, max_keys: 1)
+      
+      # Use different validation methods based on provider
+      if @storage_credential.provider == "gcp"
+        # For GCP, try to list objects with max_keys=0 (requires minimal permissions)
+        client.list_objects_v2(bucket: @storage_credential.bucket, max_keys: 0)
+      else
+        # For S3 and DO Spaces, use list_objects_v2
+        client.list_objects_v2(bucket: @storage_credential.bucket, max_keys: 1)
+      end
     rescue Aws::S3::Errors::InvalidAccessKeyId, Aws::S3::Errors::SignatureDoesNotMatch
       render json: { errors: [ "Credential validation failed: Invalid access key or secret." ] }, status: :unprocessable_entity
       return
@@ -20,7 +38,8 @@ class Api::Storage::StorageController < Api::BaseController
       render json: { errors: [ "Credential validation failed: The specified bucket does not exist." ] }, status: :unprocessable_entity
       return
     rescue => e
-      render json: { errors: [ "Credential validation failed: Unable to connect to the storage provider." ] }, status: :unprocessable_entity
+      Rails.logger.error "Credential validation error: #{e.class} - #{e.message}"
+      render json: { errors: [ "Credential validation failed: Unable to connect to the storage provider. Error: #{e.message}" ] }, status: :unprocessable_entity
       return
     end
 
@@ -592,8 +611,16 @@ class Api::Storage::StorageController < Api::BaseController
     end
     begin
       client = S3ClientBuilder.new(credential).client
-      # Try to list the bucket (limit 1)
-      client.list_objects_v2(bucket: credential.bucket, max_keys: 1)
+      
+      # Use different validation methods based on provider
+      if credential.provider == "gcp"
+        # For GCP, try to list objects with max_keys=0 (requires minimal permissions)
+        client.list_objects_v2(bucket: credential.bucket, max_keys: 0)
+      else
+        # For S3 and DO Spaces, use list_objects_v2
+        client.list_objects_v2(bucket: credential.bucket, max_keys: 1)
+      end
+      
       render json: { valid: true, message: "Credential is valid" }
     rescue Aws::S3::Errors::InvalidAccessKeyId, Aws::S3::Errors::SignatureDoesNotMatch
       Rails.logger.error("Credential validation failed: Invalid access key or secret.")

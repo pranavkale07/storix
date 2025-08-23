@@ -26,4 +26,16 @@ describe S3ClientBuilder do
       expect(client.config.force_path_style).to be true
     end
   end
+
+  context 'GCP Cloud Storage provider' do
+    let(:credential) { create(:storage_credential, user: user, provider: 'gcp', endpoint: 'https://storage.googleapis.com') }
+
+    it 'builds a client with GCP endpoint and path style' do
+      builder = described_class.new(credential)
+      client = builder.client
+      expect(client.config.endpoint.to_s).to eq('https://storage.googleapis.com')
+      expect(client.config.force_path_style).to be true
+      expect(client.config.region).to eq('auto')
+    end
+  end
 end

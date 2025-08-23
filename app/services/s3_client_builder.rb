@@ -30,6 +30,12 @@ class S3ClientBuilder
       # Use provided endpoint or default to DigitalOcean Spaces endpoint
       config[:endpoint] = storage_credential.endpoint.presence || "https://#{storage_credential.region}.digitaloceanspaces.com"
       config[:force_path_style] = true
+    elsif storage_credential.provider == "gcp"
+      # GCP Cloud Storage uses S3-compatible API with custom endpoint
+      config[:endpoint] = storage_credential.endpoint.presence || "https://storage.googleapis.com"
+      config[:force_path_style] = true
+      # GCP requires specific region handling
+      config[:region] = "auto"
     end
     # For AWS S3, do not set endpoint (let SDK use default)
 

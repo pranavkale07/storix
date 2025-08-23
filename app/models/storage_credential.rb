@@ -11,7 +11,7 @@ class StorageCredential < ApplicationRecord
   validates :secret_access_key, presence: true
   validates :region, presence: true
   validates :bucket, presence: true
-  validates :provider, presence: true, inclusion: { in: %w[s3 do_spaces] }
+  validates :provider, presence: true, inclusion: { in: %w[s3 do_spaces gcp] }
 
   # Custom validation for endpoint URL format, only if present
   validate :endpoint_format, if: -> { endpoint.present? }
