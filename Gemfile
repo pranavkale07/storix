@@ -18,7 +18,7 @@ gem "aws-sdk-s3", "~> 1.0"
 gem "dotenv-rails", "~> 2.8"
 
 # JWT for API authentication
-gem "jwt", "~> 2.7"
+gem "jwt", "~> 3.1"
 
 # OAuth gems for Google and GitHub authentication
 gem "omniauth-google-oauth2", "~> 1.2"
